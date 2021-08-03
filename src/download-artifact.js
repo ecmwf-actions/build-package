@@ -43,6 +43,27 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         auth: githubToken,
     });
 
+    let headSha;
+
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+        });
+
+        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`))
+            return false;
+
+        headSha = response.data.object.sha;
+    }
+    catch (error) {
+        isError(true, `Error getting repository HEAD: ${error.message}`);
+        return false;
+    }
+
+    core.info(`==> headSha: ${headSha}`);
+
     let runId;
 
     try {
@@ -96,13 +117,15 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}`;
     else artifactName = `${repo}-${os}-${compiler}`;
 
-    artifacts = artifacts.filter((artifact) => artifact.name == artifactName);
+    // Consider only artifacts with expected name and built against latest HEAD.
+    artifacts = artifacts.filter((artifact) => artifact.name === artifactName && artifact.head_sha === headSha );
 
-    if (isError(!artifacts.length, `No ${artifactName} artifact found`)) return false;
+    if (isError(!artifacts.length, `No suitable artifact found: ${artifactName} (${headSha})`)) return false;
 
     const artifact = artifacts.shift();
 
     core.info(`==> artifactName: ${artifactName}`);
+    core.info(`==> headSha: ${headSha}`);
     core.info(`==> artifactId: ${artifact.id}`);
 
     let zip;
