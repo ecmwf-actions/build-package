@@ -1,0 +1,131 @@
+const process = require('process');
+const core = require('@actions/core');
+const exec = require('@actions/exec');
+
+const { isError } = require('./helper-functions');
+
+/**
+ * Returns Local environment variables:
+ *
+ *   CC
+ *   CXX
+ *   FC
+ *   CMAKE_VERSION
+ *   OPENSSL_ROOT_DIR
+ *   OPENSSL_INCLUDE_DIR
+ *
+ * @param {String} os Current OS platform
+ * @param {String} compilerCc C compiler alias
+ * @param {String} compilerCxx C++ compiler alias
+ * @param {String} compilerFc Fortran compiler alias
+ * @returns {Object} Environment object with keys as variable names
+ */
+module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
+    core.startGroup('Setup Environment');
+
+    const env = {
+        CC: compilerCc,
+        CXX: compilerCxx,
+        FC: compilerFc,
+    };
+
+    core.info(`==> Compiler env: ${JSON.stringify(env)}`);
+
+    let output;
+
+    const options = {
+        shell: '/bin/bash -eux',
+        listeners: {
+            stdout: (data) => {
+                output = data.toString();
+            },
+        },
+    };
+
+    // Get CMake command capabilities output in JSON format.
+    let exitCode = await exec.exec('env', ['cmake', '-E', 'capabilities'], options);
+
+    if (isError(exitCode, 'CMake capabilities command failed')) return env;
+
+    let cMakeVersion;
+
+    try {
+        const json = JSON.parse(output);
+        cMakeVersion = json.version.string;
+    }
+    catch (error) {
+        isError(true, `JSON parsing failed: ${error.message}`);
+        return env;
+    }
+
+    if (isError(!cMakeVersion, 'CMake version string not found')) return env;
+
+    env.CMAKE_VERSION = cMakeVersion;
+
+    core.info(`==> CMake version: ${env.CMAKE_VERSION}`);
+
+    // On macOS, linking against system OpenSSL library is not permitted.
+    //   Instead, we link against Homebrew version. Here we prepare necessary environment variables.
+    if (/^macos-/.test(os)) {
+        output = '';
+        exitCode = await exec.exec('env', ['brew', '--prefix', 'openssl@1.1'], options);
+
+        if (isError(exitCode, 'Homebrew command failed')) return env;
+
+        if (isError(!output, 'OpenSSL 1.1 prefix not found')) return env;
+
+        const openSslDir = output.replace(/\n$/, '');
+
+        env.OPENSSL_ROOT_DIR = openSslDir;
+        env.OPENSSL_INCLUDE_DIR = `${openSslDir}/include`;
+
+        core.info(`==> OpenSSL prefix: ${env.OPENSSL_ROOT_DIR}`);
+    }
+
+    core.endGroup();
+
+    return env;
+};
+
+module.exports.extendPaths = async (env, installDir) => {
+    if (env.PATH) {
+        env.PATH = `${installDir}/bin:${env.PATH}`;
+    }
+    else if (process.env.PATH) {
+        env.PATH = `${installDir}/bin:${process.env.PATH}`;
+    }
+    else {
+        env.PATH = `${installDir}/bin`;
+    }
+
+    core.info(`==> Extended local PATH variable to include ${installDir}/bin`);
+
+    if (env.BIN_PATH) {
+        env.BIN_PATH = `${installDir}/bin:${env.BIN_PATH}`;
+    }
+    else {
+        env.BIN_PATH = `${installDir}/bin`;
+    }
+
+    if (env.INCLUDE_PATH) {
+        env.INCLUDE_PATH = `${installDir}/include:${env.INCLUDE_PATH}`;
+    }
+    else {
+        env.INCLUDE_PATH = `${installDir}/include`;
+    }
+
+    if (env.INSTALL_PATH) {
+        env.INSTALL_PATH = `${installDir}:${env.INSTALL_PATH}`;
+    }
+    else {
+        env.INSTALL_PATH = installDir;
+    }
+
+    if (env.LIB_PATH) {
+        env.LIB_PATH = `${installDir}/lib:${env.LIB_PATH}`;
+    }
+    else {
+        env.LIB_PATH = `${installDir}/lib`;
+    }
+
+};

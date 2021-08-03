@@ -1,0 +1,52 @@
+name: ecbuild
+
+# Controls when the action will run
+on:
+
+  # Trigger the workflow on all pushes, except on tag creation
+  push:
+    branches:
+    - '**'
+    tags-ignore:
+    - '**'
+
+  # Trigger the workflow on all pull requests
+  pull_request: ~
+
+  # Allow workflow to be dispatched on demand
+  workflow_dispatch: ~
+
+jobs:
+  ecbuild:
+    name: ecbuild
+    strategy:
+      matrix:
+        name:
+        - ubuntu-20.04
+        - ubuntu-18.04
+        - macos-10.15
+        include:
+        - name: ubuntu-20.04
+          os: ubuntu-20.04
+        - name: ubuntu-18.04
+          os: ubuntu-18.04
+        - name: macos-10.15
+          os: macos-10.15
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Checkout ecbuild Repository
+      uses: actions/checkout@v2
+      with:
+        repository: ecmwf/ecbuild
+        ref: develop
+        path: ecbuild
+
+    - name: Build & Test
+      id: build-test
+      uses: ./
+      with:
+        workspace: ${{ github.workspace }}/ecbuild
+        repository: ecmwf/ecbuild

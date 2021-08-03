@@ -1,0 +1,62 @@
+{
+  "name": "build-package",
+  "version": "1.0.0",
+  "description": "A Github action to build ECMWF software",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
+    "test": "jest --ci --coverage",
+    "lint": "eslint --fix src/** tests/**"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ecmwf-actions/build-package"
+  },
+  "dependencies": {
+    "@actions/artifact": "^0.5.2",
+    "@actions/cache": "^1.0.7",
+    "@actions/core": "^1.4.0",
+    "@actions/exec": "^1.1.0",
+    "@actions/http-client": "^1.0.11",
+    "@actions/io": "^1.1.1",
+    "@octokit/core": "^3.5.1",
+    "adm-zip": "^0.5.5",
+    "fast-folder-size": "^1.4.0",
+    "filesize": "^7.0.0",
+    "tar": "^6.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^7.30.0",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^27.0.6"
+  },
+  "jest": {
+    "clearMocks": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!<rootDir>/node_modules/"
+    ]
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": false,
+      "node": true,
+      "commonjs": true,
+      "es2021": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:jest/all"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 12
+    },
+    "rules": {
+      "indent": [
+        "error",
+        4
+      ]
+    }
+  }
+}
