@@ -1,8 +1,8 @@
 # build-package
 
-[![Build Status](https://img.shields.io/github/workflow/status/ecmwf-actions/build-package/ci/master)](https://github.com/ecmwf-actions/build-package/actions/workflows/ci.yml)
-[![Code Coverage](https://img.shields.io/codecov/c/gh/ecmwf-actions/build-package/master)](https://codecov.io/gh/ecmwf-actions/build-package)
-[![Licence](https://img.shields.io/github/license/ecmwf-actions/build-package)](https://github.com/ecmwf-actions/build-package/blob/master/LICENSE)
+[![Build Status](https://img.shields.io/github/workflow/status/ecmwf-actions/build-package/ci/main)](https://github.com/ecmwf-actions/build-package/actions/workflows/ci.yml)
+[![Code Coverage](https://img.shields.io/codecov/c/gh/ecmwf-actions/build-package/main)](https://codecov.io/gh/ecmwf-actions/build-package)
+[![Licence](https://img.shields.io/github/license/ecmwf-actions/build-package)](https://github.com/ecmwf-actions/build-package/blob/main/LICENSE)
 
 A Github action to build ECMWF software.
 
