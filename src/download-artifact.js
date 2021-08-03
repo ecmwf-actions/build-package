@@ -64,7 +64,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
     core.info(`==> headSha: ${headSha}`);
 
-    let runId;
+    let workflowRuns;
 
     try {
         const response = await octokit.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
@@ -80,13 +80,20 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
         if (isError(!response.data.workflow_runs.length, 'No workflow runs found')) return false;
 
-        const lastRun = response.data.workflow_runs.shift();
-        runId = lastRun.id;
+        workflowRuns = response.data.workflow_runs;
     }
     catch (error) {
         isError(true, `Error fetching workflow runs: ${error.message}`);
         return false;
     }
+
+    // Consider only workflow runs for repository HEAD.
+    workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.head_sha === headSha);
+
+    if (isError(!workflowRuns.length, `No workflow runs for repository HEAD found: ${headSha}`)) return false;
+
+    const lastRun = workflowRuns.shift();
+    const runId = lastRun.id;
 
     core.info(`==> RunID: ${runId}`);
 
@@ -117,8 +124,8 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}`;
     else artifactName = `${repo}-${os}-${compiler}`;
 
-    // Consider only artifacts with expected name and built against latest HEAD.
-    artifacts = artifacts.filter((artifact) => artifact.name === artifactName && artifact.head_sha === headSha );
+    // Consider only artifacts with expected name.
+    artifacts = artifacts.filter((artifact) => artifact.name === artifactName);
 
     if (isError(!artifacts.length, `No suitable artifact found: ${artifactName} (${headSha})`)) return false;
 

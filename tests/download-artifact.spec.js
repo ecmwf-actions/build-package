@@ -49,6 +49,7 @@ const resolveWorkflowRuns = () => Promise.resolve({
         workflow_runs: [
             {
                 id: runId,
+                head_sha: headSha,
             },
         ],
     },
@@ -61,19 +62,16 @@ const resolveWorkflowRunArtifacts = (targetArtifactName) => Promise.resolve({
             {
                 name: `${repo}-macos-10.15-clang-12`,
                 id: 987654320,
-                head_sha: '123456789',
                 size_in_bytes: 41651984,
             },
             {
                 name: targetArtifactName,
                 id: artifactId,
-                head_sha: headSha,
                 size_in_bytes: artifactSize,
             },
             {
                 name: `${repo}-ubuntu-18.04-gnu-9`,
                 id: 987654322,
-                head_sha: '987654321',
                 size_in_bytes: 716551654,
             },
         ],
@@ -273,7 +271,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION} (${testSha})`);
+        expect(core.warning).toHaveBeenCalledWith(`No workflow runs for repository HEAD found: ${testSha}`);
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
