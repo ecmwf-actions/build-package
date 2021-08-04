@@ -42,7 +42,12 @@ jobs:
       with:
         repository: ecmwf/ecbuild
         ref: develop
-        path: ecbuild
+        path: ${{ github.workspace }}/ecbuild
+
+    - name: Retrieve ecbuild SHA
+      working-directory: ${{ github.workspace }}/ecbuild
+      shell: bash -eux {0}
+      run: echo "ECBUILD_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
 
     - name: Build & Test
       id: build-test
@@ -50,3 +55,5 @@ jobs:
       with:
         workspace: ${{ github.workspace }}/ecbuild
         repository: ecmwf/ecbuild
+        sha: ${{ env.ECBUILD_SHA }}
+        github_token: ${{ secrets.GH_PAT }}

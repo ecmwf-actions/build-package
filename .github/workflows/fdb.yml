@@ -78,12 +78,18 @@ jobs:
         ref: develop
         path: fdb
 
+    - name: Retrieve fdb SHA
+      working-directory: ${{ github.workspace }}/fdb
+      shell: bash -eux {0}
+      run: echo "FDB_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
     - name: Build & Test
       id: build-test
       uses: ./
       with:
         workspace: ${{ github.workspace }}/fdb
         repository: ecmwf/fdb
+        sha: ${{ env.FDB_SHA }}
         self_coverage: true
         dependencies: |
           ecmwf/ecbuild
@@ -91,6 +97,7 @@ jobs:
           ecmwf/eccodes
           ecmwf/metkit
         dependency_branch: develop
+        github_token: ${{ secrets.GH_PAT }}
 
     - name: Check Code Coverage
       if: steps.build-test.outputs.coverage_file

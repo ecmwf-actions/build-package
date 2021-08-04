@@ -78,18 +78,25 @@ jobs:
         ref: develop
         path: metkit
 
+    - name: Retrieve metkit SHA
+      working-directory: ${{ github.workspace }}/metkit
+      shell: bash -eux {0}
+      run: echo "METKIT_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
     - name: Build & Test
       id: build-test
       uses: ./
       with:
         workspace: ${{ github.workspace }}/metkit
         repository: ecmwf/metkit
+        sha: ${{ env.METKIT_SHA }}
         self_coverage: true
         dependencies: |
           ecmwf/ecbuild
           ecmwf/eckit
           ecmwf/eccodes
         dependency_branch: develop
+        github_token: ${{ secrets.GH_PAT }}
 
     - name: Check Code Coverage
       if: steps.build-test.outputs.coverage_file

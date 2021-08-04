@@ -78,18 +78,25 @@ jobs:
         ref: develop
         path: pyodc
 
+    - name: Retrieve pyodc SHA
+      working-directory: ${{ github.workspace }}/pyodc
+      shell: bash -eux {0}
+      run: echo "PYODC_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
     - name: Install Dependencies
       id: install-dependencies
       uses: ./
       with:
         workspace: ${{ github.workspace }}/pyodc
         repository: ecmwf/pyodc
+        sha: ${{ env.PYODC_SHA }}
         self_build: false
         dependencies: |
           ecmwf/ecbuild
           ecmwf/eckit
           ecmwf/odc
         dependency_branch: develop
+        github_token: ${{ secrets.GH_PAT }}
 
     - name: Setup Python
       uses: actions/setup-python@v2

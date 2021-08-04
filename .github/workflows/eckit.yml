@@ -78,15 +78,21 @@ jobs:
         ref: develop
         path: eckit
 
+    - name: Retrieve eckit SHA
+      working-directory: ${{ github.workspace }}/eckit
+      run: echo "ECKIT_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
     - name: Build & Test
       id: build-test
       uses: ./
       with:
         workspace: ${{ github.workspace }}/eckit
         repository: ecmwf/eckit
+        sha: ${{ env.ECKIT_SHA }}
         self_coverage: true
         dependencies: ecmwf/ecbuild
         dependency_branch: develop
+        github_token: ${{ secrets.GH_PAT }}
 
     - name: Check Code Coverage
       if: steps.build-test.outputs.coverage_file

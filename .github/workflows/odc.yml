@@ -78,12 +78,18 @@ jobs:
         ref: develop
         path: odc
 
+    - name: Retrieve odc SHA
+      working-directory: ${{ github.workspace }}/odc
+      shell: bash -eux {0}
+      run: echo "ODC_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+
     - name: Build & Test
       id: build-test
       uses: ./
       with:
         workspace: ${{ github.workspace }}/odc
         repository: ecmwf/odc
+        sha: ${{ env.ODC_SHA }}
         self_coverage: true
         dependencies: |
           ecmwf/ecbuild
