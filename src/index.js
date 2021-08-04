@@ -7,8 +7,9 @@ const main = require('./main');
  *
  * Inputs:
  *   @param {String} workspace The location of currently checked out source repository.
- *   @param {String} repository The current repository name. Repository names should follow the standard Github
- *     `owner/name` format.
+ *   @param {String} repository The currently checked out source repository name. Repository names should follow the
+ *    standard Github `owner/name` format.
+ *   @param {String} sha The currently checked out source repository commit SHA.
  *   @param {Boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
  *   @param {MultilineString} cmake_options The list of ecbuild/CMake options to be passed during the build c
  *     configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its

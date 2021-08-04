@@ -22,6 +22,7 @@ module.exports = async () => {
     try {
         const workspace = core.getInput('workspace', { required: true });
         const repository = core.getInput('repository', { required: true });
+        const sha = core.getInput('sha', { required: true });
         const cmake = core.getBooleanInput('cmake', { required: true });
         const selfBuild = core.getBooleanInput('self_build', { required: true });
         const selfTest = core.getBooleanInput('self_test', { required: true });
@@ -96,10 +97,10 @@ module.exports = async () => {
             if (!isBuilt) return Promise.reject('Error building package');
 
             // Upload build artifact.
-            await uploadArtifact(repository, path.join(installDir, repo), env.DEPENDENCIES, os, compiler, env);
+            await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES, os, compiler, env);
 
             // Upload coverage artifact.
-            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, env.COVERAGE_DIR, null, os, compiler, env);
+            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR, null, os, compiler, env);
         }
 
         const outputs = {

@@ -41,27 +41,6 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         auth: githubToken,
     });
 
-    let headSha;
-
-    try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-            owner,
-            repo,
-            ref: `heads/${branch}`,
-        });
-
-        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`))
-            return false;
-
-        headSha = response.data.object.sha;
-    }
-    catch (error) {
-        isError(true, `Error getting repository HEAD: ${error.message}`);
-        return false;
-    }
-
-    core.info(`==> headSha: ${headSha}`);
-
     let workflowRuns;
 
     try {
@@ -92,10 +71,9 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     // Consider only workflow runs that:
     // - have status "completed"
     // - have conclusion "success"
-    // - were executed against the current repository HEAD
-    workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.status === 'completed' && workflowRun.conclusion === 'success' && workflowRun.head_sha === headSha);
+    workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.status === 'completed' && workflowRun.conclusion === 'success');
 
-    if (isError(!workflowRuns.length, `No completed successful workflow runs found for repository HEAD: ${headSha}`)) return false;
+    if (isError(!workflowRuns.length, 'No completed successful workflow runs found')) return false;
 
     const lastRun = workflowRuns.shift();
     const runId = lastRun.id;
@@ -123,21 +101,46 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
     core.info(`==> Artifacts: ${artifacts.length}`);
 
+    if (!artifacts.length) {
+        isError(true, 'No workflow artifacts found');
+        return false;
+    }
+
+    let headSha;
+
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+        });
+
+        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`))
+            return false;
+
+        headSha = response.data.object.sha;
+    }
+    catch (error) {
+        isError(true, `Error getting repository HEAD: ${error.message}`);
+        return false;
+    }
+
+    core.info(`==> headSha: ${headSha}`);
+
     let artifactName;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}`;
-    else artifactName = `${repo}-${os}-${compiler}`;
+    if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
+    else artifactName = `${repo}-${os}-${compiler}-${headSha}`;
 
     // Consider only artifacts with expected name.
     artifacts = artifacts.filter((artifact) => artifact.name === artifactName);
 
-    if (isError(!artifacts.length, `No suitable artifact found: ${artifactName} (${headSha})`)) return false;
+    if (isError(!artifacts.length, `No suitable artifact found: ${artifactName}`)) return false;
 
     const artifact = artifacts.shift();
 
     core.info(`==> artifactName: ${artifactName}`);
-    core.info(`==> headSha: ${headSha}`);
     core.info(`==> artifactId: ${artifact.id}`);
 
     let zip;

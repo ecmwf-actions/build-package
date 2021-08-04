@@ -92,7 +92,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             compilerFlags.push(`-DCMAKE_Fortran_FLAGS='--coverage'`);
         }
         else if (test && codeCoverage) {
-            core.warning(`Skipping code coverage collection on unsupported platform: ${compiler}@${os}`);
+            core.info(`Skipping code coverage collection on unsupported platform: ${compiler}@${os}`);
         }
 
         core.info(`==> compilerFlags: ${compilerFlags.join(' ')}`);

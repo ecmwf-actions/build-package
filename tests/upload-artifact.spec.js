@@ -18,7 +18,8 @@ const installDir = '/path/to/install/repo';
 const os = 'ubuntu-20.04';
 const compiler = 'gnu-10';
 const size = 68168435;
-const artifactName = `${repo}-${os}-${compiler}`;
+const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
+const artifactName = `${repo}-${os}-${compiler}-${sha}`;
 const tarName = `${artifactName}.tar`;
 const rootDirectory = path.dirname(installDir);
 const tarPath = path.join(rootDirectory, tarName);
@@ -73,7 +74,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Created artifact TAR: ${tarPath} (${filesize(size)})`);
@@ -113,7 +114,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(`coverage-${repo}`, installDir, null, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(`coverage-${repo}`, sha, installDir, null, os, compiler, testEnv);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`);
@@ -130,7 +131,7 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}`;
+        const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${sha}`;
 
         artifact.create.mockImplementation(() => ({
             uploadArtifact: () => Promise.resolve({
@@ -155,7 +156,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact('ecmwf/ecbuild', installDir, {}, os, null, testEnv);
+        const isUploaded = await uploadArtifact('ecmwf/ecbuild', sha, installDir, {}, os, null, testEnv);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`);
@@ -177,7 +178,7 @@ describe('uploadArtifact', () => {
             throw new Error(errorMessage);
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error creating artifact TAR: ${errorMessage}`);
@@ -201,7 +202,7 @@ describe('uploadArtifact', () => {
             size: 0,
         }));
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('Error determining size of artifact TAR');
@@ -236,7 +237,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error writing dependencies file: ${errorMessage}`);
@@ -274,7 +275,7 @@ describe('uploadArtifact', () => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact: ${artifactName}`);
@@ -305,7 +306,7 @@ describe('uploadArtifact', () => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('Error uploading artifact');
@@ -336,7 +337,7 @@ describe('uploadArtifact', () => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact: ${errorMessage}`);

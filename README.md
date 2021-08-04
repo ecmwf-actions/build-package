@@ -116,8 +116,13 @@ steps:
 
 ### `repository`
 
-**Required** The current repository name. Repository names should follow the standard Github `owner/name` format.  
+**Required** The currently checked out source repository name. Repository names should follow the standard Github `owner/name` format.  
 **Default:** `${{ github.repository }}`
+
+### `sha`
+
+**Required** The currently checked out source repository commit SHA.  
+**Default:** `${{ github.sha }}`
 
 ### `cmake`
 

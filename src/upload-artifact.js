@@ -11,6 +11,7 @@ const { isError } = require('./helper-functions');
  * Archives and uploads package artifact.
  *
  * @param {String} repository Github repository owner and name to upload artifact for.
+ * @param {String} sha Github repository commit SHA.
  * @param {String} targetDir Target directory to upload as artifact.
  * @param {Object} dependencies Dependencies object.
  * @param {String} os Current OS platform.
@@ -18,7 +19,7 @@ const { isError } = require('./helper-functions');
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the archiving and upload was successful.
  */
-module.exports = async (repository, targetDir, dependencies, os, compiler, env) => {
+module.exports = async (repository, sha, targetDir, dependencies, os, compiler, env) => {
     core.startGroup(`Upload ${repository} Artifact`);
 
     let [owner, repo] = repository.split('/');
@@ -27,8 +28,8 @@ module.exports = async (repository, targetDir, dependencies, os, compiler, env) 
     let artifactName;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}`;
-    else artifactName = `${repo}-${os}-${compiler}`;
+    if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
+    else artifactName = `${repo}-${os}-${compiler}-${sha}`;
 
     const tarName = `${artifactName}.tar`;
     const rootDirectory = path.dirname(targetDir);

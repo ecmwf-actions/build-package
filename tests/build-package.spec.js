@@ -229,7 +229,7 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, macOs, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
-        expect(core.warning).toHaveBeenCalledWith(`Skipping code coverage collection on unsupported platform: ${compiler}@${macOs}`);
+        expect(core.info).toHaveBeenCalledWith(`Skipping code coverage collection on unsupported platform: ${compiler}@${macOs}`);
     });
 
     it('extends current environment with additional variables', async () => {

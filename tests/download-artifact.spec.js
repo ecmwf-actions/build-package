@@ -25,8 +25,8 @@ const installDir = '/path/to/install/repo';
 const os = 'ubuntu-20.04';
 const compiler = 'gnu-10';
 const runId = 123456789;
-const artifactName = `${repo}-${os}-${compiler}`;
 const headSha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
+const artifactName = `${repo}-${os}-${compiler}-${headSha}`;
 const artifactId = 987654321;
 const artifactSize = 68168435;
 const artifactPath = `${downloadDir}/${artifactName}`;
@@ -34,15 +34,6 @@ const tarPath = `${artifactPath}/${artifactName}.tar`;
 const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 const errorStatusCode = 500;
 const errorMessage = 'Oops!';
-
-const resolveHeadSha = () => Promise.resolve({
-    status: 200,
-    data: {
-        object: {
-            sha: headSha,
-        },
-    },
-});
 
 const resolveWorkflowRuns = () => Promise.resolve({
     status: 200,
@@ -78,6 +69,15 @@ const resolveWorkflowRunArtifacts = (targetArtifactName) => Promise.resolve({
                 size_in_bytes: 716551654,
             },
         ],
+    },
+});
+
+const resolveHeadSha = () => Promise.resolve({
+    status: 200,
+    data: {
+        object: {
+            sha: headSha,
+        },
     },
 });
 
@@ -134,12 +134,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return resolveArtifactDownload();
                 }
@@ -168,8 +168,8 @@ describe('downloadArtifact', () => {
         expect(core.info).toHaveBeenCalledWith('==> workflowRuns: 1');
         expect(core.info).toHaveBeenCalledWith(`==> RunID: ${runId}`);
         expect(core.info).toHaveBeenCalledWith('==> Artifacts: 3');
-        expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${artifactName}`);
         expect(core.info).toHaveBeenCalledWith(`==> headSha: ${headSha}`);
+        expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${artifactName}`);
         expect(core.info).toHaveBeenCalledWith(`==> artifactId: ${artifactId}`);
         expect(core.info).toHaveBeenCalledWith(`==> Downloaded: ${artifactName}.zip (${filesize(artifactSize)})`);
         expect(core.info).toHaveBeenCalledWith(`==> Extracted artifact ZIP archive to ${artifactPath}`);
@@ -192,25 +192,28 @@ describe('downloadArtifact', () => {
     it('returns true if dependencies match', async () => {
         expect.assertions(2);
 
-        const dependency = 'owner/repo1';
-        const dependencySha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
+        const dependency1 = 'owner/repo1';
+        const dependency1Sha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
+        const dependency2 = 'owner/repo2';
+        const dependency2Sha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
 
         const testEnv = {
             ...env,
             DEPENDENCIES: {
-                [dependency]: dependencySha,
+                [dependency1]: dependency1Sha,
+                [dependency2]: dependency2Sha,
             },
         };
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return resolveArtifactDownload();
                 }
@@ -230,7 +233,8 @@ describe('downloadArtifact', () => {
         const readFileSync = jest.spyOn(fs, 'readFileSync');
         readFileSync.mockImplementation((path) => {
             if (path === dependenciesPath) return JSON.stringify({
-                [dependency]: dependencySha,
+                [dependency1]: dependency1Sha,
+                [dependency2]: dependency2Sha,
             });
         });
 
@@ -256,17 +260,17 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}`;
+        const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`;
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(ecbuildArtifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return resolveArtifactDownload();
                 }
@@ -301,8 +305,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
                         status: 200,
@@ -310,17 +312,12 @@ describe('downloadArtifact', () => {
                             workflow_runs: [
                                 {
                                     id: runId,
-                                    head_sha: headSha,
                                     status: 'in_progress',
                                     conclusion: 'neutral',
                                 },
                             ],
                         },
                     });
-                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
                 }
             },
         }));
@@ -336,7 +333,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No completed successful workflow runs found for repository HEAD: ${headSha}`);
+        expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found');
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
@@ -353,8 +350,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
                         status: 200,
@@ -362,17 +357,12 @@ describe('downloadArtifact', () => {
                             workflow_runs: [
                                 {
                                     id: runId,
-                                    head_sha: headSha,
                                     status: 'completed',
                                     conclusion: 'failure',
                                 },
                             ],
                         },
                     });
-                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
                 }
             },
         }));
@@ -388,150 +378,11 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No completed successful workflow runs found for repository HEAD: ${headSha}`);
+        expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found');
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
         unlinkSync.mockReset();
-    });
-
-    it('returns false if no workflow runs for repository HEAD were found', async () => {
-        expect.assertions(2);
-
-        const testEnv = {
-            ...env,
-        };
-
-        const testSha = '123456789';
-
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return Promise.resolve({
-                        status: 200,
-                        data: {
-                            object: {
-                                sha: testSha,
-                            },
-                        },
-                    });
-                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
-                    return resolveWorkflowRuns();
-                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
-                }
-            },
-        }));
-
-        AdmZip.prototype.constructor.mockImplementation(() => ({
-            getEntries,
-            extractAllTo,
-        }));
-
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => true);
-
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
-
-        expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No completed successful workflow runs found for repository HEAD: ${testSha}`);
-
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
-        unlinkSync.mockReset();
-    });
-
-    it('returns false if no artifacts with expected name were found', async () => {
-        expect.assertions(2);
-
-        const testEnv = {
-            ...env,
-        };
-
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
-                    return resolveWorkflowRuns();
-                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
-                }
-            },
-        }));
-
-        AdmZip.prototype.constructor.mockImplementation(() => ({
-            getEntries,
-            extractAllTo,
-        }));
-
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => true);
-
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
-
-        expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION} (${headSha})`);
-
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
-        unlinkSync.mockReset();
-    });
-
-    it('returns false if request for repository HEAD runs errors out', async () => {
-        expect.assertions(2);
-
-        const testEnv = {
-            ...env,
-        };
-
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return Promise.resolve({
-                        status: errorStatusCode,
-                    });
-                }
-            },
-        }));
-
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
-
-        expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD: ${errorStatusCode}`);
-
-        Octokit.prototype.constructor.mockReset();
-    });
-
-    it('returns false if request for repository HEAD runs fails', async () => {
-        expect.assertions(2);
-
-        const testEnv = {
-            ...env,
-        };
-
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    throw Error(errorMessage);
-                }
-            },
-        }));
-
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
-
-        expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD: ${errorMessage}`);
-
-        Octokit.prototype.constructor.mockReset();
     });
 
     it('returns false if request for workflow runs errors out', async () => {
@@ -544,8 +395,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
                         status: errorStatusCode,
@@ -572,8 +421,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
                         status: 200,
@@ -603,8 +450,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     throw Error(errorMessage);
                 }
@@ -629,8 +474,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
@@ -659,8 +502,6 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
@@ -677,6 +518,182 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
+    it('returns false if no workflow artifacts are found', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return Promise.resolve({
+                        status: 200,
+                        data: {
+                            artifacts: [],
+                        },
+                    });
+                }
+            },
+        }));
+
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith('No workflow artifacts found');
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('returns false if repository HEAD state does not match', async () => {
+        expect.assertions(2);
+
+        const newSha = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return Promise.resolve({
+                        status: 200,
+                        data: {
+                            object: {
+                                sha: newSha,
+                            },
+                        },
+                    });
+                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
+                    return resolveArtifactDownload();
+                }
+            },
+        }));
+
+        AdmZip.prototype.constructor.mockImplementation(() => ({
+            getEntries,
+            extractAllTo,
+        }));
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ${repo}-${os}-${compiler}-${newSha}`);
+
+        Octokit.prototype.constructor.mockReset();
+        AdmZip.prototype.constructor.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('returns false if no artifacts with expected name were found', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
+                }
+            },
+        }));
+
+        AdmZip.prototype.constructor.mockImplementation(() => ({
+            getEntries,
+            extractAllTo,
+        }));
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`);
+
+        Octokit.prototype.constructor.mockReset();
+        AdmZip.prototype.constructor.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('returns false if request for repository HEAD runs errors out', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return Promise.resolve({
+                        status: errorStatusCode,
+                    });
+                }
+            },
+        }));
+
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD: ${errorStatusCode}`);
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('returns false if request for repository HEAD runs fails', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    throw Error(errorMessage);
+                }
+            },
+        }));
+
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD: ${errorMessage}`);
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
     it('returns false if request for downloading workflow run artifact errors out', async () => {
         expect.assertions(2);
 
@@ -687,12 +704,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return Promise.resolve({
                         status: errorStatusCode,
@@ -719,12 +736,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     throw Error(errorMessage);
                 }
@@ -749,12 +766,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return resolveArtifactDownload();
                 }
@@ -783,26 +800,29 @@ describe('downloadArtifact', () => {
     it('returns false if dependencies do not match', async () => {
         expect.assertions(3);
 
-        const dependency = 'owner/repo1';
-        const oldSha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
-        const newSha = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
+        const dependency1 = 'owner/repo1';
+        const dependency1Sha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
+        const dependency2 = 'owner/repo2';
+        const dependency2OldSha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
+        const dependency2NewSha = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
 
         const testEnv = {
             ...env,
             DEPENDENCIES: {
-                [dependency]: newSha,
+                [dependency1]: dependency1Sha,
+                [dependency2]: dependency2NewSha,
             },
         };
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return resolveArtifactDownload();
                 }
@@ -822,7 +842,8 @@ describe('downloadArtifact', () => {
         const readFileSync = jest.spyOn(fs, 'readFileSync');
         readFileSync.mockImplementation((path) => {
             if (path === dependenciesPath) return JSON.stringify({
-                [dependency]: oldSha,
+                [dependency1]: dependency1Sha,
+                [dependency2]: dependency2OldSha,
             });
         });
 
@@ -833,7 +854,7 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
-        expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency}: ${newSha} !== ${oldSha}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency2}: ${dependency2NewSha} !== ${dependency2OldSha}`);
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
@@ -864,12 +885,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: (route) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
                     return resolveArtifactDownload();
                 }

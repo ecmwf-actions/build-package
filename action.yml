@@ -8,9 +8,14 @@ inputs:
     required: true
     default: ${{ github.workspace }}
   repository:
-    description: The current repository name. Repository names should follow the standard Github `owner/name` format.
+    description: The currently checked out source repository name. Repository names should follow the standard Github
+      `owner/name` format.
     required: true
     default: ${{ github.repository }}
+  sha:
+    description: The currently checked out source repository commit SHA.
+    required: true
+    default: ${{ github.sha }}
   cmake:
     description: Whether to use CMake for build configuration, instead of ecbuild.
     required: true
