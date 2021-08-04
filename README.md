@@ -1,6 +1,6 @@
 # build-package
 
-[![Build Status](https://img.shields.io/github/workflow/status/ecmwf-actions/build-package/ci/main)](https://github.com/ecmwf-actions/build-package/actions/workflows/ci.yml)
+[![Build Status](https://img.shields.io/github/workflow/status/ecmwf-actions/build-package/ci/main)](https://github.com/ecmwf-actions/build-package/actions/workflows/ci.yml?query=branch:main)
 [![Code Coverage](https://img.shields.io/codecov/c/gh/ecmwf-actions/build-package/main)](https://codecov.io/gh/ecmwf-actions/build-package)
 [![Licence](https://img.shields.io/github/license/ecmwf-actions/build-package)](https://github.com/ecmwf-actions/build-package/blob/main/LICENSE)
 
@@ -241,10 +241,10 @@ To post-process the code coverage file in a later step, you can refer to it via 
     dependency_branch: develop
 
 - name: Codecov Upload
-  if: steps.build-test.outputs.coverage_file
-  env:
-    COVERAGE_FILE: ${{ steps.build-test.outputs.coverage_file }}
-  run: bash <(curl -s https://codecov.io/bash) -f $COVERAGE_FILE || echo "Codecov did not collect coverage reports"
+  if: steps.build-test.outputs.coverage_file && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+  uses: codecov/codecov-action@v2
+  with:
+    files: ${{ steps.build-test.outputs.coverage_file }}
 ```
 
 ## Development

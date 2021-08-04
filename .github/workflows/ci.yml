@@ -48,9 +48,5 @@ jobs:
       run: npm test
 
     - name: Codecov Upload
-      if: env.CODECOV_TOKEN && matrix.os == 'ubuntu-20.04'
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      run: |
-        npm install -g codecov
-        codecov
+      if: matrix.os == 'ubuntu-20.04' && github.ref == 'refs/heads/main'
+      uses: codecov/codecov-action@v2
