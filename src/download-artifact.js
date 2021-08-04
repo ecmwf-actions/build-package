@@ -28,12 +28,10 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';
-    const workflowConclusion = 'completed,success';
     const [owner, repo] = repository.split('/');
 
     core.info(`==> Workflow: ${workflow}`);
     core.info(`==> Repository: ${owner}/${repo}`);
-    core.info(`==> Conclusion: ${workflowConclusion}`);
 
     branch = branch.replace(/^refs\/heads\//, '');
 
@@ -67,12 +65,14 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     let workflowRuns;
 
     try {
+        // NB: Filtering for "status === completed,success" is not working as expected at the moment. Therefore, we
+        //   aim to fetch all available workflow runs and filter them locally later.
+        //   https://docs.github.com/en/rest/reference/actions#list-workflow-runs
         const response = await octokit.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
             owner,
             repo,
             branch,
             workflow_id: workflow,
-            status: workflowConclusion,
         });
 
         if (isError(response.status != 200, `Wrong response code while fetching workflow runs: ${response.status}`))
@@ -87,10 +87,15 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         return false;
     }
 
-    // Consider only workflow runs for repository HEAD.
-    workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.head_sha === headSha);
+    core.info(`==> workflowRuns: ${workflowRuns.length}`);
 
-    if (isError(!workflowRuns.length, `No workflow runs for repository HEAD found: ${headSha}`)) return false;
+    // Consider only workflow runs that:
+    // - have status "completed"
+    // - have conclusion "success"
+    // - were executed against the current repository HEAD
+    workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.status === 'completed' && workflowRun.conclusion === 'success' && workflowRun.head_sha === headSha);
+
+    if (isError(!workflowRuns.length, `No completed successful workflow runs found for repository HEAD: ${headSha}`)) return false;
 
     const lastRun = workflowRuns.shift();
     const runId = lastRun.id;

@@ -50,6 +50,8 @@ const resolveWorkflowRuns = () => Promise.resolve({
             {
                 id: runId,
                 head_sha: headSha,
+                status: 'completed',
+                conclusion: 'success',
             },
         ],
     },
@@ -149,17 +151,15 @@ describe('downloadArtifact', () => {
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
-            return true;
-        });
+        unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> Workflow: ci.yml');
         expect(core.info).toHaveBeenCalledWith(`==> Repository: ${repository}`);
-        expect(core.info).toHaveBeenCalledWith('==> Conclusion: completed,success');
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${branch}`);
+        expect(core.info).toHaveBeenCalledWith('==> workflowRuns: 1');
         expect(core.info).toHaveBeenCalledWith(`==> RunID: ${runId}`);
         expect(core.info).toHaveBeenCalledWith('==> Artifacts: 3');
         expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${artifactName}`);
@@ -213,9 +213,7 @@ describe('downloadArtifact', () => {
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
-            return true;
-        });
+        unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
@@ -227,7 +225,111 @@ describe('downloadArtifact', () => {
         unlinkSync.mockReset();
     });
 
-    it('returns false if no artifacts for repository HEAD were found', async () => {
+    it('returns false if no completed workflow runs were found', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return Promise.resolve({
+                        status: 200,
+                        data: {
+                            workflow_runs: [
+                                {
+                                    id: runId,
+                                    head_sha: headSha,
+                                    status: 'in_progress',
+                                    conclusion: 'neutral',
+                                },
+                            ],
+                        },
+                    });
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
+                    return resolveArtifactDownload();
+                }
+            },
+        }));
+
+        AdmZip.prototype.constructor.mockImplementation(() => ({
+            getEntries,
+            extractAllTo,
+        }));
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`No completed successful workflow runs found for repository HEAD: ${headSha}`);
+
+        Octokit.prototype.constructor.mockReset();
+        AdmZip.prototype.constructor.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('returns false if no successful workflow runs were found', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return Promise.resolve({
+                        status: 200,
+                        data: {
+                            workflow_runs: [
+                                {
+                                    id: runId,
+                                    head_sha: headSha,
+                                    status: 'completed',
+                                    conclusion: 'failure',
+                                },
+                            ],
+                        },
+                    });
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
+                    return resolveArtifactDownload();
+                }
+            },
+        }));
+
+        AdmZip.prototype.constructor.mockImplementation(() => ({
+            getEntries,
+            extractAllTo,
+        }));
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`No completed successful workflow runs found for repository HEAD: ${headSha}`);
+
+        Octokit.prototype.constructor.mockReset();
+        AdmZip.prototype.constructor.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('returns false if no workflow runs for repository HEAD were found', async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -264,14 +366,12 @@ describe('downloadArtifact', () => {
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
-            return true;
-        });
+        unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No workflow runs for repository HEAD found: ${testSha}`);
+        expect(core.warning).toHaveBeenCalledWith(`No completed successful workflow runs found for repository HEAD: ${testSha}`);
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
@@ -306,9 +406,7 @@ describe('downloadArtifact', () => {
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
-            return true;
-        });
+        unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
@@ -653,9 +751,7 @@ describe('downloadArtifact', () => {
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
-            return true;
-        });
+        unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
