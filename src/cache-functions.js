@@ -17,7 +17,7 @@ const { isError } = require('./helper-functions');
  * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
  * @param {String} os Current OS platform
  * @param {String} compiler Current compiler family
- * @param {Object} env Local environment variables
+ * @param {Object} env Local environment object.
  * @returns {String} Package cache key
  */
 const getCacheKey = async (repository, branch, githubToken, os, compiler, env) => {
@@ -80,7 +80,7 @@ module.exports.getCacheKey = getCacheKey;
  * @param {String} installDir Directory to restore to
  * @param {String} os Current OS platform
  * @param {String} compiler Current compiler family
- * @param {Object} env Local environment variables
+ * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the package cache was found
  */
 module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, env) => {
@@ -117,7 +117,7 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
  * @param {String} targetDir Target directory to save
  * @param {String} os Current OS platform
  * @param {String} compiler Current compiler family
- * @param {Object} env Local environment variables
+ * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the package was cached successfully
  */
 module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, env) => {

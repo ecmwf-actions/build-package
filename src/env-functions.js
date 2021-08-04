@@ -5,7 +5,7 @@ const exec = require('@actions/exec');
 const { isError } = require('./helper-functions');
 
 /**
- * Returns Local environment variables:
+ * Returns local environment variables:
  *
  *   CC
  *   CXX
@@ -14,11 +14,11 @@ const { isError } = require('./helper-functions');
  *   OPENSSL_ROOT_DIR
  *   OPENSSL_INCLUDE_DIR
  *
- * @param {String} os Current OS platform
- * @param {String} compilerCc C compiler alias
- * @param {String} compilerCxx C++ compiler alias
- * @param {String} compilerFc Fortran compiler alias
- * @returns {Object} Environment object with keys as variable names
+ * @param {String} os Current OS platform.
+ * @param {String} compilerCc C compiler alias.
+ * @param {String} compilerCxx C++ compiler alias.
+ * @param {String} compilerFc Fortran compiler alias.
+ * @returns {Object} Environment object with keys as variable names.
  */
 module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
     core.startGroup('Setup Environment');
@@ -87,7 +87,15 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
     return env;
 };
 
+/**
+ * Extends environment object with installation paths.
+ *
+ * @param {Object} env Environment object.
+ * @param {String} installDir Path to installation directory
+ */
 module.exports.extendPaths = async (env, installDir) => {
+    if (!env) return;
+
     if (env.PATH) {
         env.PATH = `${installDir}/bin:${env.PATH}`;
     }
@@ -127,5 +135,26 @@ module.exports.extendPaths = async (env, installDir) => {
     else {
         env.LIB_PATH = `${installDir}/lib`;
     }
+};
 
+/**
+ * Extends environment object with dependencies.
+ *
+ * @param {Object} env Environment object.
+ * @param {String} repository Github repository owner and name.
+ * @param {String} sha Github repository commit SHA.
+ */
+module.exports.extendDependencies = async (env, repository, sha) => {
+    if (!env) return;
+
+    if (env.DEPENDENCIES) {
+        env.DEPENDENCIES[repository] = sha;
+    }
+    else {
+        env.DEPENDENCIES = {
+            [repository]: sha,
+        };
+    }
+
+    core.info(`==> Extended list of dependencies to include ${repository}: ${sha}`);
 };

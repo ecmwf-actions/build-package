@@ -1,6 +1,7 @@
 const process = require('process');
+const core = require('@actions/core');
 const exec = require('@actions/exec');
-const { setupEnv, extendPaths } = require('../src/env-functions');
+const { setupEnv, extendPaths, extendDependencies } = require('../src/env-functions');
 
 jest.mock('@actions/core');
 jest.mock('@actions/exec');
@@ -189,7 +190,7 @@ describe('setupEnv', () => {
 
 describe('extendPaths', () => {
     it('populates empty environment object w/ PATH', async () => {
-        expect.assertions(1);
+        expect.assertions(2);
 
         extendPaths(env, installDir1);
 
@@ -200,10 +201,12 @@ describe('extendPaths', () => {
             INSTALL_PATH: installDir1,
             LIB_PATH: `${installDir1}/lib`,
         });
+
+        expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir1}/bin`);
     });
 
     it('extends existing environment object', async () => {
-        expect.assertions(1);
+        expect.assertions(2);
 
         extendPaths(env, installDir2);
 
@@ -214,10 +217,12 @@ describe('extendPaths', () => {
             INSTALL_PATH: `${installDir2}:${installDir1}`,
             LIB_PATH: `${installDir2}/lib:${installDir1}/lib`,
         });
+
+        expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir2}/bin`);
     });
 
     it('extends empty environment object w/o PATH', async () => {
-        expect.assertions(1);
+        expect.assertions(2);
 
         const newEnv = {};
 
@@ -232,5 +237,79 @@ describe('extendPaths', () => {
             INSTALL_PATH: installDir3,
             LIB_PATH: `${installDir3}/lib`,
         });
+
+        expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir3}/bin`);
+    });
+
+    it('ignores missing environment object', async () => {
+        expect.assertions(2);
+
+        const testEnv = null;
+
+        extendPaths(testEnv, installDir1);
+
+        expect(testEnv).toBeNull();
+        expect(core.info).not.toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir1}/bin`);
+    });
+});
+
+describe('extendDependencies', () => {
+    it('populates empty environment object', async () => {
+        expect.assertions(2);
+
+        const testEnv = {};
+
+        const repository = 'owner/repo1';
+        const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
+
+        const expectedEnv = {
+            DEPENDENCIES: {
+                [repository]: sha,
+            },
+        };
+
+        extendDependencies(testEnv, repository, sha);
+
+        expect(testEnv).toStrictEqual(expectedEnv);
+        expect(core.info).toHaveBeenCalledWith(`==> Extended list of dependencies to include ${repository}: ${sha}`);
+    });
+
+    it('populates existing environment object', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            DEPENDENCIES: {
+                'owner/repo1': 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2',
+            },
+        };
+
+        const repository = 'owner/repo2';
+        const sha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
+
+        const expectedEnv = {
+            DEPENDENCIES: {
+                ...testEnv.DEPENDENCIES,
+                [repository]: sha,
+            },
+        };
+
+        extendDependencies(testEnv, repository, sha);
+
+        expect(testEnv).toStrictEqual(expectedEnv);
+        expect(core.info).toHaveBeenCalledWith(`==> Extended list of dependencies to include ${repository}: ${sha}`);
+    });
+
+    it('ignores missing environment object', async () => {
+        expect.assertions(2);
+
+        const testEnv = null;
+
+        const repository = 'owner/repo2';
+        const sha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
+
+        extendDependencies(testEnv, repository, sha);
+
+        expect(testEnv).toBeNull();
+        expect(core.info).not.toHaveBeenCalledWith(`==> Extended list of dependencies to include ${repository}: ${sha}`);
     });
 });

@@ -22,7 +22,14 @@ const artifactName = `${repo}-${os}-${compiler}`;
 const tarName = `${artifactName}.tar`;
 const rootDirectory = path.dirname(installDir);
 const tarPath = path.join(rootDirectory, tarName);
+const dependenciesName = `${artifactName}-dependencies.json`;
+const dependenciesPath = path.join(rootDirectory, dependenciesName);
 const errorMessage = 'Oops!';
+
+const dependencies = {
+    'owner/repo1': 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3',
+    'owner/repo2': '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12',
+};
 
 // Base environment object, we will take care not to modify it.
 const env = {
@@ -30,6 +37,7 @@ const env = {
     CXX: 'g++-10',
     FC: 'gfortran-10',
     CMAKE_VERSION: '3.21.1',
+    DEPENDENCIES: dependencies,
 };
 
 const uploadResult = () => Promise.resolve({
@@ -40,7 +48,7 @@ const uploadResult = () => Promise.resolve({
 
 describe('uploadArtifact', () => {
     it('returns true on success', async () => {
-        expect.assertions(3);
+        expect.assertions(4);
 
         const testEnv = {
             ...env,
@@ -55,19 +63,26 @@ describe('uploadArtifact', () => {
             size,
         }));
 
+        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        writeFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementation(() => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Created artifact TAR: ${tarPath} (${filesize(size)})`);
+        expect(core.info).toHaveBeenCalledWith(`==> Created dependencies file: ${dependenciesPath}`);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${artifactName} (${filesize(size)})`);
 
         artifact.create.mockReset();
         statSync.mockReset();
+        writeFileSync.mockReset();
         unlinkSync.mockReset();
     });
 
@@ -98,7 +113,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(`coverage-${repo}`, installDir, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(`coverage-${repo}`, installDir, null, os, compiler, testEnv);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`);
@@ -130,18 +145,24 @@ describe('uploadArtifact', () => {
             size,
         }));
 
+        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        writeFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementation(() => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact('ecmwf/ecbuild', installDir, os, null, testEnv);
+        const isUploaded = await uploadArtifact('ecmwf/ecbuild', installDir, {}, os, null, testEnv);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`);
 
         artifact.create.mockReset();
         statSync.mockReset();
+        writeFileSync.mockReset();
         unlinkSync.mockReset();
     });
 
@@ -156,7 +177,7 @@ describe('uploadArtifact', () => {
             throw new Error(errorMessage);
         });
 
-        const isUploaded = await uploadArtifact(repository, installDir, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error creating artifact TAR: ${errorMessage}`);
@@ -180,13 +201,50 @@ describe('uploadArtifact', () => {
             size: 0,
         }));
 
-        const isUploaded = await uploadArtifact(repository, installDir, os, compiler, testEnv);
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('Error determining size of artifact TAR');
 
         artifact.create.mockReset();
         statSync.mockReset();
+    });
+
+    it('returns false if writing dependencies file errors out', async () => {
+        expect.assertions(2);
+
+        const testEnv = {
+            ...env,
+        };
+
+        artifact.create.mockImplementation(() => ({
+            uploadArtifact: uploadResult,
+        }));
+
+        const statSync = jest.spyOn(fs, 'statSync');
+        statSync.mockImplementation(() => ({
+            size,
+        }));
+
+        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        writeFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) throw Error(errorMessage);
+        });
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => {
+            return true;
+        });
+
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
+
+        expect(isUploaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(`Error writing dependencies file: ${errorMessage}`);
+
+        artifact.create.mockReset();
+        statSync.mockReset();
+        writeFileSync.mockReset();
+        unlinkSync.mockReset();
     });
 
     it('returns false if artifact item upload has some failures', async () => {
@@ -211,13 +269,19 @@ describe('uploadArtifact', () => {
             size,
         }));
 
-        const isUploaded = await uploadArtifact(repository, installDir, os, compiler, testEnv);
+        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        writeFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact: ${artifactName}`);
 
         artifact.create.mockReset();
         statSync.mockReset();
+        writeFileSync.mockReset();
     });
 
     it('returns false if artifact item upload returns empty result', async () => {
@@ -236,13 +300,19 @@ describe('uploadArtifact', () => {
             size,
         }));
 
-        const isUploaded = await uploadArtifact(repository, installDir, os, compiler, testEnv);
+        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        writeFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('Error uploading artifact');
 
         artifact.create.mockReset();
         statSync.mockReset();
+        writeFileSync.mockReset();
     });
 
     it('returns false if artifact item upload fails', async () => {
@@ -261,12 +331,18 @@ describe('uploadArtifact', () => {
             size,
         }));
 
-        const isUploaded = await uploadArtifact(repository, installDir, os, compiler, testEnv);
+        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        writeFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
+        const isUploaded = await uploadArtifact(repository, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact: ${errorMessage}`);
 
         artifact.create.mockReset();
         statSync.mockReset();
+        writeFileSync.mockReset();
     });
 });

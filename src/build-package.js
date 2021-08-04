@@ -21,7 +21,7 @@ const { isError } = require('./helper-functions');
  *   Currently supported only on Ubuntu 20.04 platform with GNU 10 compiler.
  * @param {String} os Current OS platform.
  * @param {String} compiler Current compiler family.
- * @param {Object} env Local environment variables.
+ * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the build and install process finished successfully.
  */
 module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, env) => {

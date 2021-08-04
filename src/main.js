@@ -71,7 +71,7 @@ module.exports = async () => {
             if (cacheHit) continue;
 
             // Otherwise, download the latest repository state.
-            const isRepositoryDownloaded = await downloadRepository(dependencyRepository, dependencyBranch, githubToken, downloadDir);
+            const isRepositoryDownloaded = await downloadRepository(dependencyRepository, dependencyBranch, githubToken, downloadDir, env);
 
             if (!isRepositoryDownloaded) return Promise.reject('Error downloading repository');
 
@@ -96,10 +96,10 @@ module.exports = async () => {
             if (!isBuilt) return Promise.reject('Error building package');
 
             // Upload build artifact.
-            await uploadArtifact(repository, path.join(installDir, repo), os, compiler, env);
+            await uploadArtifact(repository, path.join(installDir, repo), env.DEPENDENCIES, os, compiler, env);
 
             // Upload coverage artifact.
-            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, env.COVERAGE_DIR, os, compiler, env);
+            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, env.COVERAGE_DIR, null, os, compiler, env);
         }
 
         const outputs = {

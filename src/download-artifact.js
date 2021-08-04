@@ -8,7 +8,7 @@ const AdmZip = require('adm-zip');
 const filesize = require('filesize');
 const tar = require('tar');
 
-const { extendPaths } = require('./env-functions');
+const { extendPaths, extendDependencies } = require('./env-functions');
 const { isError } = require('./helper-functions');
 
 /**
@@ -21,7 +21,7 @@ const { isError } = require('./helper-functions');
  * @param {String} installDir Directory where to extract the artifact
  * @param {String} os Current OS platform
  * @param {String} compiler Current compiler family
- * @param {Object} env Local environment variables
+ * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the download and extraction was successful
  */
 module.exports = async (repository, branch, githubToken, downloadDir, installDir, os, compiler, env) => {
@@ -181,14 +181,41 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
     core.info(`==> Extracted artifact ZIP archive to ${artifactPath}`);
 
-    const tarName = path.join(artifactPath, `${artifactName}.tar`);
+    const tarPath = path.join(artifactPath, `${artifactName}.tar`);
+    const dependenciesPath = path.join(artifactPath, `${artifactName}-dependencies.json`);
+
+    // Check artifact compatibility by going through its dependencies and verifying against current ones.
+    if (fs.existsSync(dependenciesPath)) {
+        const dependenciesContent = fs.readFileSync(dependenciesPath).toString();
+
+        core.info(`==> Found ${dependenciesPath}`);
+
+        const dependencies = JSON.parse(dependenciesContent);
+
+        for (const [dependency, dependencySha] of Object.entries(dependencies)) {
+            if (
+                env.DEPENDENCIES
+                && env.DEPENDENCIES[dependency]
+                && env.DEPENDENCIES[dependency] !== dependencySha
+            ) {
+                fs.unlinkSync(tarPath);
+                fs.unlinkSync(dependenciesPath);
+
+                isError(true, `Error matching dependency ${dependency}: ${env.DEPENDENCIES[dependency]} !== ${dependencySha}`);
+
+                return false;
+            }
+        }
+
+        fs.unlinkSync(dependenciesPath);
+    }
 
     mkdirP(installDir);
 
     try {
         await tar.x({
             C: installDir,
-            file: tarName,
+            file: tarPath,
         });
     }
     catch (error) {
@@ -198,9 +225,11 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
     core.info(`==> Extracted artifact TAR to ${installDir}`);
 
-    fs.unlinkSync(tarName);
+    fs.unlinkSync(tarPath);
 
     await extendPaths(env, installDir);
+
+    await extendDependencies(env, repository, headSha);
 
     core.endGroup();
 

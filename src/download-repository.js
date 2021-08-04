@@ -7,18 +7,20 @@ const filesize = require('filesize');
 const tar = require('tar');
 
 const downloadFile = require('./download-file');
+const { extendDependencies } = require('./env-functions');
 const { isError } = require('./helper-functions');
 
 /**
  * Downloads a Github repository state and extracts it to a directory with supplied name.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
+ * @param {String} repository Github repository owner and name.
+ * @param {String} branch Branch name.
+ * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {String} downloadDir Directory where the repository will be downloaded.
- * @returns {Boolean} Whether the download and extraction was successful
+ * @param {Object} env Local environment object.
+ * @returns {Boolean} Whether the download and extraction was successful.
  */
-module.exports = async (repository, branch, githubToken, downloadDir) => {
+module.exports = async (repository, branch, githubToken, downloadDir, env) => {
     core.startGroup(`Download ${repository} Repository`);
 
     const [owner, repo] = repository.split('/');
@@ -32,6 +34,25 @@ module.exports = async (repository, branch, githubToken, downloadDir) => {
     const octokit = new Octokit({
         token: githubToken,
     });
+
+    let headSha;
+
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+        });
+
+        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`))
+            return false;
+
+        headSha = response.data.object.sha;
+    }
+    catch (error) {
+        isError(true, `Error getting repository HEAD: ${error.message}`);
+        return false;
+    }
 
     let url;
 
@@ -91,6 +112,8 @@ module.exports = async (repository, branch, githubToken, downloadDir) => {
     core.info(`==> Extracted ${tarName} to ${sourceDir}`);
 
     fs.unlinkSync(tarName);
+
+    await extendDependencies(env, repository, headSha);
 
     core.endGroup();
 

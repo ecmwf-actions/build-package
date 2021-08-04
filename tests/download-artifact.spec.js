@@ -30,7 +30,8 @@ const headSha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
 const artifactId = 987654321;
 const artifactSize = 68168435;
 const artifactPath = `${downloadDir}/${artifactName}`;
-const tarName = `${artifactPath}/${artifactName}.tar`;
+const tarPath = `${artifactPath}/${artifactName}.tar`;
+const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 const errorStatusCode = 500;
 const errorMessage = 'Oops!';
 
@@ -150,6 +151,11 @@ describe('downloadArtifact', () => {
             extractAllTo,
         }));
 
+        const existsSync = jest.spyOn(fs, 'existsSync');
+        existsSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return false;
+        });
+
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementation(() => true);
 
@@ -169,7 +175,7 @@ describe('downloadArtifact', () => {
         expect(core.info).toHaveBeenCalledWith(`==> Extracted artifact ZIP archive to ${artifactPath}`);
         expect(core.info).toHaveBeenCalledWith(`==> Extracted artifact TAR to ${installDir}`);
         expect(extractAllTo).toHaveBeenCalledWith(artifactPath, true);
-        expect(unlinkSync).toHaveBeenCalledWith(tarName);
+        expect(unlinkSync).toHaveBeenCalledWith(tarPath);
 
         getEntries().forEach((entry) => {
             const action = entry.isDirectory ? 'creating' : 'inflating';
@@ -180,6 +186,66 @@ describe('downloadArtifact', () => {
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('returns true if dependencies match', async () => {
+        expect.assertions(2);
+
+        const dependency = 'owner/repo1';
+        const dependencySha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
+
+        const testEnv = {
+            ...env,
+            DEPENDENCIES: {
+                [dependency]: dependencySha,
+            },
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
+                    return resolveArtifactDownload();
+                }
+            },
+        }));
+
+        AdmZip.prototype.constructor.mockImplementation(() => ({
+            getEntries,
+            extractAllTo,
+        }));
+
+        const existsSync = jest.spyOn(fs, 'existsSync');
+        existsSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
+        const readFileSync = jest.spyOn(fs, 'readFileSync');
+        readFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return JSON.stringify({
+                [dependency]: dependencySha,
+            });
+        });
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
+
+        Octokit.prototype.constructor.mockReset();
+        AdmZip.prototype.constructor.mockReset();
+        existsSync.mockReset();
+        readFileSync.mockReset();
         unlinkSync.mockReset();
     });
 
@@ -714,7 +780,69 @@ describe('downloadArtifact', () => {
         tar.x.mockReset();
     });
 
-    it('extends environment object with install paths', async () => {
+    it('returns false if dependencies do not match', async () => {
+        expect.assertions(3);
+
+        const dependency = 'owner/repo1';
+        const oldSha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
+        const newSha = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
+
+        const testEnv = {
+            ...env,
+            DEPENDENCIES: {
+                [dependency]: newSha,
+            },
+        };
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
+                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                    return resolveWorkflowRuns();
+                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                    return resolveWorkflowRunArtifacts(artifactName);
+                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
+                    return resolveArtifactDownload();
+                }
+            },
+        }));
+
+        AdmZip.prototype.constructor.mockImplementation(() => ({
+            getEntries,
+            extractAllTo,
+        }));
+
+        const existsSync = jest.spyOn(fs, 'existsSync');
+        existsSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return true;
+        });
+
+        const readFileSync = jest.spyOn(fs, 'readFileSync');
+        readFileSync.mockImplementation((path) => {
+            if (path === dependenciesPath) return JSON.stringify({
+                [dependency]: oldSha,
+            });
+        });
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency}: ${newSha} !== ${oldSha}`);
+
+        Octokit.prototype.constructor.mockReset();
+        AdmZip.prototype.constructor.mockReset();
+        existsSync.mockReset();
+        readFileSync.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('extends environment object with install paths and dependency', async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -728,6 +856,9 @@ describe('downloadArtifact', () => {
             INCLUDE_PATH: `${installDir}/include`,
             INSTALL_PATH: installDir,
             LIB_PATH: `${installDir}/lib`,
+            DEPENDENCIES: {
+                [repository]: headSha,
+            },
         };
 
         Octokit.prototype.constructor.mockImplementation(() => ({

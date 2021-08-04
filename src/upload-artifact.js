@@ -10,14 +10,15 @@ const { isError } = require('./helper-functions');
 /**
  * Archives and uploads package artifact.
  *
- * @param {String} repository Github repository owner and name to upload artifact for
- * @param {String} targetDir Target directory to upload as artifact
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
- * @param {Object} env Local environment variables
- * @returns {Boolean} Whether the archiving and upload was successful
+ * @param {String} repository Github repository owner and name to upload artifact for.
+ * @param {String} targetDir Target directory to upload as artifact.
+ * @param {Object} dependencies Dependencies object.
+ * @param {String} os Current OS platform.
+ * @param {String} compiler Current compiler family.
+ * @param {Object} env Local environment object.
+ * @returns {Boolean} Whether the archiving and upload was successful.
  */
-module.exports = async (repository, targetDir, os, compiler, env) => {
+module.exports = async (repository, targetDir, dependencies, os, compiler, env) => {
     core.startGroup(`Upload ${repository} Artifact`);
 
     let [owner, repo] = repository.split('/');
@@ -58,13 +59,34 @@ module.exports = async (repository, targetDir, os, compiler, env) => {
 
     core.info(`==> Created artifact TAR: ${tarPath} (${size})`);
 
+    const uploadPaths = [tarPath];
+
+    // Then, we output list of dependencies if they exist.
+    if (dependencies) {
+        const dependenciesName = `${artifactName}-dependencies.json`;
+        const dependenciesPath = path.join(rootDirectory, dependenciesName);
+        const dependenciesJson = JSON.stringify(dependencies);
+
+        try {
+            fs.writeFileSync(dependenciesPath, dependenciesJson);
+        }
+        catch (error) {
+            isError(true, `Error writing dependencies file: ${error.message}`);
+            return false;
+        }
+
+        core.info(`==> Created dependencies file: ${dependenciesPath}`);
+
+        uploadPaths.push(dependenciesPath);
+    }
+
     const artifactClient = artifact.create();
 
     let uploadResult;
 
     // Then, we try to upload the artifact. The artifact client will compress it further (i.e. as a ZIP).
     try {
-        uploadResult = await artifactClient.uploadArtifact(artifactName, [tarPath], rootDirectory, {
+        uploadResult = await artifactClient.uploadArtifact(artifactName, uploadPaths, rootDirectory, {
             continueOnError: true,
         });
     }
