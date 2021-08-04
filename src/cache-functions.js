@@ -51,7 +51,12 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, env) =
 
     core.info(`==> sha: ${sha}`);
 
-    const cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+    let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+
+    for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+        const [ , dependencyRepo] = dependency.split('/');
+        cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+    }
 
     core.info(`==> cacheKeyStr: ${cacheKeyStr}`);
 

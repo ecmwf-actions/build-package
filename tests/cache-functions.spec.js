@@ -18,9 +18,16 @@ const githubToken = '123';
 const repo = 'repo';
 const os = 'ubuntu-20.04';
 const compiler = 'gnu-10';
-const env = { CMAKE_VERSION: '3.20.5' };
 const installDir = '/path/to/install/repo';
 const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
+
+const env = {
+    CMAKE_VERSION: '3.20.5',
+    DEPENDENCIES: {
+        'owner/repo1': 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3',
+        'owner/repo2': '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12',
+    },
+};
 
 let cacheKey;
 
@@ -28,7 +35,13 @@ describe('getCacheKey', () => {
     it('returns a consistent cache key', async () => {
         expect.assertions(10);
 
-        const cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+        let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
         Octokit.prototype.constructor.mockImplementation(() => ({
@@ -51,8 +64,76 @@ describe('getCacheKey', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('logs error if repository HEAD fetch fails', async () => {
+    it('returns cache key if dependencies object is undefined', async () => {
         expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+        };
+
+        delete testEnv.DEPENDENCIES;
+
+        const cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: () => ({
+                status: 200,
+                data: {
+                    object: {
+                        sha,
+                    },
+                },
+            }),
+        }));
+
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('returns cache key if dependencies object is empty', async () => {
+        expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+            DEPENDENCIES: {},
+        };
+
+        const cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: () => ({
+                status: 200,
+                data: {
+                    object: {
+                        sha,
+                    },
+                },
+            }),
+        }));
+
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('logs error if repository HEAD fetch fails', async () => {
+        expect.assertions(3);
+
+        let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=undefined`;
+
+        for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
         const errorMessage = 'Oops!';
 
@@ -62,8 +143,10 @@ describe('getCacheKey', () => {
             },
         }));
 
-        await getCacheKey(repository, branch, githubToken, os, compiler, env);
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
 
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(core.info).toHaveBeenCalledWith(`==> sha: undefined`);
         expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD: ${errorMessage}`)
 
         Octokit.prototype.constructor.mockReset();
