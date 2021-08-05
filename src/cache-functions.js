@@ -55,6 +55,7 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, env) =
 
     for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
         const [ , dependencyRepo] = dependency.split('/');
+        if (dependencyRepo === repo) continue;
         cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
     }
 

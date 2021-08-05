@@ -29,15 +29,28 @@ const env = {
     },
 };
 
+const resolveHeadSha = () => Promise.resolve({
+    status: 200,
+    data: {
+        object: {
+            sha,
+        },
+    },
+});
+
 let cacheKey;
 
 describe('getCacheKey', () => {
     it('returns a consistent cache key', async () => {
         expect.assertions(10);
 
-        let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+        const testEnv = {
+            ...env,
+        };
 
-        for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -48,22 +61,47 @@ describe('getCacheKey', () => {
             if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
 
             return {
-                request: () => ({
-                    status: 200,
-                    data: {
-                        object: {
-                            sha,
-                        },
-                    },
-                }),
+                request: resolveHeadSha,
             };
         });
 
         for (let i = 0; i < 10; i++) {
-            cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
+            cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
 
             expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         }
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('skips current repository as a dependency', async () => {
+        expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+            DEPENDENCIES: {
+                ...env.DEPENDENCIES,
+                [repository]: sha,
+            },
+        };
+
+        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            if (dependency === repository) continue;
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: resolveHeadSha,
+        }));
+
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -77,18 +115,11 @@ describe('getCacheKey', () => {
 
         delete testEnv.DEPENDENCIES;
 
-        const cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+        const cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
@@ -106,18 +137,11 @@ describe('getCacheKey', () => {
             DEPENDENCIES: {},
         };
 
-        const cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+        const cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
@@ -130,9 +154,13 @@ describe('getCacheKey', () => {
     it('logs error if repository HEAD fetch fails', async () => {
         expect.assertions(3);
 
-        let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=undefined`;
+        const testEnv = {
+            ...env,
+        };
 
-        for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=undefined`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -147,7 +175,7 @@ describe('getCacheKey', () => {
             },
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> sha: undefined`);
@@ -162,14 +190,7 @@ describe('restoreCache', () => {
         expect.assertions(4);
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         for (const mockCacheHit of [false, true]) {
@@ -189,14 +210,7 @@ describe('restoreCache', () => {
         expect.assertions(2);
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         const errorMessage = 'Oops!';
@@ -218,14 +232,7 @@ describe('saveCache', () => {
         expect.assertions(4);
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         fastFolderSize.mockImplementation((f, cb) => {
@@ -250,14 +257,7 @@ describe('saveCache', () => {
         expect.assertions(2);
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         fastFolderSize.mockImplementation((f, cb) => {
@@ -277,14 +277,7 @@ describe('saveCache', () => {
         expect.assertions(2);
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         fastFolderSize.mockImplementation((f, cb) => {
@@ -309,14 +302,7 @@ describe('saveCache', () => {
         expect.assertions(2);
 
         Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
-                    },
-                },
-            }),
+            request: resolveHeadSha,
         }));
 
         fastFolderSize.mockImplementation((f, cb) => {
