@@ -99,8 +99,8 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
         cacheHit = Boolean(await restoreCache([installDir], cacheKey));
     }
     catch (error) {
-        core.warning(error.message);
-        cacheHit = false;
+        isError(true, error.message);
+        return false;
     }
 
     core.info(`==> cacheHit: ${cacheHit}`);
@@ -146,7 +146,7 @@ module.exports.saveCache = async (repository, branch, githubToken, targetDir, os
     }
     catch (error) {
         isError(true, error.message);
-        isSaved = false;
+        return false;
     }
 
     core.info(`==> isSaved: ${isSaved}`);
