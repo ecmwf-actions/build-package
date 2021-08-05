@@ -260,9 +260,11 @@ To post-process the code coverage file in a later step, you can refer to it via 
 npm install
 ```
 
+A post-install script will deploy Git pre-commit hook, that conveniently runs a lint check, builds the action and stages the changes. To skip the hook, simply add `--no-verify` switch to the Git commit command.
+
 ### Build Action
 
-This action transpiles its code into a self-contained script, pulling in all of its dependencies. Please make sure to run the build command after _any_ changes and stage `dist/` directory.
+This action transpiles its code into a self-contained script, pulling in all of its dependencies. This will happen automatically by the installed pre-commit hook, but in case you do not have it install just make sure to run the build command manually after _any_ changes and stage `dist/` directory.
 
 ```
 npm run build

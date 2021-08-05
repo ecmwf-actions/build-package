@@ -4,6 +4,7 @@
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
+    "postinstall": "scripts/postinstall.sh",
     "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
     "test": "jest --ci --coverage",
     "lint": "eslint --fix src/** tests/**"
