@@ -293,7 +293,7 @@ describe('saveCache', () => {
 
         const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
 
-        expect(isSaved).toBe(true);
+        expect(isSaved).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(errorMessage);
 
         Octokit.prototype.constructor.mockReset();

@@ -145,14 +145,8 @@ module.exports.saveCache = async (repository, branch, githubToken, targetDir, os
         isSaved = Boolean(await saveCache([targetDir], cacheKey));
     }
     catch (error) {
-        if (/^Unable to reserve cache with key/.test(error.message)) {
-            core.warning(`Unable to reserve cache with key ${cacheKey}, another job may be creating this cache.`);
-            isSaved = true;
-        }
-        else {
-            isError(true, error.message);
-            isSaved = false;
-        }
+        isError(true, error.message);
+        isSaved = false;
     }
 
     core.info(`==> isSaved: ${isSaved}`);
