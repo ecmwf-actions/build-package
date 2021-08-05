@@ -57,16 +57,20 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/tarball/{ref}':
-                    return resolveRepositoryDownloadUrl();
-                }
-            },
-        }));
+        Octokit.prototype.constructor.mockImplementation((options) => {
+            if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
+
+            return {
+                request: (route) => {
+                    switch (route) {
+                    case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                        return resolveHeadSha();
+                    case 'GET /repos/{owner}/{repo}/tarball/{ref}':
+                        return resolveRepositoryDownloadUrl();
+                    }
+                },
+            };
+        });
 
         downloadFile.mockImplementation(() => Promise.resolve());
 

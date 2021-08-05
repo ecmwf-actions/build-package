@@ -44,16 +44,20 @@ describe('getCacheKey', () => {
 
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: () => ({
-                status: 200,
-                data: {
-                    object: {
-                        sha,
+        Octokit.prototype.constructor.mockImplementation((options) => {
+            if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
+
+            return {
+                request: () => ({
+                    status: 200,
+                    data: {
+                        object: {
+                            sha,
+                        },
                     },
-                },
-            }),
-        }));
+                }),
+            };
+        });
 
         for (let i = 0; i < 10; i++) {
             cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);

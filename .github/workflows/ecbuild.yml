@@ -56,4 +56,3 @@ jobs:
         workspace: ${{ github.workspace }}/ecbuild
         repository: ecmwf/ecbuild
         sha: ${{ env.ECBUILD_SHA }}
-        github_token: ${{ secrets.GH_PAT }}

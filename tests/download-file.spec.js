@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { HttpClient } = require('@actions/http-client');
 
 const downloadFile = require('../src/download-file');
@@ -27,9 +28,17 @@ describe('downloadFile', () => {
             }),
         }));
 
+        const createWriteStream = jest.spyOn(fs, 'createWriteStream');
+        createWriteStream.mockImplementation((path) => {
+            if (path === dest) return {
+                close: (cb) => cb(),
+            };
+        });
+
         await expect(downloadFile(url, dest)).resolves.toBe();
 
         HttpClient.prototype.constructor.mockReset();
+        createWriteStream.mockImplementation();
     });
 
     it('returns promise that rejects on failure', async () => {
@@ -51,9 +60,17 @@ describe('downloadFile', () => {
             }),
         }));
 
+        const createWriteStream = jest.spyOn(fs, 'createWriteStream');
+        createWriteStream.mockImplementation((path) => {
+            if (path === dest) return {
+                unlink: (d, cb) => cb(),
+            };
+        });
+
         await expect(downloadFile(url, dest)).rejects.toBe(errorMessage);
 
         HttpClient.prototype.constructor.mockReset();
+        createWriteStream.mockImplementation();
     });
 
     it('catches failed request', async () => {

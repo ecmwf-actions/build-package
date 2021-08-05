@@ -96,7 +96,6 @@ jobs:
           ecmwf/eckit
           ecmwf/eccodes
         dependency_branch: develop
-        github_token: ${{ secrets.GH_PAT }}
 
     - name: Check Code Coverage
       if: steps.build-test.outputs.coverage_file

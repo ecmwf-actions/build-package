@@ -1,0 +1,14 @@
+on:
+  schedule:
+  - cron: '0 0 * * *'
+
+jobs:
+  cleanup:
+    name: cleanup
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Delete Workflow Runs
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 8

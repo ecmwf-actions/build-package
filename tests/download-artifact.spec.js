@@ -131,20 +131,24 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
-                    return resolveWorkflowRuns();
-                case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
-                }
-            },
-        }));
+        Octokit.prototype.constructor.mockImplementation((options) => {
+            if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
+
+            return {
+                request: (route) => {
+                    switch (route) {
+                    case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
+                        return resolveWorkflowRuns();
+                    case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                        return resolveHeadSha();
+                    case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
+                        return resolveArtifactDownload();
+                    }
+                },
+            };
+        });
 
         AdmZip.prototype.constructor.mockImplementation(() => ({
             getEntries,

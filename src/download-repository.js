@@ -32,7 +32,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
     core.info(`==> Branch: ${branch}`);
 
     const octokit = new Octokit({
-        token: githubToken,
+        auth: githubToken,
     });
 
     let headSha;

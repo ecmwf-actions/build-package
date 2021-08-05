@@ -96,7 +96,6 @@ jobs:
           ecmwf/eckit
           ecmwf/odc
         dependency_branch: develop
-        github_token: ${{ secrets.GH_PAT }}
 
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -107,7 +106,7 @@ jobs:
       working-directory: pyodc
       run: |
         python -m pip install --upgrade pip
-        python -m pip install pytest
+        python -m pip install pytest pytest-cov
         test -f requirements.txt && python -m pip install -r requirements.txt || echo "Requirements file not found"
 
     - name: Run Tests
@@ -115,4 +114,6 @@ jobs:
         LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
       shell: bash -eux {0}
       working-directory: pyodc
-      run: DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest
+      run: |
+        DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest --cov=./ --cov-report=xml
+        python -m coverage report

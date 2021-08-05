@@ -29,7 +29,7 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, env) =
     core.info(`==> Branch: ${branch}`);
 
     const octokit = new Octokit({
-        token: githubToken,
+        auth: githubToken,
     });
 
     let sha;
