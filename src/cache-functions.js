@@ -41,12 +41,12 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, env) =
             ref: `heads/${branch}`,
         });
 
-        isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`);
+        isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`);
 
         sha = response.data.object.sha;
     }
     catch (error) {
-        isError(true, `Error getting repository HEAD: ${error.message}`);
+        isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
     }
 
     core.info(`==> sha: ${sha}`);
@@ -100,7 +100,7 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
         cacheHit = Boolean(await restoreCache([installDir], cacheKey));
     }
     catch (error) {
-        isError(true, error.message);
+        isError(true, `Error restoring cache for ${repository}: ${error.message}`);
         return false;
     }
 
@@ -136,7 +136,7 @@ module.exports.saveCache = async (repository, branch, githubToken, targetDir, os
     const bytes = await fastFolderSizeAsync(targetDir);
 
     if (!bytes) {
-        isError(true, 'Empty target dir, skipping saving cache');
+        isError(true, `Empty target dir, skipping saving cache for ${repository}`);
         return false;
     }
 
@@ -146,7 +146,7 @@ module.exports.saveCache = async (repository, branch, githubToken, targetDir, os
         isSaved = Boolean(await saveCache([targetDir], cacheKey));
     }
     catch (error) {
-        isError(true, error.message);
+        isError(true, `Error saving cache for ${repository}: ${error.message}`);
         return false;
     }
 

@@ -44,13 +44,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
             ref: `heads/${branch}`,
         });
 
-        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`))
+        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
             return false;
 
         headSha = response.data.object.sha;
     }
     catch (error) {
-        isError(true, `Error getting repository HEAD: ${error.message}`);
+        isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -63,13 +63,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
             ref: branch,
         });
 
-        if (isError(response.status != 200, `Wrong response code while fetching repository download URL: ${response.status}`))
+        if (isError(response.status != 200, `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`))
             return false;
 
         url = response.url;
     }
     catch (error) {
-        isError(true, `Error getting repository download URL: ${error.message}`);
+        isError(true, `Error getting repository download URL for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -81,13 +81,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         await downloadFile(url, tarName);
     }
     catch (error) {
-        isError(true, `Error downloading repository archive: ${error.message}`);
+        isError(true, `Error downloading repository archive for ${repo}: ${error.message}`);
         return false;
     }
 
     const stats = fs.statSync(tarName);
 
-    if (isError(!stats.size, 'Error determining size of repository archive')) return false;
+    if (isError(!stats.size, `Error determining size of repository archive for ${repo}`)) return false;
 
     const size = filesize(stats.size);
 
@@ -105,7 +105,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         });
     }
     catch (error) {
-        isError(true, `Error extracting repository archive: ${error.message}`);
+        isError(true, `Error extracting repository archive for ${repo}: ${error.message}`);
         return false;
     }
 

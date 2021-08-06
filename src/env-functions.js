@@ -54,7 +54,7 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
         cMakeVersion = json.version.string;
     }
     catch (error) {
-        isError(true, `JSON parsing failed: ${error.message}`);
+        isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
         return env;
     }
 
@@ -72,7 +72,7 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
 
         if (isError(exitCode, 'Homebrew command failed')) return env;
 
-        if (isError(!output, 'OpenSSL 1.1 prefix not found')) return env;
+        if (isError(!output, 'Homebrew OpenSSL 1.1 prefix not found')) return env;
 
         const openSslDir = output.replace(/\n$/, '');
 

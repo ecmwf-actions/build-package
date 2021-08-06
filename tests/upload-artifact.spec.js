@@ -181,7 +181,7 @@ describe('uploadArtifact', () => {
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error creating artifact TAR: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error creating artifact TAR for ${repo}: ${errorMessage}`);
 
         tar.c.mockReset();
     });
@@ -205,7 +205,7 @@ describe('uploadArtifact', () => {
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('Error determining size of artifact TAR');
+        expect(core.warning).toHaveBeenCalledWith(`Error determining size of artifact TAR for ${repo}`);
 
         artifact.create.mockReset();
         statSync.mockReset();
@@ -240,7 +240,7 @@ describe('uploadArtifact', () => {
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error writing dependencies file: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error writing dependencies file for ${repo}: ${errorMessage}`);
 
         artifact.create.mockReset();
         statSync.mockReset();
@@ -278,7 +278,7 @@ describe('uploadArtifact', () => {
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact: ${artifactName}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${artifactName}`);
 
         artifact.create.mockReset();
         statSync.mockReset();
@@ -309,7 +309,7 @@ describe('uploadArtifact', () => {
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('Error uploading artifact');
+        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}`);
 
         artifact.create.mockReset();
         statSync.mockReset();
@@ -340,7 +340,7 @@ describe('uploadArtifact', () => {
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${errorMessage}`);
 
         artifact.create.mockReset();
         statSync.mockReset();

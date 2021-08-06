@@ -323,8 +323,7 @@ describe('downloadArtifact', () => {
                         },
                     });
                 }
-            },
-        }));
+            }        }));
 
         AdmZip.prototype.constructor.mockImplementation(() => ({
             getEntries,
@@ -337,7 +336,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found');
+        expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found for ecbuild');
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
@@ -382,7 +381,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found');
+        expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found for ecbuild');
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
@@ -410,7 +409,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow runs: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow runs for ${repo}: ${errorStatusCode}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -439,7 +438,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('No workflow runs found');
+        expect(core.warning).toHaveBeenCalledWith(`No workflow runs found for ${repo}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -463,7 +462,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow runs: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow runs for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -491,7 +490,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow run artifacts: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow run artifacts for ${repo}: ${errorStatusCode}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -517,7 +516,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow run artifacts: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow run artifacts for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -548,7 +547,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('No workflow artifacts found');
+        expect(core.warning).toHaveBeenCalledWith(`No workflow artifacts found for ${repo}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -665,7 +664,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -693,7 +692,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -725,7 +724,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while downloading workflow run artifact: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while downloading workflow run artifact for ${repo}: ${errorStatusCode}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -755,7 +754,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error downloading workflow run artifact: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error downloading workflow run artifact for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -794,7 +793,7 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error extracting artifact TAR: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error extracting artifact TAR for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
@@ -858,7 +857,7 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
-        expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency2}: ${dependency2NewSha} !== ${dependency2OldSha}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency2} for ${repo}: ${dependency2NewSha} !== ${dependency2OldSha}`);
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();

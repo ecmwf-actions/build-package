@@ -54,15 +54,15 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
             workflow_id: workflow,
         });
 
-        if (isError(response.status != 200, `Wrong response code while fetching workflow runs: ${response.status}`))
+        if (isError(response.status != 200, `Wrong response code while fetching workflow runs for ${repo}: ${response.status}`))
             return false;
 
-        if (isError(!response.data.workflow_runs.length, 'No workflow runs found')) return false;
+        if (isError(!response.data.workflow_runs.length, `No workflow runs found for ${repo}`)) return false;
 
         workflowRuns = response.data.workflow_runs;
     }
     catch (error) {
-        isError(true, `Error fetching workflow runs: ${error.message}`);
+        isError(true, `Error fetching workflow runs for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -73,7 +73,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     // - have conclusion "success"
     workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.status === 'completed' && workflowRun.conclusion === 'success');
 
-    if (isError(!workflowRuns.length, 'No completed successful workflow runs found')) return false;
+    if (isError(!workflowRuns.length, `No completed successful workflow runs found for ${repo}`)) return false;
 
     const lastRun = workflowRuns.shift();
     const runId = lastRun.id;
@@ -89,20 +89,20 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
             run_id: runId,
         });
 
-        if (isError(response.status != 200, `Wrong response code while fetching workflow run artifacts: ${response.status}`))
+        if (isError(response.status != 200, `Wrong response code while fetching workflow run artifacts for ${repo}: ${response.status}`))
             return false;
 
         artifacts = response.data.artifacts;
     }
     catch (error) {
-        isError(true, `Error fetching workflow run artifacts: ${error.message}`);
+        isError(true, `Error fetching workflow run artifacts for ${repo}: ${error.message}`);
         return false;
     }
 
     core.info(`==> Artifacts: ${artifacts.length}`);
 
     if (!artifacts.length) {
-        isError(true, 'No workflow artifacts found');
+        isError(true, `No workflow artifacts found for ${repo}`);
         return false;
     }
 
@@ -115,13 +115,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
             ref: `heads/${branch}`,
         });
 
-        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD: ${response.status}`))
+        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
             return false;
 
         headSha = response.data.object.sha;
     }
     catch (error) {
-        isError(true, `Error getting repository HEAD: ${error.message}`);
+        isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -153,13 +153,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
             archive_format: 'zip',
         });
 
-        if (isError(response.status != 200, `Wrong response code while downloading workflow run artifact: ${response.status}`))
+        if (isError(response.status != 200, `Wrong response code while downloading workflow run artifact for ${repo}: ${response.status}`))
             return false;
 
         zip = response.data;
     }
     catch (error) {
-        isError(true, `Error downloading workflow run artifact: ${error.message}`);
+        isError(true, `Error downloading workflow run artifact for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -204,7 +204,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
                 fs.unlinkSync(tarPath);
                 fs.unlinkSync(dependenciesPath);
 
-                isError(true, `Error matching dependency ${dependency}: ${env.DEPENDENCIES[dependency]} !== ${dependencySha}`);
+                isError(true, `Error matching dependency ${dependency} for ${repo}: ${env.DEPENDENCIES[dependency]} !== ${dependencySha}`);
 
                 return false;
             }
@@ -222,7 +222,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         });
     }
     catch (error) {
-        isError(true, `Error extracting artifact TAR: ${error.message}`);
+        isError(true, `Error extracting artifact TAR for ${repo}: ${error.message}`);
         return false;
     }
 

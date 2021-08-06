@@ -16,6 +16,7 @@ jest.mock('../src/download-file');
 
 // Test parameters.
 const repository = 'owner/repo';
+const repo = 'repo';
 const branch = 'develop';
 const headSha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
 const githubToken = '12345';
@@ -120,7 +121,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -144,7 +145,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -172,7 +173,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository download URL: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository download URL for ${repo}: ${errorStatusCode}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -198,7 +199,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository download URL: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository download URL for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -228,7 +229,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error downloading repository archive: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error downloading repository archive for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         downloadFile.mockReset();
@@ -262,7 +263,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith('Error determining size of repository archive');
+        expect(core.warning).toHaveBeenCalledWith(`Error determining size of repository archive for ${repo}`);
 
         Octokit.prototype.constructor.mockReset();
         downloadFile.mockReset();
@@ -301,7 +302,7 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error extracting repository archive: ${errorMessage}`);
+        expect(core.warning).toHaveBeenCalledWith(`Error extracting repository archive for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         downloadFile.mockReset();

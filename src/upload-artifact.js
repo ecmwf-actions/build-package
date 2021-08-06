@@ -48,13 +48,13 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
         );
     }
     catch (error) {
-        isError(true, `Error creating artifact TAR: ${error.message}`);
+        isError(true, `Error creating artifact TAR for ${repo}: ${error.message}`);
         return false;
     }
 
     const stats = fs.statSync(tarPath);
 
-    if (isError(!stats.size, 'Error determining size of artifact TAR')) return false;
+    if (isError(!stats.size, `Error determining size of artifact TAR for ${repo}`)) return false;
 
     const size = filesize(stats.size);
 
@@ -72,7 +72,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
             fs.writeFileSync(dependenciesPath, dependenciesJson);
         }
         catch (error) {
-            isError(true, `Error writing dependencies file: ${error.message}`);
+            isError(true, `Error writing dependencies file for ${repo}: ${error.message}`);
             return false;
         }
 
@@ -92,18 +92,18 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
         });
     }
     catch (error) {
-        isError(true, `Error uploading artifact: ${error.message}`);
+        isError(true, `Error uploading artifact for ${repo}: ${error.message}`);
         return false;
     }
 
-    if (isError(!uploadResult, 'Error uploading artifact')) return false;
+    if (isError(!uploadResult, `Error uploading artifact for ${repo}`)) return false;
 
     if (
         isError(
             uploadResult
             && uploadResult.failedItems
             && uploadResult.failedItems.length,
-            `Error uploading artifact: ${uploadResult.failedItems}`
+            `Error uploading artifact for ${repo}: ${uploadResult.failedItems}`
         )
     ) {
         return false;

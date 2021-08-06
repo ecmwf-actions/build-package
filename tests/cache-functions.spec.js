@@ -179,7 +179,7 @@ describe('getCacheKey', () => {
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> sha: undefined`);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD: ${errorMessage}`)
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`)
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -220,7 +220,7 @@ describe('restoreCache', () => {
         const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, env);
 
         expect(cacheHit).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(errorMessage);
+        expect(core.warning).toHaveBeenCalledWith(`Error restoring cache for ${repository}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         cache.restoreCache.mockReset();
@@ -291,7 +291,7 @@ describe('saveCache', () => {
         const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
 
         expect(isSaved).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(errorMessage);
+        expect(core.warning).toHaveBeenCalledWith(`Error saving cache for ${repository}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         fastFolderSize.mockReset();
@@ -316,7 +316,7 @@ describe('saveCache', () => {
         const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
 
         expect(isSaved).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(errorMessage);
+        expect(core.warning).toHaveBeenCalledWith(`Error saving cache for ${repository}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         fastFolderSize.mockReset();
