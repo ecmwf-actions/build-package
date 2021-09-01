@@ -24,7 +24,7 @@
     "@octokit/core": "^3.5.1",
     "adm-zip": "^0.5.5",
     "fast-folder-size": "^1.4.0",
-    "filesize": "^7.0.0",
+    "filesize": "^8.0.0",
     "tar": "^6.1.2"
   },
   "devDependencies": {
