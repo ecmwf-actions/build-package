@@ -323,7 +323,8 @@ describe('downloadArtifact', () => {
                         },
                     });
                 }
-            }        }));
+            },
+        }));
 
         AdmZip.prototype.constructor.mockImplementation(() => ({
             getEntries,
