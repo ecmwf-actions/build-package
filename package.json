@@ -7,7 +7,8 @@
     "postinstall": "scripts/postinstall.sh",
     "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
     "test": "jest --ci --coverage",
-    "lint": "eslint --fix src/** tests/**"
+    "lint": "eslint --fix src/** tests/**",
+    "version": "auto-changelog --hide-credit --package && git add CHANGELOG.md"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -28,6 +29,7 @@
     "tar": "^6.1.2"
   },
   "devDependencies": {
+    "auto-changelog": "^2.3.0",
     "eslint": "^7.30.0",
     "eslint-plugin-jest": "^24.3.6",
     "jest": "^27.0.6"

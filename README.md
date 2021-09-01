@@ -1,5 +1,6 @@
 # build-package
 
+[![Changelog](https://img.shields.io/github/package-json/v/ecmwf-actions/build-package)](CHANGELOG.md)
 [![Build Status](https://img.shields.io/github/workflow/status/ecmwf-actions/build-package/ci/main)](https://github.com/ecmwf-actions/build-package/actions/workflows/ci.yml?query=branch:main)
 [![Code Coverage](https://img.shields.io/codecov/c/gh/ecmwf-actions/build-package/main)](https://codecov.io/gh/ecmwf-actions/build-package)
 [![Licence](https://img.shields.io/github/license/ecmwf-actions/build-package)](https://github.com/ecmwf-actions/build-package/blob/main/LICENSE)
