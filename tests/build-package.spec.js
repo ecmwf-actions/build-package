@@ -279,6 +279,7 @@ describe('buildPackage', () => {
             env: {
                 ...process.env,
                 ...testEnv,
+                'CTEST_OUTPUT_ON_FAILURE': '1',
             },
         };
 
@@ -308,6 +309,7 @@ describe('buildPackage', () => {
             env: {
                 ...process.env,
                 ...testEnv,
+                'CTEST_OUTPUT_ON_FAILURE': '1',
             },
         };
 
