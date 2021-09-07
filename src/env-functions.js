@@ -91,9 +91,10 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
  * Extends environment object with installation paths.
  *
  * @param {Object} env Environment object.
- * @param {String} installDir Path to installation directory
+ * @param {String} installDir Path to installation directory.
+ * @param {String} packageName Package name.
  */
-module.exports.extendPaths = async (env, installDir) => {
+module.exports.extendPaths = async (env, installDir, packageName) => {
     if (!env) return;
 
     if (env.PATH) {
@@ -135,6 +136,14 @@ module.exports.extendPaths = async (env, installDir) => {
     else {
         env.LIB_PATH = `${installDir}/lib`;
     }
+
+    // Define common package path variables:
+    // - packageName_DIR
+    // - PACKAGENAME_DIR
+    // - PACKAGENAME_PATH
+    env[`${packageName}_DIR`] = installDir;
+    env[`${packageName.toUpperCase()}_DIR`] = installDir;
+    env[`${packageName.toUpperCase()}_PATH`] = installDir;
 };
 
 /**

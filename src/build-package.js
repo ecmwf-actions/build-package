@@ -152,7 +152,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         if (isError(exitCode, 'Error installing package')) return false;
 
-        await extendPaths(env, installDir);
+        await extendPaths(env, installDir, repo);
     }
     catch (error) {
         isError(true, error.message);

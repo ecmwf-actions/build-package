@@ -230,7 +230,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
     fs.unlinkSync(tarPath);
 
-    await extendPaths(env, installDir);
+    await extendPaths(env, installDir, repo);
 
     await extendDependencies(env, repository, headSha);
 
