@@ -106,8 +106,11 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
 
     core.info(`==> cacheHit: ${cacheHit}`);
 
-    // If we have cache, extend the environment path with install directory.
-    if (cacheHit) await extendPaths(env, installDir);
+    // If we have cache, extend the environment paths with install directory.
+    if (cacheHit) {
+        const [, repo] = repository.split('/');
+        await extendPaths(env, installDir, repo);
+    }
 
     core.endGroup();
 

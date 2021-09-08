@@ -103,6 +103,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             env: {
                 ...process.env,  // preserve existing environment
                 ...env,
+                ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
             },
         };
 
@@ -152,7 +153,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         if (isError(exitCode, 'Error installing package')) return false;
 
-        await extendPaths(env, installDir);
+        await extendPaths(env, installDir, repo);
     }
     catch (error) {
         isError(true, error.message);

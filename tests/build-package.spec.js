@@ -13,6 +13,7 @@ jest.mock('@actions/io');
 
 // Test parameters.
 const repository = 'owner/repo';
+const repo = 'repo';
 const sourceDir = '/path/to/source/repo';
 const installDir = '/path/to/install/repo';
 const buildDir = `${sourceDir}/build`;
@@ -279,6 +280,7 @@ describe('buildPackage', () => {
             env: {
                 ...process.env,
                 ...testEnv,
+                'CTEST_OUTPUT_ON_FAILURE': '1',
             },
         };
 
@@ -308,6 +310,7 @@ describe('buildPackage', () => {
             env: {
                 ...process.env,
                 ...testEnv,
+                'CTEST_OUTPUT_ON_FAILURE': '1',
             },
         };
 
@@ -589,6 +592,9 @@ describe('buildPackage', () => {
             INCLUDE_PATH: `${installDir}/include`,
             INSTALL_PATH: installDir,
             LIB_PATH: `${installDir}/lib`,
+            [`${repo}_DIR`]: installDir,
+            [`${repo.toUpperCase()}_DIR`]: installDir,
+            [`${repo.toUpperCase()}_PATH`]: installDir,
         };
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv);
@@ -613,6 +619,9 @@ describe('buildPackage', () => {
             INCLUDE_PATH: `${installDir}/include`,
             INSTALL_PATH: installDir,
             LIB_PATH: `${installDir}/lib`,
+            [`${repo}_DIR`]: installDir,
+            [`${repo.toUpperCase()}_DIR`]: installDir,
+            [`${repo.toUpperCase()}_PATH`]: installDir,
             COVERAGE_FILE: coverageFile,
             COVERAGE_DIR: coverageDir,
         };

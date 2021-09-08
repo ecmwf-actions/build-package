@@ -22,6 +22,10 @@ const installDir1 = '/path/to/install/package1';
 const installDir2 = '/path/to/install/package2';
 const installDir3 = '/path/to/install/package3';
 
+const repo1 = 'package1';
+const repo2 = 'package2';
+const repo3 = 'PACKAGE3';
+
 const env = {};
 
 describe('setupEnv', () => {
@@ -192,7 +196,7 @@ describe('extendPaths', () => {
     it('populates empty environment object w/ PATH', async () => {
         expect.assertions(2);
 
-        extendPaths(env, installDir1);
+        extendPaths(env, installDir1, repo1);
 
         expect(env).toStrictEqual({
             PATH: `${installDir1}/bin:${process.env.PATH}`,
@@ -200,6 +204,9 @@ describe('extendPaths', () => {
             INCLUDE_PATH: `${installDir1}/include`,
             INSTALL_PATH: installDir1,
             LIB_PATH: `${installDir1}/lib`,
+            [`${repo1}_DIR`]: installDir1,
+            [`${repo1.toUpperCase()}_DIR`]: installDir1,
+            [`${repo1.toUpperCase()}_PATH`]: installDir1,
         });
 
         expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir1}/bin`);
@@ -208,7 +215,7 @@ describe('extendPaths', () => {
     it('extends existing environment object', async () => {
         expect.assertions(2);
 
-        extendPaths(env, installDir2);
+        extendPaths(env, installDir2, repo2);
 
         expect(env).toStrictEqual({
             PATH: `${installDir2}/bin:${installDir1}/bin:${process.env.PATH}`,
@@ -216,6 +223,12 @@ describe('extendPaths', () => {
             INCLUDE_PATH: `${installDir2}/include:${installDir1}/include`,
             INSTALL_PATH: `${installDir2}:${installDir1}`,
             LIB_PATH: `${installDir2}/lib:${installDir1}/lib`,
+            [`${repo1}_DIR`]: installDir1,
+            [`${repo1.toUpperCase()}_DIR`]: installDir1,
+            [`${repo1.toUpperCase()}_PATH`]: installDir1,
+            [`${repo2}_DIR`]: installDir2,
+            [`${repo2.toUpperCase()}_DIR`]: installDir2,
+            [`${repo2.toUpperCase()}_PATH`]: installDir2,
         });
 
         expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir2}/bin`);
@@ -228,7 +241,7 @@ describe('extendPaths', () => {
 
         process.env.PATH = '';
 
-        extendPaths(newEnv, installDir3);
+        extendPaths(newEnv, installDir3, repo3);
 
         expect(newEnv).toStrictEqual({
             PATH: `${installDir3}/bin`,
@@ -236,6 +249,9 @@ describe('extendPaths', () => {
             INCLUDE_PATH: `${installDir3}/include`,
             INSTALL_PATH: installDir3,
             LIB_PATH: `${installDir3}/lib`,
+            [`${repo3}_DIR`]: installDir3,
+            [`${repo3.toUpperCase()}_DIR`]: installDir3,
+            [`${repo3.toUpperCase()}_PATH`]: installDir3,
         });
 
         expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir3}/bin`);
@@ -246,7 +262,7 @@ describe('extendPaths', () => {
 
         const testEnv = null;
 
-        extendPaths(testEnv, installDir1);
+        extendPaths(testEnv, installDir1, repo1);
 
         expect(testEnv).toBeNull();
         expect(core.info).not.toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir1}/bin`);
