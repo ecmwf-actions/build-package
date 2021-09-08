@@ -881,6 +881,9 @@ describe('downloadArtifact', () => {
             INCLUDE_PATH: `${installDir}/include`,
             INSTALL_PATH: installDir,
             LIB_PATH: `${installDir}/lib`,
+            [`${repo}_DIR`]: installDir,
+            [`${repo.toUpperCase()}_DIR`]: installDir,
+            [`${repo.toUpperCase()}_PATH`]: installDir,
             DEPENDENCIES: {
                 [repository]: headSha,
             },
