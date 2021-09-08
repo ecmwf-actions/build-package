@@ -103,6 +103,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             env: {
                 ...process.env,  // preserve existing environment
                 ...env,
+                ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
             },
         };
 
