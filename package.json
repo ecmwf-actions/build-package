@@ -8,7 +8,7 @@
     "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
     "test": "jest --ci --coverage",
     "lint": "eslint --fix src/** tests/**",
-    "version": "auto-changelog --hide-credit --package && git add CHANGELOG.md"
+    "version": "auto-changelog && git add CHANGELOG.md"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -61,5 +61,10 @@
         4
       ]
     }
+  },
+  "auto-changelog": {
+    "hideCredit": true,
+    "package": true,
+    "template": "keepachangelog"
   }
 }
