@@ -48,5 +48,5 @@ jobs:
       run: npm test
 
     - name: Codecov Upload
-      if: matrix.os == 'ubuntu-20.04' && github.ref == 'refs/heads/main'
+      if: matrix.os == 'ubuntu-20.04' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
       uses: codecov/codecov-action@v2
