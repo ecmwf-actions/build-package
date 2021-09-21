@@ -46,29 +46,28 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             configureOptions.push(`--prefix=${installDir}`);
         }
 
-        if (cmakeOptions) configureOptions.push(cmakeOptions);
-
         core.info(`==> configurePath: ${configurePath}`);
-        core.info(`==> configureOptions: ${configureOptions}`);
 
         const srcDir = path.resolve(sourceDir);
         core.info(`==> srcDir: ${srcDir}`);
 
-        const buildDir = path.join(srcDir, 'build');
-        core.info(`==> buildDir: ${buildDir}`);
+        const cmakeOptionsFile = path.join(srcDir, '.github', '.cmake-options');
+        const deprecatedCmakeOptionsFile = path.join(srcDir, '.github', '.compiler-flags');
 
-        await mkdirP(buildDir);
+        if (fs.existsSync(cmakeOptionsFile)) {
+            const cmakeOptionsFileContent = fs.readFileSync(cmakeOptionsFile).toString();
 
-        const compilerFlags = [];
+            core.info(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
 
-        const compilerFlagsFile = path.join(srcDir, '.github', '.compiler-flags');
+            configureOptions.push(...cmakeOptionsFileContent.split(' '));
+        }
+        else if (fs.existsSync(deprecatedCmakeOptionsFile)) {
+            const deprecatedCmakeOptionsFileContent = fs.readFileSync(deprecatedCmakeOptionsFile).toString();
 
-        if (fs.existsSync(compilerFlagsFile)) {
-            const compilerFlagsFileContent = fs.readFileSync(compilerFlagsFile).toString();
+            core.info(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
+            core.warning('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
 
-            core.info(`==> Found ${compilerFlagsFile}: ${compilerFlagsFileContent}`);
-
-            compilerFlags.push(...compilerFlagsFileContent.split(' '));
+            configureOptions.push(...deprecatedCmakeOptionsFileContent.split(' '));
         }
 
         // Currently, code coverage is supported only on Ubuntu 20.04 with GNU 10 compiler.
@@ -87,15 +86,24 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
             const instrumentationOptions = '--coverage';
 
-            compilerFlags.push(`-DCMAKE_C_FLAGS='${instrumentationOptions}'`);
-            compilerFlags.push(`-DCMAKE_CXX_FLAGS='${instrumentationOptions}'`);
-            compilerFlags.push(`-DCMAKE_Fortran_FLAGS='--coverage'`);
+            configureOptions.push(`-DCMAKE_C_FLAGS='${instrumentationOptions}'`);
+            configureOptions.push(`-DCMAKE_CXX_FLAGS='${instrumentationOptions}'`);
+            configureOptions.push(`-DCMAKE_Fortran_FLAGS='--coverage'`);
         }
         else if (test && codeCoverage) {
             core.info(`Skipping code coverage collection on unsupported platform: ${compiler}@${os}`);
         }
 
-        core.info(`==> compilerFlags: ${compilerFlags.join(' ')}`);
+        // Include additional CMake options at the end, therefore giving them chance to override those before.
+        //   See https://github.com/ecmwf-actions/build-package/issues/1 for more information.
+        if (cmakeOptions) configureOptions.push(cmakeOptions);
+
+        core.info(`==> configureOptions: ${configureOptions}`);
+
+        const buildDir = path.join(srcDir, 'build');
+        core.info(`==> buildDir: ${buildDir}`);
+
+        await mkdirP(buildDir);
 
         const options = {
             cwd: buildDir,
@@ -111,7 +119,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         await mkdirP(installDir);
 
-        let exitCode = await exec.exec('env', [configurePath, ...configureOptions, ...compilerFlags, srcDir], options);
+        let exitCode = await exec.exec('env', [configurePath, ...configureOptions, srcDir], options);
 
         if (isError(exitCode, 'Error configuring package')) return false;
 
