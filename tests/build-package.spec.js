@@ -107,9 +107,15 @@ describe('buildPackage', () => {
     it('supports cmake options', async () => {
         expect.assertions(6);
 
-        const cmakeOptions = '-DOPT1=ON -DOPT2=OFF';
+        const testCmakeOptions = [
+            '-DOPT1=ON',
+            '-DOPT2=OFF',
+            '-DOPT3="A string with spaces"',
+            "OPT4='Hello, world!'",
+            'OPT5=foo',
+        ];
 
-        const testCmakeOptions = cmakeOptions.split(' ');
+        const cmakeOptions = testCmakeOptions.join(' ');
 
         const testEnv1 = {
             ...env,
@@ -127,7 +133,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, testCmakeOptions, test, !codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv2);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
@@ -156,8 +162,14 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        const testCmakeOptions = [
+            '-DENABLE_FORTRAN=ON',
+            'CMAKE_BUILD_TYPE=Debug',
+            'CMAKE_VERBOSE_MAKEFILE=ON',
+        ];
+
         const cmakeOptionsFile = path.join(sourceDir, '.github', '.cmake-options');
-        const cmakeOptionsFileContent = '-DENABLE_FORTRAN=ON';
+        const cmakeOptionsFileContent = testCmakeOptions.join(' ');
 
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
@@ -173,7 +185,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
-        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${cmakeOptionsFileContent}`);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
 
         existsSync.mockReset();
         readFileSync.mockReset();
@@ -186,8 +198,14 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        const testDeprecatedCmakeOptions = [
+            '-DENABLE_FORTRAN=ON',
+            'CMAKE_BUILD_TYPE=Debug',
+            'CMAKE_VERBOSE_MAKEFILE=ON',
+        ];
+
         const deprecatedCmakeOptionsFile = path.join(sourceDir, '.github', '.compiler-flags');
-        const deprecatedCmakeOptionsFileContent = '-DENABLE_FORTRAN=ON';
+        const deprecatedCmakeOptionsFileContent = testDeprecatedCmakeOptions.join(' ');
 
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
@@ -205,7 +223,7 @@ describe('buildPackage', () => {
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
         expect(core.warning).toHaveBeenCalledWith('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
-        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${deprecatedCmakeOptionsFileContent}`);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testDeprecatedCmakeOptions}`);
 
         existsSync.mockReset();
         readFileSync.mockReset();

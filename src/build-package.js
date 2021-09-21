@@ -4,9 +4,46 @@ const path = require('path');
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const { mkdirP } = require('@actions/io');
+const yargsParser = require('yargs-parser');
 
 const { extendPaths } = require('./env-functions');
 const { isError } = require('./helper-functions');
+
+/**
+ * Parses a string of options and returns an array of items for each. Will handle quoting and prefixing of separate
+ *   options as expected.
+ *
+ * @param {String} options A list of options as one string.
+ * @returns {Array} Array of parsed options, may be empty.
+ *
+ * @example
+ *   const opts = parseOptions('-DOPT1=ON -DOPT2=OFF -DOPT3="A string with spaces" OPT4=\'Hello, world!\' OPT5=foo');
+ *
+ *   [
+ *     '-DOPT1=ON',
+ *     '-DOPT2=OFF',
+ *     '-DOPT3="A string with spaces"',
+ *     "OPT4='Hello, world!'",
+ *     'OPT5=foo',
+ *   ]
+ */
+const parseOptions = (options) => {
+    const { _ } = yargsParser(options, {
+        configuration: {
+            'short-option-groups': false,
+            'camel-case-expansion': false,
+            'dot-notation': false,
+            'parse-numbers': false,
+            'parse-positional-numbers': false,
+            'boolean-negation': false,
+            'duplicate-arguments-array': false,
+            'greedy-arrays': false,
+            'unknown-options-as-args': true,
+        },
+    });
+
+    return _;
+};
 
 /**
  * Builds and installs a package from source. Optionally, runs tests and collects code coverage information.
@@ -59,7 +96,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
             core.info(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
 
-            configureOptions.push(...cmakeOptionsFileContent.split(' '));
+            configureOptions.push(...parseOptions(cmakeOptionsFileContent));
         }
         else if (fs.existsSync(deprecatedCmakeOptionsFile)) {
             const deprecatedCmakeOptionsFileContent = fs.readFileSync(deprecatedCmakeOptionsFile).toString();
@@ -67,7 +104,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             core.info(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
             core.warning('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
 
-            configureOptions.push(...deprecatedCmakeOptionsFileContent.split(' '));
+            configureOptions.push(...parseOptions(deprecatedCmakeOptionsFileContent));
         }
 
         // Currently, code coverage is supported only on Ubuntu 20.04 with GNU 10 compiler.
@@ -96,7 +133,9 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         // Include additional CMake options at the end, therefore giving them chance to override those before.
         //   See https://github.com/ecmwf-actions/build-package/issues/1 for more information.
-        if (cmakeOptions) configureOptions.push(...cmakeOptions.toString().split(' '));
+        if (cmakeOptions) {
+            configureOptions.push(...parseOptions(cmakeOptions));
+        }
 
         core.info(`==> configureOptions: ${configureOptions}`);
 
