@@ -12,15 +12,16 @@ const { isError } = require('./helper-functions');
 /**
  * Returns cache key for a package.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
+ * @param {String} repository Github repository owner and name.
+ * @param {String} branch Branch name.
+ * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {String} os Current OS platform.
+ * @param {String} compiler Current compiler family.
+ * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
- * @returns {String} Package cache key
+ * @returns {String} Package cache key.
  */
-const getCacheKey = async (repository, branch, githubToken, os, compiler, env) => {
+const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheSuffix, env) => {
     core.startGroup(`Cache Key for ${repository}`);
 
     const [owner, repo] = repository.split('/');
@@ -51,7 +52,7 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, env) =
 
     core.info(`==> sha: ${sha}`);
 
-    let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
 
     for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
         const [ , dependencyRepo] = dependency.split('/');
@@ -79,18 +80,19 @@ module.exports.getCacheKey = getCacheKey;
 /**
  * Restores package from cache, if found.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} repo Name of the package to download, will be used as the final extraction directory
- * @param {String} installDir Directory to restore to
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
+ * @param {String} repository Github repository owner and name.
+ * @param {String} branch Branch name.
+ * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {String} repo Name of the package to download, will be used as the final extraction directory.
+ * @param {String} installDir Directory to restore to.
+ * @param {String} os Current OS platform.
+ * @param {String} compiler Current compiler family.
+ * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the package cache was found
+ * @returns {Boolean} Whether the package cache was found.
  */
-module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, env) => {
-    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
+module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env) => {
+    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Restore ${repository} Cache`);
 
@@ -126,11 +128,12 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
  * @param {String} targetDir Target directory to save
  * @param {String} os Current OS platform
  * @param {String} compiler Current compiler family
+ * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the package was cached successfully
  */
-module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, env) => {
-    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
+module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, cacheSuffix, env) => {
+    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Save ${repository} Cache`);
 
