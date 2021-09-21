@@ -24,13 +24,14 @@ module.exports = async () => {
         const repository = core.getInput('repository', { required: true });
         const sha = core.getInput('sha', { required: true });
         const cmake = core.getBooleanInput('cmake', { required: true });
+        const cmakeOptionLines = core.getMultilineInput('cmake_options', { required: false }) || [];
         const selfBuild = core.getBooleanInput('self_build', { required: true });
         const selfTest = core.getBooleanInput('self_test', { required: true });
         const selfCoverage = core.getBooleanInput('self_coverage', { required: true });
         const dependencies = core.getMultilineInput('dependencies', { required: false });
         const dependencyBranchDefault = core.getInput('dependency_branch', { required: true });
         const forceBuild = core.getBooleanInput('force_build', { required: true });
-        const cmakeOptionLines = core.getMultilineInput('cmake_options', { required: false }) || [];
+        const cacheSuffix = core.getInput('cache_suffix', { required: false }) || '';
         const os = core.getInput('os', { required: true });
         const compiler = core.getInput('compiler', { required: false });
         const compilerCc = core.getInput('compiler_cc', { required: false });
@@ -67,7 +68,7 @@ module.exports = async () => {
             }
 
             // Check if we already cached the build of this package.
-            const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, env);
+            const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
 
             if (cacheHit) continue;
 
@@ -84,7 +85,7 @@ module.exports = async () => {
             if (!isBuilt) return Promise.reject('Error building dependency');
 
             // Save built package to the cache.
-            await saveCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, env);
+            await saveCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
         }
 
         if (selfBuild) {

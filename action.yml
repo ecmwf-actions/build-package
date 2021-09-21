@@ -51,6 +51,9 @@ inputs:
       first try to download a build artifact if it exists.
     required: true
     default: false
+  cache_suffix:
+    description: A string which will be appended to the cache key. To invalidate the cache, simply change its value.
+    required: false
   os:
     description: Current OS platform.
     required: true
