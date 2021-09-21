@@ -52,8 +52,13 @@ inputs:
     required: true
     default: false
   cache_suffix:
-    description: A string which will be appended to the cache key. To invalidate the cache, simply change its value.
+    description: A string which will be appended to the cache key. To invalidate the build cache, simply change its
+      value.
     required: false
+  recreate_cache:
+    description: Whether to skip restoring builds from cache and recreate them instead.
+    required: true
+    default: false
   os:
     description: Current OS platform.
     required: true

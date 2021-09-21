@@ -32,6 +32,8 @@ const inputs = {
     ],
     dependency_branch: 'develop',
     force_build: false,
+    cache_suffix: null,
+    recreate_cache: false,
     os: 'ubuntu-20.04',
     compiler: 'gnu-10',
     compiler_cc: 'gcc-10',
@@ -132,6 +134,36 @@ describe('main', () => {
         downloadArtifact.mockReset();
         restoreCache.mockReset();
         buildPackage.mockReset();
+        uploadArtifact.mockReset();
+        core.getInput.mockReset();
+        core.getBooleanInput.mockReset();
+        core.getMultilineInput.mockReset();
+    });
+
+    it('resolves the promise if restoring cache is being skipped', async () => {
+        expect.assertions(1);
+
+        core.getInput.mockImplementation((inputName) => inputs[inputName]);
+        core.getBooleanInput.mockImplementation((inputName) => {
+            if (inputName === 'recreate_cache') return true;
+            return inputs[inputName];
+        });
+        core.getMultilineInput.mockImplementation((inputName) => inputs[inputName]);
+
+        setupEnv.mockResolvedValue(env);
+        downloadArtifact.mockResolvedValue(false);
+        downloadRepository.mockResolvedValue(true);
+        buildPackage.mockResolvedValue(true);
+        saveCache.mockResolvedValue(true);
+        uploadArtifact.mockResolvedValue(true);
+
+        await expect(main.call()).resolves.toStrictEqual(outputs);
+
+        setupEnv.mockReset();
+        downloadArtifact.mockReset();
+        downloadRepository.mockReset();
+        buildPackage.mockReset();
+        saveCache.mockReset();
         uploadArtifact.mockReset();
         core.getInput.mockReset();
         core.getBooleanInput.mockReset();

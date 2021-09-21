@@ -32,6 +32,7 @@ module.exports = async () => {
         const dependencyBranchDefault = core.getInput('dependency_branch', { required: true });
         const forceBuild = core.getBooleanInput('force_build', { required: true });
         const cacheSuffix = core.getInput('cache_suffix', { required: false }) || '';
+        const recreateCache = core.getBooleanInput('recreate_cache', { required: true });
         const os = core.getInput('os', { required: true });
         const compiler = core.getInput('compiler', { required: false });
         const compilerCc = core.getInput('compiler_cc', { required: false });
@@ -68,18 +69,21 @@ module.exports = async () => {
             }
 
             // Check if we already cached the build of this package.
-            const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+            //   Skip this part if we were told to always recreate cache.
+            if (!recreateCache) {
+                const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
 
-            if (cacheHit) continue;
+                if (cacheHit) continue;
+            }
 
-            // Otherwise, download the latest repository state.
+            // Download the latest repository state.
             const isRepositoryDownloaded = await downloadRepository(dependencyRepository, dependencyBranch, githubToken, downloadDir, env);
 
             if (!isRepositoryDownloaded) return Promise.reject('Error downloading repository');
 
             const cmakeOptions = cmakeOptionsLookup[dependencyRepository];
 
-            // Then, build the package locally. We don't run any tests or code coverage in this case.
+            // Build the package locally. We don't run any tests or code coverage in this case.
             const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, cmakeOptions, false, false, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
