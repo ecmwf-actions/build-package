@@ -24,12 +24,13 @@ module.exports = async () => {
         const repository = core.getInput('repository', { required: true });
         const sha = core.getInput('sha', { required: true });
         const cmake = core.getBooleanInput('cmake', { required: true });
-        const cmakeOptionLines = core.getMultilineInput('cmake_options', { required: false }) || [];
+        const cmakeOptions = core.getInput('cmake_options', { required: false });
         const selfBuild = core.getBooleanInput('self_build', { required: true });
         const selfTest = core.getBooleanInput('self_test', { required: true });
         const selfCoverage = core.getBooleanInput('self_coverage', { required: true });
         const dependencies = core.getMultilineInput('dependencies', { required: false });
         const dependencyBranchDefault = core.getInput('dependency_branch', { required: true });
+        const dependencyCmakeOptionLines = core.getMultilineInput('dependency_cmake_options', { required: false }) || [];
         const forceBuild = core.getBooleanInput('force_build', { required: true });
         const cacheSuffix = core.getInput('cache_suffix', { required: false }) || '';
         const recreateCache = core.getBooleanInput('recreate_cache', { required: true });
@@ -42,11 +43,11 @@ module.exports = async () => {
         const installDir = core.getInput('install_dir', { required: true });
         const downloadDir = core.getInput('download_dir', { required: true });
 
-        const cmakeOptionsLookup = {};
-        for (const cmakeOptionLine of cmakeOptionLines) {
-            const [repo, options] = cmakeOptionLine.split(/:\s?(.+)/);
-            if (!repo || !options) return Promise.reject(`Unexpected CMake option, must be in 'owner/repo: option' format: ${cmakeOptionLine}`);
-            cmakeOptionsLookup[repo] = options.replace(/^['"]|['"]$/g, '');
+        const dependencyCmakeOptionsLookup = {};
+        for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
+            const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
+            if (!repo || !options) return Promise.reject(`Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`);
+            dependencyCmakeOptionsLookup[repo] = options.replace(/^['"]|['"]$/g, '');
         }
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
@@ -81,10 +82,10 @@ module.exports = async () => {
 
             if (!isRepositoryDownloaded) return Promise.reject('Error downloading repository');
 
-            const cmakeOptions = cmakeOptionsLookup[dependencyRepository];
+            const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
 
             // Build the package locally. We don't run any tests or code coverage in this case.
-            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, cmakeOptions, false, false, os, compiler, env);
+            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, false, false, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
 
@@ -94,7 +95,6 @@ module.exports = async () => {
 
         if (selfBuild) {
             const [ , repo] = repository.split('/');
-            const cmakeOptions = cmakeOptionsLookup[repository];
 
             // Build the currently checked out repository.
             const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, selfTest, selfCoverage, os, compiler, env);
