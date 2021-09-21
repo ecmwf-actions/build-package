@@ -107,13 +107,15 @@ describe('buildPackage', () => {
     it('supports cmake options', async () => {
         expect.assertions(6);
 
-        const testCmakeOptions = '-DOPT1=ON -DOPT2=OFF';
+        const cmakeOptions = '-DOPT1=ON -DOPT2=OFF';
+
+        const testCmakeOptions = cmakeOptions.split(' ');
 
         const testEnv1 = {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, testCmakeOptions, test, !codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');

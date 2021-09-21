@@ -96,7 +96,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         // Include additional CMake options at the end, therefore giving them chance to override those before.
         //   See https://github.com/ecmwf-actions/build-package/issues/1 for more information.
-        if (cmakeOptions) configureOptions.push(cmakeOptions);
+        if (cmakeOptions) configureOptions.push(...cmakeOptions.toString().split(' '));
 
         core.info(`==> configureOptions: ${configureOptions}`);
 
