@@ -20,9 +20,11 @@ const main = require('./main');
  *     Note that `test` input must be set to true for this to work. Currently supported only on Ubuntu 20.04 platform.
  *   @param {MultilineString} dependencies The list of dependency repositories to build from, in correct order.
  *     Repository names should follow the standard Github `owner/name` format. To specify different branch name per
- *     repository, use `owner/name@branch_name` format.
- *   @param {String} dependency_branch The default branch name for dependency repositories. Will be ignored if the
- *     branch name is specified per repository, see `dependencies` input.
+ *     repository, use `owner/name@branch_name` format. To specify specific tag name per repository, use
+ *     `owner/name@refs/tags/tag_name` format.
+ *   @param {String} dependency_branch The default branch (or tag) name for dependency repositories. Will be ignored if
+ *     the branch (or tag) name is specified per repository, see `dependencies` input. To specify specific tag name,
+ *     use `refs/tags/tag_name` format.
  *   @param {Boolean} force_build Whether to always build dependencies from latest repository states or not. Otherwise,
  *     the action will first try to download a build artifact if it exists.
  *   @param {String} os Current OS platform.

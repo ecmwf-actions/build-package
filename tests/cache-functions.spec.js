@@ -42,7 +42,7 @@ let cacheKey;
 
 describe('getCacheKey', () => {
     it('returns a consistent cache key', async () => {
-        expect.assertions(10);
+        expect.assertions(12);
 
         const testEnv = {
             ...env,
@@ -70,6 +70,41 @@ describe('getCacheKey', () => {
 
             expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         }
+
+        expect(core.info).toHaveBeenCalledWith(`==> Branch: ${branch}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Ref: heads/${branch}`);
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('supports tags', async () => {
+        expect.assertions(3);
+
+        const testEnv = {
+            ...env,
+        };
+
+        const testTag = '1.0.0';
+        const testBranch = `refs/tags/${testTag}`;
+
+        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: resolveHeadSha,
+        }));
+
+        const cacheKey = await getCacheKey(repository, testBranch, githubToken, os, compiler, testEnv);
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Ref: tags/${testTag}`);
 
         Octokit.prototype.constructor.mockReset();
     });

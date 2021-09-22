@@ -152,12 +152,12 @@ The list of ecbuild/CMake options to be passed during the build configuration ph
 
 ### `dependencies`
 
-The list of dependency repositories to build from, in correct order. Repository names should follow the standard Github `owner/name` format. To specify different branch name per repository, use `owner/name@branch_name` format.  
+The list of dependency repositories to build from, in correct order. Repository names should follow the standard Github `owner/name` format. To specify different branch name per repository, use `owner/name@branch_name` format. To specify specific tag name per repository, use `owner/name@refs/tags/tag_name` format.  
 **Multiline Support:** yes
 
 ### `dependency_branch`
 
-**Required** The default branch name for dependency repositories. Will be ignored if the branch name is specified per repository, see [dependencies](#dependencies) input.  
+**Required** The default branch (or tag) name for dependency repositories. Will be ignored if the branch (or tag) name is specified per repository, see [dependencies](#dependencies) input. To specify specific tag name, use `refs/tags/tag_name` format.  
 **Default:** `${{ github.ref }}`
 
 ### `force_build`
