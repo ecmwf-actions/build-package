@@ -48,17 +48,15 @@ steps:
 steps:
 - name: Checkout Repository
   uses: actions/checkout@v2
-  with:
-    repository: ecmwf/eckit
-    ref: develop
 
 - name: Build & Test
   uses: ecmwf-actions/build-package@v1
   with:
     cmake: true
-    cmake_options: |
-      ecmwf/eckit: "-DCMAKE_BUILD_TYPE=Debug"
+    cmake_options: -DCMAKE_BUILD_TYPE=Debug
     dependencies: ecmwf/ecbuild
+    dependency_cmake_options: |
+      ecmwf/ecbuild: "-DCMAKE_BUILD_TYPE=Debug"
     dependency_branch: develop
 ```
 
@@ -132,8 +130,10 @@ steps:
 
 ### `cmake_options`
 
-The list of ecbuild/CMake options to be passed during the build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.  
-**Multiline Support:** yes
+The list of ecbuild/CMake options to be passed during the current repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple options. If left empty, the repository will be configured with default options only.
+
+> **NOTE:**  
+To make sure that the options are also applied when the repository is built as a dependency, you can instead of this input provide a file under magic path `.github/.cmake-options`. Use the same form for options and take care the file does not contain line breaks.
 
 ### `self_build`
 
@@ -159,6 +159,11 @@ The list of dependency repositories to build from, in correct order. Repository 
 
 **Required** The default branch name for dependency repositories. Will be ignored if the branch name is specified per repository, see [dependencies](#dependencies) input.  
 **Default:** `${{ github.ref }}`
+
+### `dependency_cmake_options`
+
+The list of ecbuild/CMake options to be passed during the dependency build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.  
+**Multiline Support:** yes
 
 ### `force_build`
 

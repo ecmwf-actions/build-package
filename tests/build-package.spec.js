@@ -43,7 +43,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, test, codeCoverage, cmake, cmakeOptions, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
     });
@@ -75,7 +75,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
-        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir}`);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`);
     });
 
     it('determines correct ecbuild path', async () => {
@@ -85,7 +85,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
@@ -97,7 +97,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage('ecmwf/ecbuild', sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage('ecmwf/ecbuild', sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv2);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> configurePath: ${sourceDir}/bin/ecbuild`);
@@ -107,13 +107,21 @@ describe('buildPackage', () => {
     it('supports cmake options', async () => {
         expect.assertions(6);
 
-        const testCmakeOptions = '-DOPT1=ON -DOPT2=OFF';
+        const testCmakeOptions = [
+            '-DOPT1=ON',
+            '-DOPT2=OFF',
+            '-DOPT3="A string with spaces"',
+            "OPT4='Hello, world!'",
+            'OPT5=foo',
+        ];
+
+        const cmakeOptions = testCmakeOptions.join(' ');
 
         const testEnv1 = {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, testCmakeOptions, test, codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
@@ -125,7 +133,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, testCmakeOptions, test, codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv2);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
@@ -147,31 +155,75 @@ describe('buildPackage', () => {
         expect(mkdirP).toHaveBeenCalledWith(buildDir);
     });
 
-    it('reads compiler flags from a magic path', async () => {
+    it('reads cmake options from a magic path', async () => {
         expect.assertions(3);
 
         const testEnv = {
             ...env,
         };
 
-        const compilerFlagsFile = path.join(sourceDir, '.github', '.compiler-flags');
-        const compilerFlagsFileContent = '-DENABLE_FORTRAN=ON';
+        const testCmakeOptions = [
+            '-DENABLE_FORTRAN=ON',
+            'CMAKE_BUILD_TYPE=Debug',
+            'CMAKE_VERBOSE_MAKEFILE=ON',
+        ];
+
+        const cmakeOptionsFile = path.join(sourceDir, '.github', '.cmake-options');
+        const cmakeOptionsFileContent = testCmakeOptions.join(' ');
 
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
-            if (path === compilerFlagsFile) return true;
+            if (path === cmakeOptionsFile) return true;
         });
 
         const readFileSync = jest.spyOn(fs, 'readFileSync');
         readFileSync.mockImplementation((path) => {
-            if (path === compilerFlagsFile) return compilerFlagsFileContent;
+            if (path === cmakeOptionsFile) return cmakeOptionsFileContent;
         });
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
-        expect(core.info).toHaveBeenCalledWith(`==> Found ${compilerFlagsFile}: ${compilerFlagsFileContent}`);
-        expect(core.info).toHaveBeenCalledWith(`==> compilerFlags: ${compilerFlagsFileContent}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
+
+        existsSync.mockReset();
+        readFileSync.mockReset();
+    });
+
+    it('supports backwards compatible magic path for cmake options', async () => {
+        expect.assertions(4);
+
+        const testEnv = {
+            ...env,
+        };
+
+        const testDeprecatedCmakeOptions = [
+            '-DENABLE_FORTRAN=ON',
+            'CMAKE_BUILD_TYPE=Debug',
+            'CMAKE_VERBOSE_MAKEFILE=ON',
+        ];
+
+        const deprecatedCmakeOptionsFile = path.join(sourceDir, '.github', '.compiler-flags');
+        const deprecatedCmakeOptionsFileContent = testDeprecatedCmakeOptions.join(' ');
+
+        const existsSync = jest.spyOn(fs, 'existsSync');
+        existsSync.mockImplementation((path) => {
+            if (path === deprecatedCmakeOptionsFile) return true;
+            return false;
+        });
+
+        const readFileSync = jest.spyOn(fs, 'readFileSync');
+        readFileSync.mockImplementation((path) => {
+            if (path === deprecatedCmakeOptionsFile) return deprecatedCmakeOptionsFileContent;
+        });
+
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv);
+
+        expect(isBuilt).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
+        expect(core.warning).toHaveBeenCalledWith('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testDeprecatedCmakeOptions}`);
 
         existsSync.mockReset();
         readFileSync.mockReset();
@@ -217,7 +269,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> Code coverage collection enabled, installing lcov...');
-        expect(core.info).toHaveBeenCalledWith("==> compilerFlags: -DCMAKE_C_FLAGS='--coverage' -DCMAKE_CXX_FLAGS='--coverage' -DCMAKE_Fortran_FLAGS='--coverage'");
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`);
     });
 
     it('warns if code coverage in unsupported on current platforms', async () => {

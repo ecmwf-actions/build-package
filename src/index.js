@@ -8,12 +8,12 @@ const main = require('./main');
  * Inputs:
  *   @param {String} workspace The location of currently checked out source repository.
  *   @param {String} repository The currently checked out source repository name. Repository names should follow the
- *    standard Github `owner/name` format.
+ *     standard Github `owner/name` format.
  *   @param {String} sha The currently checked out source repository commit SHA.
  *   @param {Boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
- *   @param {MultilineString} cmake_options The list of ecbuild/CMake options to be passed during the build c
- *     configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its
- *     dependencies. If the package is not listed, it will be configured with default options only.
+ *   @param {String} cmake_options The list of ecbuild/CMake options to be passed during the current
+ *     repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple
+ *     options. If left empty, the repository will be configured with default options only.
  *   @param {Boolean} self_build Whether to build from currently checked out repository or not.
  *   @param {Boolean} self_test Whether to run tests from currently checked out repository or not.
  *   @param {Boolean} self_coverage Whether to collect code coverage from currently checked out repository or not.
@@ -23,6 +23,9 @@ const main = require('./main');
  *     repository, use `owner/name@branch_name` format.
  *   @param {String} dependency_branch The default branch name for dependency repositories. Will be ignored if the
  *     branch name is specified per repository, see `dependencies` input.
+ *   @param {MultilineString} dependency_cmake_options The list of ecbuild/CMake options to be passed during the
+ *     dependency build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the
+ *     package or its dependencies. If the package is not listed, it will be configured with default options only.
  *   @param {Boolean} force_build Whether to always build dependencies from latest repository states or not. Otherwise,
  *     the action will first try to download a build artifact if it exists.
  *   @param {String} cache_suffix A string which will be appended to the cache key. To invalidate the build cache,
