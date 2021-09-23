@@ -18,6 +18,7 @@ const githubToken = '123';
 const repo = 'repo';
 const os = 'ubuntu-20.04';
 const compiler = 'gnu-10';
+const cacheSuffix = '';
 const installDir = '/path/to/install/repo';
 const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
 
@@ -48,7 +49,7 @@ describe('getCacheKey', () => {
             ...env,
         };
 
-        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
             const [ , dependencyRepo] = dependency.split('/');
@@ -66,7 +67,7 @@ describe('getCacheKey', () => {
         });
 
         for (let i = 0; i < 10; i++) {
-            cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+            cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
             expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         }
@@ -87,7 +88,7 @@ describe('getCacheKey', () => {
         const testTag = '1.0.0';
         const testBranch = `refs/tags/${testTag}`;
 
-        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
             const [ , dependencyRepo] = dependency.split('/');
@@ -100,7 +101,7 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, testBranch, githubToken, os, compiler, testEnv);
+        const cacheKey = await getCacheKey(repository, testBranch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
@@ -120,7 +121,7 @@ describe('getCacheKey', () => {
             },
         };
 
-        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
             const [ , dependencyRepo] = dependency.split('/');
@@ -134,7 +135,7 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
@@ -150,14 +151,14 @@ describe('getCacheKey', () => {
 
         delete testEnv.DEPENDENCIES;
 
-        const cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+        const cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
@@ -172,14 +173,14 @@ describe('getCacheKey', () => {
             DEPENDENCIES: {},
         };
 
-        const cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+        const cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
@@ -193,7 +194,7 @@ describe('getCacheKey', () => {
             ...env,
         };
 
-        let cacheKeyStr = `v=${version}::cmake=${testEnv.CMAKE_VERSION}::${repo}=undefined`;
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=undefined`;
 
         for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
             const [ , dependencyRepo] = dependency.split('/');
@@ -210,11 +211,54 @@ describe('getCacheKey', () => {
             },
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testEnv);
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> sha: undefined`);
         expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`)
+
+        Octokit.prototype.constructor.mockReset();
+    });
+
+    it('invalidates the cache if suffix is supplied', async () => {
+        expect.assertions(3);
+
+        const testEnv = {
+            ...env,
+        };
+
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: resolveHeadSha,
+        }));
+
+        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+
+        const testCacheSuffix = 'foobar';
+
+        let newCacheKeyStr = `v=${version}${testCacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            newCacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const newCacheKeySha = crypto.createHash('sha1').update(newCacheKeyStr).digest('hex');
+
+        const newCacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testCacheSuffix, testEnv);
+
+        expect(newCacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${newCacheKeySha}`);
+        expect(newCacheKey).not.toStrictEqual(cacheKey);
 
         Octokit.prototype.constructor.mockReset();
     });
@@ -231,7 +275,7 @@ describe('restoreCache', () => {
         for (const mockCacheHit of [false, true]) {
             cache.restoreCache.mockResolvedValue(mockCacheHit);
 
-            const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, env);
+            const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
             expect(cacheHit).toBe(mockCacheHit);
             expect(cache.restoreCache).toHaveBeenCalledWith([installDir], cacheKey);
@@ -252,7 +296,7 @@ describe('restoreCache', () => {
 
         cache.restoreCache.mockRejectedValue(new Error(errorMessage));
 
-        const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, env);
+        const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
         expect(cacheHit).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error restoring cache for ${repository}: ${errorMessage}`);
@@ -277,7 +321,7 @@ describe('saveCache', () => {
         for (const mockIsSaved of [false, true]) {
             cache.saveCache.mockResolvedValue(mockIsSaved);
 
-            const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
+            const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
             expect(isSaved).toBe(mockIsSaved);
             expect(cache.saveCache).toHaveBeenCalledWith([installDir], cacheKey);
@@ -299,7 +343,7 @@ describe('saveCache', () => {
             if (f) cb(null, 0);
         });
 
-        const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
+        const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
         expect(isSaved).toBe(false);
         expect(cache.saveCache).not.toHaveBeenCalled();
@@ -323,7 +367,7 @@ describe('saveCache', () => {
 
         cache.saveCache.mockRejectedValue(new Error(errorMessage));
 
-        const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
+        const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
         expect(isSaved).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error saving cache for ${repository}: ${errorMessage}`);
@@ -348,7 +392,7 @@ describe('saveCache', () => {
 
         cache.saveCache.mockRejectedValue(new Error(errorMessage));
 
-        const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, env);
+        const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
         expect(isSaved).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error saving cache for ${repository}: ${errorMessage}`);
