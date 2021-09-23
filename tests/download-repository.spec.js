@@ -52,7 +52,7 @@ const env = {
 
 describe('downloadRepository', () => {
     it('returns true on success', async () => {
-        expect.assertions(6);
+        expect.assertions(7);
 
         const testEnv = {
             ...env,
@@ -90,9 +90,55 @@ describe('downloadRepository', () => {
         expect(isRepositoryDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Repository: ${repository}`);
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${branch}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Ref: heads/${branch}`);
         expect(core.info).toHaveBeenCalledWith(`==> URL: ${url}`);
         expect(core.info).toHaveBeenCalledWith(`==> Downloaded: ${tarName} (${filesize(size)})`);
         expect(core.info).toHaveBeenCalledWith(`==> Extracted ${tarName} to ${sourceDir}`);
+
+        Octokit.prototype.constructor.mockReset();
+        downloadFile.mockReset();
+        statSync.mockReset();
+        unlinkSync.mockReset();
+    });
+
+    it('supports tags', async () => {
+        expect.assertions(3);
+
+        const testEnv = {
+            ...env,
+        };
+
+        const testTag = '1.0.0';
+        const testBranch = `refs/tags/${testTag}`;
+
+        Octokit.prototype.constructor.mockImplementation(() => ({
+            request: (route) => {
+                switch (route) {
+                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
+                    return resolveHeadSha();
+                case 'GET /repos/{owner}/{repo}/tarball/{ref}':
+                    return resolveRepositoryDownloadUrl();
+                }
+            },
+        }));
+
+        downloadFile.mockImplementation(() => Promise.resolve());
+
+        const statSync = jest.spyOn(fs, 'statSync');
+        statSync.mockImplementation(() => ({
+            size,
+        }));
+
+        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        unlinkSync.mockImplementation(() => {
+            return true;
+        });
+
+        const isRepositoryDownloaded = await downloadRepository(repository, testBranch, githubToken, downloadDir, testEnv);
+
+        expect(isRepositoryDownloaded).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Ref: tags/${testTag}`);
 
         Octokit.prototype.constructor.mockReset();
         downloadFile.mockReset();
