@@ -6,7 +6,7 @@ const { promisify } = require('util')
 const fastFolderSize = require('fast-folder-size');
 
 const { version } = require('../package.json');
-const { extendPaths } = require('./env-functions');
+const { extendPaths, extendDependencies } = require('./env-functions');
 const { isError } = require('./helper-functions');
 
 /**
@@ -19,7 +19,7 @@ const { isError } = require('./helper-functions');
  * @param {String} compiler Current compiler family.
  * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
- * @returns {String} Package cache key.
+ * @returns {Object} An object with package cache key and head SHA used to calculate it.
  */
 const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheSuffix, env) => {
     core.startGroup(`Cache Key for ${repository}`);
@@ -46,7 +46,7 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheS
         auth: githubToken,
     });
 
-    let sha;
+    const result = {};
 
     try {
         const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
@@ -57,15 +57,15 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheS
 
         isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`);
 
-        sha = response.data.object.sha;
+        result.headSha = response.data.object.sha;
     }
     catch (error) {
         isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
     }
 
-    core.info(`==> sha: ${sha}`);
+    core.info(`==> result.headSha: ${result.headSha}`);
 
-    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::${repo}=${result.headSha}`;
 
     for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
         const [ , dependencyRepo] = dependency.split('/');
@@ -79,13 +79,13 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheS
 
     core.info(`==> cacheKeySha: ${cacheKeySha}`);
 
-    const cacheKey = `${os}-${compiler}-${repo}-${cacheKeySha}`;
+    result.cacheKey = `${os}-${compiler}-${repo}-${cacheKeySha}`;
 
-    core.info(`==> cacheKey: ${cacheKey}`);
+    core.info(`==> result.cacheKey: ${result.cacheKey}`);
 
     core.endGroup();
 
-    return cacheKey;
+    return result;
 };
 
 module.exports.getCacheKey = getCacheKey;
@@ -105,7 +105,7 @@ module.exports.getCacheKey = getCacheKey;
  * @returns {Boolean} Whether the package cache was found.
  */
 module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env) => {
-    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
+    const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Restore ${repository} Cache`);
 
@@ -121,10 +121,11 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
 
     core.info(`==> cacheHit: ${cacheHit}`);
 
-    // If we have cache, extend the environment paths with install directory.
+    // If we have cache, extend the environment.
     if (cacheHit) {
         const [, repo] = repository.split('/');
         await extendPaths(env, installDir, repo);
+        await extendDependencies(env, repository, headSha);
     }
 
     core.endGroup();
@@ -146,7 +147,7 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
  * @returns {Boolean} Whether the package was cached successfully.
  */
 module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, cacheSuffix, env) => {
-    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
+    const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Save ${repository} Cache`);
 

@@ -43,7 +43,7 @@ let cacheKey;
 
 describe('getCacheKey', () => {
     it('returns a consistent cache key', async () => {
-        expect.assertions(12);
+        expect.assertions(22);
 
         const testEnv = {
             ...env,
@@ -67,9 +67,12 @@ describe('getCacheKey', () => {
         });
 
         for (let i = 0; i < 10; i++) {
-            cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+            const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
-            expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+            expect(result.cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+            expect(result.headSha).toStrictEqual(sha);
+
+            cacheKey = result.cacheKey;  // Save for later tests.
         }
 
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${branch}`);
@@ -101,7 +104,7 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, testBranch, githubToken, os, compiler, cacheSuffix, testEnv);
+        const { cacheKey } = await getCacheKey(repository, testBranch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
@@ -135,7 +138,7 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+        const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
@@ -158,7 +161,7 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+        const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
@@ -180,7 +183,7 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+        const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
 
@@ -211,17 +214,17 @@ describe('getCacheKey', () => {
             },
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+        const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
-        expect(core.info).toHaveBeenCalledWith(`==> sha: undefined`);
+        expect(core.info).toHaveBeenCalledWith(`==> result.headSha: undefined`);
         expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`)
 
         Octokit.prototype.constructor.mockReset();
     });
 
     it('invalidates the cache if suffix is supplied', async () => {
-        expect.assertions(3);
+        expect.assertions(5);
 
         const testEnv = {
             ...env,
@@ -240,9 +243,10 @@ describe('getCacheKey', () => {
             request: resolveHeadSha,
         }));
 
-        const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
+        const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(result.cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(result.headSha).toStrictEqual(sha);
 
         const testCacheSuffix = 'foobar';
 
@@ -255,10 +259,11 @@ describe('getCacheKey', () => {
 
         const newCacheKeySha = crypto.createHash('sha1').update(newCacheKeyStr).digest('hex');
 
-        const newCacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, testCacheSuffix, testEnv);
+        const newResult = await getCacheKey(repository, branch, githubToken, os, compiler, testCacheSuffix, testEnv);
 
-        expect(newCacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${newCacheKeySha}`);
-        expect(newCacheKey).not.toStrictEqual(cacheKey);
+        expect(newResult.cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${newCacheKeySha}`);
+        expect(newResult.cacheKey).not.toStrictEqual(result.cacheKey);
+        expect(newResult.headSha).toStrictEqual(result.headSha);
 
         Octokit.prototype.constructor.mockReset();
     });
