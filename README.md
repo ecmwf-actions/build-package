@@ -165,6 +165,15 @@ The list of dependency repositories to build from, in correct order. Repository 
 **Required** Whether to always build dependencies from latest repository states or not. Otherwise, the action will first try to download a build artifact if it exists.  
 **Default:** `false`
 
+### `cache_suffix`
+
+A string which will be appended to the cache key. To invalidate the build cache, simply change its value.  
+
+### `recreate_cache`
+
+**Required** Whether to skip restoring builds from cache and recreate them instead.  
+**Default:** `false`
+
 ### `os`
 
 **Required** Current OS platform.  
