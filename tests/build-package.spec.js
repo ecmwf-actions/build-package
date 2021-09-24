@@ -333,6 +333,8 @@ describe('buildPackage', () => {
                 ...process.env,
                 ...testEnv,
                 'CTEST_OUTPUT_ON_FAILURE': '1',
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
+                'CTEST_PARALLEL_LEVEL': '2',
             },
         };
 
@@ -340,13 +342,13 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, "-DCMAKE_C_FLAGS='--coverage'", "-DCMAKE_CXX_FLAGS='--coverage'", "-DCMAKE_Fortran_FLAGS='--coverage'", sourceDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', '-j2'], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'test', '-j2'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ctest'], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'install'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
     });
 
     it('runs configure, build, test and install commands', async () => {
@@ -363,6 +365,8 @@ describe('buildPackage', () => {
                 ...process.env,
                 ...testEnv,
                 'CTEST_OUTPUT_ON_FAILURE': '1',
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
+                'CTEST_PARALLEL_LEVEL': '2',
             },
         };
 
@@ -370,13 +374,13 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, sourceDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', '-j2'], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'test', '-j2'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ctest'], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'install'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
     });
 
     it('runs configure, build and install commands', async () => {
@@ -392,6 +396,8 @@ describe('buildPackage', () => {
             env: {
                 ...process.env,
                 ...testEnv,
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
+                'CTEST_PARALLEL_LEVEL': '2',
             },
         };
 
@@ -399,13 +405,13 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, sourceDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', '-j2'], options);
-        expect(exec.exec).not.toHaveBeenCalledWith('env', ['make', 'test', '-j2'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).not.toHaveBeenCalledWith('env', ['ctest'], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'install'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
     });
 
     it('returns false if configure command failed', async () => {
@@ -445,8 +451,9 @@ describe('buildPackage', () => {
         exec.exec.mockImplementation((command, args) => {
             if (
                 command === 'env'
-                && args[0] === 'make'
-                && args[1] === '-j2'
+                && args[0] === 'cmake'
+                && args[1] === '--build'
+                && args[2] === '.'
             ) {
                 return Promise.resolve(1);
             }
@@ -471,8 +478,7 @@ describe('buildPackage', () => {
         exec.exec.mockImplementation((command, args) => {
             if (
                 command === 'env'
-                && args[0] === 'make'
-                && args[1] === 'test'
+                && args[0] === 'ctest'
             ) {
                 return Promise.resolve(1);
             }
@@ -614,8 +620,9 @@ describe('buildPackage', () => {
         exec.exec.mockImplementation((command, args) => {
             if (
                 command === 'env'
-                && args[0] === 'make'
-                && args[1] === 'install'
+                && args[0] === 'cmake'
+                && args[1] === '--install'
+                && args[2] === '.'
             ) {
                 return Promise.resolve(1);
             }

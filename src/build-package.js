@@ -151,6 +151,8 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
                 ...process.env,  // preserve existing environment
                 ...env,
                 ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
+                CMAKE_BUILD_PARALLEL_LEVEL: '2',  // default for Github runners, equals `-j2`
+                CTEST_PARALLEL_LEVEL: '2',  // default for Github runners, equals `-j2`
             },
         };
 
@@ -162,12 +164,12 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         if (isError(exitCode, 'Error configuring package')) return false;
 
-        exitCode = await exec.exec('env', ['make', '-j2'], options);
+        exitCode = await exec.exec('env', ['cmake', '--build', '.'], options);
 
         if (isError(exitCode, 'Error building package')) return false;
 
         if (test) {
-            exitCode = await exec.exec('env', ['make', 'test', '-j2'], options);
+            exitCode = await exec.exec('env', ['ctest'], options);
 
             if (isError(exitCode, 'Error testing package')) return false;
 
@@ -196,7 +198,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             }
         }
 
-        exitCode = await exec.exec('env', ['make', 'install'], options);
+        exitCode = await exec.exec('env', ['cmake', '--install', '.'], options);
 
         if (isError(exitCode, 'Error installing package')) return false;
 
