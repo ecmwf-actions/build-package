@@ -25,6 +25,7 @@ module.exports = async () => {
         const sha = core.getInput('sha', { required: true });
         const cmake = core.getBooleanInput('cmake', { required: true });
         const cmakeOptions = core.getInput('cmake_options', { required: false });
+        const ctestOptions = core.getInput('ctest_options', { required: false });
         const selfBuild = core.getBooleanInput('self_build', { required: true });
         const selfTest = core.getBooleanInput('self_test', { required: true });
         const selfCoverage = core.getBooleanInput('self_coverage', { required: true });
@@ -85,7 +86,7 @@ module.exports = async () => {
             const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
 
             // Build the package locally. We don't run any tests or code coverage in this case.
-            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, false, false, os, compiler, env);
+            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, undefined, false, false, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
 
@@ -97,7 +98,7 @@ module.exports = async () => {
             const [ , repo] = repository.split('/');
 
             // Build the currently checked out repository.
-            const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, selfTest, selfCoverage, os, compiler, env);
+            const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, ctestOptions, selfTest, selfCoverage, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building package');
 
