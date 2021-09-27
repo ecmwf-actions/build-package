@@ -156,11 +156,11 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
-                ...process.env,  // preserve existing environment
-                ...env,
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',  // default for Github runners, equals `-j2`
                 ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
-                CMAKE_BUILD_PARALLEL_LEVEL: '2',  // default for Github runners, equals `-j2`
-                CTEST_PARALLEL_LEVEL: '2',  // default for Github runners, equals `-j2`
+                ...(test ? { 'CTEST_PARALLEL_LEVEL': '2' } : {}),  // default for Github runners, equals `-j2`
+                ...process.env,  // preserve existing environment
+                ...env,  // compiler env must win
             },
         };
 

@@ -340,6 +340,47 @@ describe('buildPackage', () => {
         });
     });
 
+    it('allows overriding of default options via current environment variables', async () => {
+        expect.assertions(12);
+
+        const testEnv = {
+            ...env,
+            'CTEST_OUTPUT_ON_FAILURE': '0',
+            'CMAKE_BUILD_PARALLEL_LEVEL': '1',
+            'CTEST_PARALLEL_LEVEL': '1',
+        };
+
+        const options = {
+            cwd: buildDir,
+            shell: '/bin/bash -eux',
+            env: {
+                ...process.env,
+                ...testEnv,
+            },
+        };
+
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+
+        expect(isBuilt).toBe(true);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, "-DCMAKE_C_FLAGS='--coverage'", "-DCMAKE_CXX_FLAGS='--coverage'", "-DCMAKE_Fortran_FLAGS='--coverage'", sourceDir], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ctest'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
+
+        core.info.mock.calls.forEach((call) => {
+            const arg = call[0];
+            if (!/^==> options\.env:/.test(arg)) return;
+
+            ['CTEST_OUTPUT_ON_FAILURE', 'CMAKE_BUILD_PARALLEL_LEVEL', 'CTEST_PARALLEL_LEVEL'].forEach((envKey) => {
+                expect(arg).toContain(`"${envKey}": "${testEnv[envKey]}"`);
+            });
+        });
+    });
+
     it('creates install directory', async () => {
         expect.assertions(2);
 
@@ -364,11 +405,11 @@ describe('buildPackage', () => {
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
-                ...process.env,
-                ...testEnv,
                 'CTEST_OUTPUT_ON_FAILURE': '1',
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',
                 'CTEST_PARALLEL_LEVEL': '2',
+                ...process.env,
+                ...testEnv,
             },
         };
 
@@ -396,11 +437,11 @@ describe('buildPackage', () => {
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
-                ...process.env,
-                ...testEnv,
                 'CTEST_OUTPUT_ON_FAILURE': '1',
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',
                 'CTEST_PARALLEL_LEVEL': '2',
+                ...process.env,
+                ...testEnv,
             },
         };
 
@@ -428,10 +469,9 @@ describe('buildPackage', () => {
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
                 ...process.env,
                 ...testEnv,
-                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
-                'CTEST_PARALLEL_LEVEL': '2',
             },
         };
 
