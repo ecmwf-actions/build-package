@@ -11,9 +11,6 @@ const outputs = {
     lib_path: '/path/to/install/repo2/lib:/path/to/install/repo2/lib',
 };
 
-// The test works with jest<=26.6.3. Since jest@27, the `isolateModules()` function does not work correctly with mocks.
-// Until this is fixed, the jest version will be pinned.
-//   More information in this issue: https://github.com/facebook/jest/issues/11666
 describe('entry', () => {
     it('sets path outputs and logs values', async () => {
         expect.assertions(8);
