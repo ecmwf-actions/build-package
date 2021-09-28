@@ -135,6 +135,10 @@ The list of ecbuild/CMake options to be passed during the current repository bui
 > **NOTE:**  
 To make sure that the options are also applied when the repository is built as a dependency, you can instead of this input provide a file under magic path `.github/.cmake-options`. Use the same form for options and take care the file does not contain line breaks.
 
+### `ctest_options`
+
+The list of ctest options to be passed to the test command for the current repository. Use the form of `-R <include-regex> -E <exclude-regex>` to define multiple options. If left empty, the repository will be tested with default options only.
+
 ### `self_build`
 
 **Required** Whether to build from currently checked out repository or not.  

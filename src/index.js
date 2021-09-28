@@ -14,6 +14,9 @@ const main = require('./main');
  *   @param {String} cmake_options The list of ecbuild/CMake options to be passed during the current
  *     repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple
  *     options. If left empty, the repository will be configured with default options only.
+ *   @param {String} ctest_options The list of ctest options to be passed to the test command for the current
+ *     repository. Use the form of `-R <include-regex> -E <exclude-regex>` to define multiple options. If left empty,
+ *     the repository will be tested with default options only.
  *   @param {Boolean} self_build Whether to build from currently checked out repository or not.
  *   @param {Boolean} self_test Whether to run tests from currently checked out repository or not.
  *   @param {Boolean} self_coverage Whether to collect code coverage from currently checked out repository or not.

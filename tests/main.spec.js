@@ -223,7 +223,7 @@ describe('main', () => {
         uploadArtifact.mockResolvedValue(true);
 
         await expect(main.call()).resolves.toStrictEqual(outputs);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.repository, inputs.workspace, `${inputs.install_dir}/repo`, inputs.cmake, testCmakeOptions, inputs.self_test, inputs.self_coverage, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.repository, inputs.workspace, `${inputs.install_dir}/repo`, inputs.cmake, testCmakeOptions, undefined, inputs.self_test, inputs.self_coverage, inputs.os, inputs.compiler, testEnv);
 
         setupEnv.mockReset();
         downloadArtifact.mockReset();
@@ -265,9 +265,9 @@ describe('main', () => {
         uploadArtifact.mockResolvedValue(true);
 
         await expect(main.call()).resolves.toStrictEqual(outputs);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, false, false, inputs.os, inputs.compiler, testEnv);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, false, false, inputs.os, inputs.compiler, testEnv);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, undefined, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, undefined, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, undefined, false, false, inputs.os, inputs.compiler, testEnv);
 
         setupEnv.mockReset();
         downloadArtifact.mockReset();

@@ -25,6 +25,11 @@ inputs:
       phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple options. If left empty, the
       repository will be configured with default options only.'
     required: false
+  ctest_options:
+    description: 'The list of ctest options to be passed to the test command for the current repository. Use the form of
+      `-R <include-regex> -E <exclude-regex>` to define multiple options. If left empty, the repository will be tested
+      with default options only.'
+    required: false
   self_build:
     description: Whether to build from currently checked out repository or not.
     required: true
