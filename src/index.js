@@ -8,23 +8,34 @@ const main = require('./main');
  * Inputs:
  *   @param {String} workspace The location of currently checked out source repository.
  *   @param {String} repository The currently checked out source repository name. Repository names should follow the
- *    standard Github `owner/name` format.
+ *     standard Github `owner/name` format.
  *   @param {String} sha The currently checked out source repository commit SHA.
  *   @param {Boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
- *   @param {MultilineString} cmake_options The list of ecbuild/CMake options to be passed during the build c
- *     configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its
- *     dependencies. If the package is not listed, it will be configured with default options only.
+ *   @param {String} cmake_options The list of ecbuild/CMake options to be passed during the current
+ *     repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple
+ *     options. If left empty, the repository will be configured with default options only.
+ *   @param {String} ctest_options The list of ctest options to be passed to the test command for the current
+ *     repository. Use the form of `-R <include-regex> -E <exclude-regex>` to define multiple options. If left empty,
+ *     the repository will be tested with default options only.
  *   @param {Boolean} self_build Whether to build from currently checked out repository or not.
  *   @param {Boolean} self_test Whether to run tests from currently checked out repository or not.
  *   @param {Boolean} self_coverage Whether to collect code coverage from currently checked out repository or not.
  *     Note that `test` input must be set to true for this to work. Currently supported only on Ubuntu 20.04 platform.
  *   @param {MultilineString} dependencies The list of dependency repositories to build from, in correct order.
  *     Repository names should follow the standard Github `owner/name` format. To specify different branch name per
- *     repository, use `owner/name@branch_name` format.
- *   @param {String} dependency_branch The default branch name for dependency repositories. Will be ignored if the
- *     branch name is specified per repository, see `dependencies` input.
+ *     repository, use `owner/name@branch_name` format. To specify specific tag name per repository, use
+ *     `owner/name@refs/tags/tag_name` format.
+ *   @param {String} dependency_branch The default branch (or tag) name for dependency repositories. Will be ignored if
+ *     the branch (or tag) name is specified per repository, see `dependencies` input. To specify specific tag name,
+ *     use `refs/tags/tag_name` format.
+ *   @param {MultilineString} dependency_cmake_options The list of ecbuild/CMake options to be passed during the
+ *     dependency build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the
+ *     package or its dependencies. If the package is not listed, it will be configured with default options only.
  *   @param {Boolean} force_build Whether to always build dependencies from latest repository states or not. Otherwise,
  *     the action will first try to download a build artifact if it exists.
+ *   @param {String} cache_suffix A string which will be appended to the cache key. To invalidate the build cache,
+ *     simply change its value.
+ *   @param {Boolean} recreate_cache Whether to skip restoring builds from cache and recreate them instead.
  *   @param {String} os Current OS platform.
  *   @param {String} compiler Current compiler family.
  *   @param {String} compiler_cc Current C compiler alias.

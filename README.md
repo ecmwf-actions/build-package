@@ -33,7 +33,7 @@ steps:
   uses: actions/checkout@v2
 
 - name: Build & Test
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_coverage: true
     dependencies: |
@@ -48,17 +48,15 @@ steps:
 steps:
 - name: Checkout Repository
   uses: actions/checkout@v2
-  with:
-    repository: ecmwf/eckit
-    ref: develop
 
 - name: Build & Test
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     cmake: true
-    cmake_options: |
-      ecmwf/eckit: "-DCMAKE_BUILD_TYPE=Debug"
+    cmake_options: -DCMAKE_BUILD_TYPE=Debug
     dependencies: ecmwf/ecbuild
+    dependency_cmake_options: |
+      ecmwf/ecbuild: "-DCMAKE_BUILD_TYPE=Debug"
     dependency_branch: develop
 ```
 
@@ -70,7 +68,7 @@ steps:
   uses: actions/checkout@v2
 
 - name: Build
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_test: false
 ```
@@ -84,7 +82,7 @@ steps:
 
 - name: Install Dependencies
   id: install-dependencies
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_build: false
     dependencies: |
@@ -132,8 +130,14 @@ steps:
 
 ### `cmake_options`
 
-The list of ecbuild/CMake options to be passed during the build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.  
-**Multiline Support:** yes
+The list of ecbuild/CMake options to be passed during the current repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple options. If left empty, the repository will be configured with default options only.
+
+> **NOTE:**  
+To make sure that the options are also applied when the repository is built as a dependency, you can instead of this input provide a file under magic path `.github/.cmake-options`. Use the same form for options and take care the file does not contain line breaks.
+
+### `ctest_options`
+
+The list of ctest options to be passed to the test command for the current repository. Use the form of `-R <include-regex> -E <exclude-regex>` to define multiple options. If left empty, the repository will be tested with default options only.
 
 ### `self_build`
 
@@ -152,17 +156,31 @@ The list of ecbuild/CMake options to be passed during the build configuration ph
 
 ### `dependencies`
 
-The list of dependency repositories to build from, in correct order. Repository names should follow the standard Github `owner/name` format. To specify different branch name per repository, use `owner/name@branch_name` format.  
+The list of dependency repositories to build from, in correct order. Repository names should follow the standard Github `owner/name` format. To specify different branch name per repository, use `owner/name@branch_name` format. To specify specific tag name per repository, use `owner/name@refs/tags/tag_name` format.  
 **Multiline Support:** yes
 
 ### `dependency_branch`
 
-**Required** The default branch name for dependency repositories. Will be ignored if the branch name is specified per repository, see [dependencies](#dependencies) input.  
+**Required** The default branch (or tag) name for dependency repositories. Will be ignored if the branch (or tag) name is specified per repository, see [dependencies](#dependencies) input. To specify specific tag name, use `refs/tags/tag_name` format.  
 **Default:** `${{ github.ref }}`
+
+### `dependency_cmake_options`
+
+The list of ecbuild/CMake options to be passed during the dependency build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.  
+**Multiline Support:** yes
 
 ### `force_build`
 
 **Required** Whether to always build dependencies from latest repository states or not. Otherwise, the action will first try to download a build artifact if it exists.  
+**Default:** `false`
+
+### `cache_suffix`
+
+A string which will be appended to the cache key. To invalidate the build cache, simply change its value.  
+
+### `recreate_cache`
+
+**Required** Whether to skip restoring builds from cache and recreate them instead.  
 **Default:** `false`
 
 ### `os`
@@ -238,7 +256,7 @@ To post-process the code coverage file in a later step, you can refer to it via 
 ```yaml
 - name: Build & Test
   id: build-test
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_coverage: true
     dependencies: |

@@ -1,6 +1,6 @@
 {
   "name": "build-package",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
@@ -26,13 +26,14 @@
     "adm-zip": "^0.5.5",
     "fast-folder-size": "^1.4.0",
     "filesize": "^8.0.0",
-    "tar": "^6.1.2"
+    "tar": "^6.1.2",
+    "yargs-parser": "^20.2.9"
   },
   "devDependencies": {
     "auto-changelog": "^2.3.0",
     "eslint": "^7.30.0",
     "eslint-plugin-jest": "^24.3.6",
-    "jest": "^26.6.3"
+    "jest": "^27.2.2"
   },
   "jest": {
     "clearMocks": true,
@@ -63,6 +64,7 @@
     }
   },
   "auto-changelog": {
+    "commitLimit": 99,
     "hideCredit": true,
     "package": true,
     "template": "keepachangelog"

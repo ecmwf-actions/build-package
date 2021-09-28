@@ -21,7 +21,14 @@ inputs:
     required: true
     default: false
   cmake_options:
-    description: 'The list of ecbuild/CMake options to be passed during the build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.'
+    description: 'The list of ecbuild/CMake options to be passed during the current repository build configuration
+      phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple options. If left empty, the
+      repository will be configured with default options only.'
+    required: false
+  ctest_options:
+    description: 'The list of ctest options to be passed to the test command for the current repository. Use the form of
+      `-R <include-regex> -E <exclude-regex>` to define multiple options. If left empty, the repository will be tested
+      with default options only.'
     required: false
   self_build:
     description: Whether to build from currently checked out repository or not.
@@ -39,16 +46,31 @@ inputs:
   dependencies:
     description: The list of dependency repositories to build from, in correct order. Repository names should follow
       the standard Github `owner/name` format. To specify different branch name per repository, use
-      `owner/name@branch_name` format.
+      `owner/name@branch_name` format. To specify specific tag name per repository, use `owner/name@refs/tags/tag_name`
+      format.
     required: false
   dependency_branch:
-    description: The default branch name for dependency repositories. Will be ignored if the branch name is specified
-      per repository, see `dependencies` input.
+    description: The default branch (or tag) name for dependency repositories. Will be ignored if the branch (or tag)
+      name is specified per repository, see `dependencies` input. To specify specific tag name, use `refs/tags/tag_name`
+      format.
     required: true
     default: ${{ github.ref }}
+  dependency_cmake_options:
+    description: 'The list of ecbuild/CMake options to be passed during the dependency build configuration phase. Use
+      the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package
+      is not listed, it will be configured with default options only.'
+    required: false
   force_build:
     description: Whether to always build dependencies from latest repository states or not. Otherwise, the action will
       first try to download a build artifact if it exists.
+    required: true
+    default: false
+  cache_suffix:
+    description: A string which will be appended to the cache key. To invalidate the build cache, simply change its
+      value.
+    required: false
+  recreate_cache:
+    description: Whether to skip restoring builds from cache and recreate them instead.
     required: true
     default: false
   os:

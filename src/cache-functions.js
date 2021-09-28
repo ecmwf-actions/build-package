@@ -6,52 +6,66 @@ const { promisify } = require('util')
 const fastFolderSize = require('fast-folder-size');
 
 const { version } = require('../package.json');
-const { extendPaths } = require('./env-functions');
+const { extendPaths, extendDependencies } = require('./env-functions');
 const { isError } = require('./helper-functions');
 
 /**
  * Returns cache key for a package.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
+ * @param {String} repository Github repository owner and name.
+ * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {String} os Current OS platform.
+ * @param {String} compiler Current compiler family.
+ * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
- * @returns {String} Package cache key
+ * @returns {Object} An object with package cache key and head SHA used to calculate it.
  */
-const getCacheKey = async (repository, branch, githubToken, os, compiler, env) => {
+const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheSuffix, env) => {
     core.startGroup(`Cache Key for ${repository}`);
 
     const [owner, repo] = repository.split('/');
 
     core.info(`==> Repository: ${owner}/${repo}`);
+
+    let ref;
+
+    if (/^refs\/tags\//.test(branch)) {
+        branch = branch.replace(/^refs\/tags\//, '');
+        ref = `tags/${branch}`;
+    }
+    else {
+        branch = branch.replace(/^refs\/heads\//, '');
+        ref = `heads/${branch}`;
+    }
+
     core.info(`==> Branch: ${branch}`);
+    core.info(`==> Ref: ${ref}`);
 
     const octokit = new Octokit({
         auth: githubToken,
     });
 
-    let sha;
+    const result = {};
 
     try {
         const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
             owner,
             repo,
-            ref: `heads/${branch}`,
+            ref,
         });
 
         isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`);
 
-        sha = response.data.object.sha;
+        result.headSha = response.data.object.sha;
     }
     catch (error) {
         isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
     }
 
-    core.info(`==> sha: ${sha}`);
+    core.info(`==> result.headSha: ${result.headSha}`);
 
-    let cacheKeyStr = `v=${version}::cmake=${env.CMAKE_VERSION}::${repo}=${sha}`;
+    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::${repo}=${result.headSha}`;
 
     for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
         const [ , dependencyRepo] = dependency.split('/');
@@ -65,13 +79,13 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, env) =
 
     core.info(`==> cacheKeySha: ${cacheKeySha}`);
 
-    const cacheKey = `${os}-${compiler}-${repo}-${cacheKeySha}`;
+    result.cacheKey = `${os}-${compiler}-${repo}-${cacheKeySha}`;
 
-    core.info(`==> cacheKey: ${cacheKey}`);
+    core.info(`==> result.cacheKey: ${result.cacheKey}`);
 
     core.endGroup();
 
-    return cacheKey;
+    return result;
 };
 
 module.exports.getCacheKey = getCacheKey;
@@ -79,18 +93,19 @@ module.exports.getCacheKey = getCacheKey;
 /**
  * Restores package from cache, if found.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} repo Name of the package to download, will be used as the final extraction directory
- * @param {String} installDir Directory to restore to
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
+ * @param {String} repository Github repository owner and name.
+ * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {String} repo Name of the package to download, will be used as the final extraction directory.
+ * @param {String} installDir Directory to restore to.
+ * @param {String} os Current OS platform.
+ * @param {String} compiler Current compiler family.
+ * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the package cache was found
+ * @returns {Boolean} Whether the package cache was found.
  */
-module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, env) => {
-    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
+module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env) => {
+    const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Restore ${repository} Cache`);
 
@@ -106,10 +121,11 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
 
     core.info(`==> cacheHit: ${cacheHit}`);
 
-    // If we have cache, extend the environment paths with install directory.
+    // If we have cache, extend the environment.
     if (cacheHit) {
         const [, repo] = repository.split('/');
         await extendPaths(env, installDir, repo);
+        await extendDependencies(env, repository, headSha);
     }
 
     core.endGroup();
@@ -120,17 +136,18 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
 /**
  * Saves target directory to cache.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} targetDir Target directory to save
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
+ * @param {String} repository Github repository owner and name.
+ * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {String} targetDir Target directory to save.
+ * @param {String} os Current OS platform.
+ * @param {String} compiler Current compiler family.
+ * @param {String} cacheSuffix A string which will be appended to the cache key.
  * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the package was cached successfully
+ * @returns {Boolean} Whether the package was cached successfully.
  */
-module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, env) => {
-    const cacheKey = await getCacheKey(repository, branch, githubToken, os, compiler, env);
+module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, cacheSuffix, env) => {
+    const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Save ${repository} Cache`);
 

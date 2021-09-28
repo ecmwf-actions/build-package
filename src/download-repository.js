@@ -14,7 +14,7 @@ const { isError } = require('./helper-functions');
  * Downloads a Github repository state and extracts it to a directory with supplied name.
  *
  * @param {String} repository Github repository owner and name.
- * @param {String} branch Branch name.
+ * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
  * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {String} downloadDir Directory where the repository will be downloaded.
  * @param {Object} env Local environment object.
@@ -27,9 +27,19 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
 
     core.info(`==> Repository: ${owner}/${repo}`);
 
-    branch = branch.replace(/^refs\/heads\//, '');
+    let ref;
+
+    if (/^refs\/tags\//.test(branch)) {
+        branch = branch.replace(/^refs\/tags\//, '');
+        ref = `tags/${branch}`;
+    }
+    else {
+        branch = branch.replace(/^refs\/heads\//, '');
+        ref = `heads/${branch}`;
+    }
 
     core.info(`==> Branch: ${branch}`);
+    core.info(`==> Ref: ${ref}`);
 
     const octokit = new Octokit({
         auth: githubToken,
@@ -41,7 +51,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
             owner,
             repo,
-            ref: `heads/${branch}`,
+            ref,
         });
 
         if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
@@ -60,7 +70,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         const response = await octokit.request('GET /repos/{owner}/{repo}/tarball/{ref}', {
             owner,
             repo,
-            ref: branch,
+            ref,
         });
 
         if (isError(response.status != 200, `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`))

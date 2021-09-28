@@ -21,6 +21,7 @@ const coverageFile = `${buildDir}/coverage.info`;
 const coverageDir = `${buildDir}/coverage`;
 const cmake = false;
 const cmakeOptions = null;
+const ctestOptions = null;
 const test = true;
 const codeCoverage = true;
 const os = 'ubuntu-20.04';
@@ -43,7 +44,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, test, codeCoverage, cmake, cmakeOptions, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
     });
@@ -57,7 +58,7 @@ describe('buildPackage', () => {
 
         exec.exec.mockImplementation(() => Promise.resolve(1));
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -71,11 +72,11 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
-        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir}`);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`);
     });
 
     it('determines correct ecbuild path', async () => {
@@ -85,7 +86,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
@@ -97,7 +98,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage('ecmwf/ecbuild', sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage('ecmwf/ecbuild', sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> configurePath: ${sourceDir}/bin/ecbuild`);
@@ -107,13 +108,21 @@ describe('buildPackage', () => {
     it('supports cmake options', async () => {
         expect.assertions(6);
 
-        const testCmakeOptions = '-DOPT1=ON -DOPT2=OFF';
+        const testCmakeOptions = [
+            '-DOPT1=ON',
+            '-DOPT2=OFF',
+            '-DOPT3="A string with spaces"',
+            "OPT4='Hello, world!'",
+            'OPT5=foo',
+        ];
+
+        const cmakeOptions = testCmakeOptions.join(' ');
 
         const testEnv1 = {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, testCmakeOptions, test, codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
@@ -125,11 +134,44 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, testCmakeOptions, test, codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
+    });
+
+    it('supports ctest options', async () => {
+        expect.assertions(4);
+
+        const testCtestOptions = [
+            '-R',
+            '<include-regex>',
+            '-E',
+            '<exclude-regex>',
+        ];
+
+        const ctestOptions = testCtestOptions.join(' ');
+
+        const testEnv1 = {
+            ...env,
+        };
+
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+
+        expect(isBuilt).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> testOptions: ${testCtestOptions}`);
+
+        core.info.mockReset();
+
+        const testEnv2 = {
+            ...env,
+        };
+
+        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2);
+
+        expect(isBuilt).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> testOptions: ${testCtestOptions}`);
     });
 
     it('creates build subdirectory in source directory', async () => {
@@ -139,7 +181,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> srcDir: ${sourceDir}`);
@@ -147,31 +189,75 @@ describe('buildPackage', () => {
         expect(mkdirP).toHaveBeenCalledWith(buildDir);
     });
 
-    it('reads compiler flags from a magic path', async () => {
+    it('reads cmake options from a magic path', async () => {
         expect.assertions(3);
 
         const testEnv = {
             ...env,
         };
 
-        const compilerFlagsFile = path.join(sourceDir, '.github', '.compiler-flags');
-        const compilerFlagsFileContent = '-DENABLE_FORTRAN=ON';
+        const testCmakeOptions = [
+            '-DENABLE_FORTRAN=ON',
+            'CMAKE_BUILD_TYPE=Debug',
+            'CMAKE_VERBOSE_MAKEFILE=ON',
+        ];
+
+        const cmakeOptionsFile = path.join(sourceDir, '.github', '.cmake-options');
+        const cmakeOptionsFileContent = testCmakeOptions.join(' ');
 
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
-            if (path === compilerFlagsFile) return true;
+            if (path === cmakeOptionsFile) return true;
         });
 
         const readFileSync = jest.spyOn(fs, 'readFileSync');
         readFileSync.mockImplementation((path) => {
-            if (path === compilerFlagsFile) return compilerFlagsFileContent;
+            if (path === cmakeOptionsFile) return cmakeOptionsFileContent;
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
-        expect(core.info).toHaveBeenCalledWith(`==> Found ${compilerFlagsFile}: ${compilerFlagsFileContent}`);
-        expect(core.info).toHaveBeenCalledWith(`==> compilerFlags: ${compilerFlagsFileContent}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
+
+        existsSync.mockReset();
+        readFileSync.mockReset();
+    });
+
+    it('supports backwards compatible magic path for cmake options', async () => {
+        expect.assertions(4);
+
+        const testEnv = {
+            ...env,
+        };
+
+        const testDeprecatedCmakeOptions = [
+            '-DENABLE_FORTRAN=ON',
+            'CMAKE_BUILD_TYPE=Debug',
+            'CMAKE_VERBOSE_MAKEFILE=ON',
+        ];
+
+        const deprecatedCmakeOptionsFile = path.join(sourceDir, '.github', '.compiler-flags');
+        const deprecatedCmakeOptionsFileContent = testDeprecatedCmakeOptions.join(' ');
+
+        const existsSync = jest.spyOn(fs, 'existsSync');
+        existsSync.mockImplementation((path) => {
+            if (path === deprecatedCmakeOptionsFile) return true;
+            return false;
+        });
+
+        const readFileSync = jest.spyOn(fs, 'readFileSync');
+        readFileSync.mockImplementation((path) => {
+            if (path === deprecatedCmakeOptionsFile) return deprecatedCmakeOptionsFileContent;
+        });
+
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
+
+        expect(isBuilt).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
+        expect(core.warning).toHaveBeenCalledWith('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testDeprecatedCmakeOptions}`);
 
         existsSync.mockReset();
         readFileSync.mockReset();
@@ -199,7 +285,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -213,11 +299,11 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> Code coverage collection enabled, installing lcov...');
-        expect(core.info).toHaveBeenCalledWith("==> compilerFlags: -DCMAKE_C_FLAGS='--coverage' -DCMAKE_CXX_FLAGS='--coverage' -DCMAKE_Fortran_FLAGS='--coverage'");
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`);
     });
 
     it('warns if code coverage in unsupported on current platforms', async () => {
@@ -227,7 +313,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, macOs, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, macOs, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`Skipping code coverage collection on unsupported platform: ${compiler}@${macOs}`);
@@ -240,7 +326,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
 
@@ -254,6 +340,47 @@ describe('buildPackage', () => {
         });
     });
 
+    it('allows overriding of default options via current environment variables', async () => {
+        expect.assertions(12);
+
+        const testEnv = {
+            ...env,
+            'CTEST_OUTPUT_ON_FAILURE': '0',
+            'CMAKE_BUILD_PARALLEL_LEVEL': '1',
+            'CTEST_PARALLEL_LEVEL': '1',
+        };
+
+        const options = {
+            cwd: buildDir,
+            shell: '/bin/bash -eux',
+            env: {
+                ...process.env,
+                ...testEnv,
+            },
+        };
+
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+
+        expect(isBuilt).toBe(true);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, "-DCMAKE_C_FLAGS='--coverage'", "-DCMAKE_CXX_FLAGS='--coverage'", "-DCMAKE_Fortran_FLAGS='--coverage'", sourceDir], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ctest'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
+
+        core.info.mock.calls.forEach((call) => {
+            const arg = call[0];
+            if (!/^==> options\.env:/.test(arg)) return;
+
+            ['CTEST_OUTPUT_ON_FAILURE', 'CMAKE_BUILD_PARALLEL_LEVEL', 'CTEST_PARALLEL_LEVEL'].forEach((envKey) => {
+                expect(arg).toContain(`"${envKey}": "${testEnv[envKey]}"`);
+            });
+        });
+    });
+
     it('creates install directory', async () => {
         expect.assertions(2);
 
@@ -261,7 +388,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(mkdirP).toHaveBeenCalledWith(installDir);
@@ -278,23 +405,25 @@ describe('buildPackage', () => {
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
+                'CTEST_OUTPUT_ON_FAILURE': '1',
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
+                'CTEST_PARALLEL_LEVEL': '2',
                 ...process.env,
                 ...testEnv,
-                'CTEST_OUTPUT_ON_FAILURE': '1',
             },
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, "-DCMAKE_C_FLAGS='--coverage'", "-DCMAKE_CXX_FLAGS='--coverage'", "-DCMAKE_Fortran_FLAGS='--coverage'", sourceDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', '-j2'], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'test', '-j2'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ctest'], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'install'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
     });
 
     it('runs configure, build, test and install commands', async () => {
@@ -308,23 +437,25 @@ describe('buildPackage', () => {
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
+                'CTEST_OUTPUT_ON_FAILURE': '1',
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
+                'CTEST_PARALLEL_LEVEL': '2',
                 ...process.env,
                 ...testEnv,
-                'CTEST_OUTPUT_ON_FAILURE': '1',
             },
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, sourceDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', '-j2'], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'test', '-j2'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['ctest'], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'install'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
     });
 
     it('runs configure, build and install commands', async () => {
@@ -338,22 +469,23 @@ describe('buildPackage', () => {
             cwd: buildDir,
             shell: '/bin/bash -eux',
             env: {
+                'CMAKE_BUILD_PARALLEL_LEVEL': '2',
                 ...process.env,
                 ...testEnv,
             },
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, !test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, sourceDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', '-j2'], options);
-        expect(exec.exec).not.toHaveBeenCalledWith('env', ['make', 'test', '-j2'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--build', '.'], options);
+        expect(exec.exec).not.toHaveBeenCalledWith('env', ['ctest'], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['lcov', '--list', coverageFile], options);
         expect(exec.exec).not.toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
-        expect(exec.exec).toHaveBeenCalledWith('env', ['make', 'install'], options);
+        expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
     });
 
     it('returns false if configure command failed', async () => {
@@ -376,7 +508,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, !test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -393,8 +525,9 @@ describe('buildPackage', () => {
         exec.exec.mockImplementation((command, args) => {
             if (
                 command === 'env'
-                && args[0] === 'make'
-                && args[1] === '-j2'
+                && args[0] === 'cmake'
+                && args[1] === '--build'
+                && args[2] === '.'
             ) {
                 return Promise.resolve(1);
             }
@@ -402,7 +535,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, !test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -419,8 +552,7 @@ describe('buildPackage', () => {
         exec.exec.mockImplementation((command, args) => {
             if (
                 command === 'env'
-                && args[0] === 'make'
-                && args[1] === 'test'
+                && args[0] === 'ctest'
             ) {
                 return Promise.resolve(1);
             }
@@ -428,7 +560,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -458,7 +590,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -490,7 +622,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -517,7 +649,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -545,7 +677,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -562,8 +694,9 @@ describe('buildPackage', () => {
         exec.exec.mockImplementation((command, args) => {
             if (
                 command === 'env'
-                && args[0] === 'make'
-                && args[1] === 'install'
+                && args[0] === 'cmake'
+                && args[1] === '--install'
+                && args[2] === '.'
             ) {
                 return Promise.resolve(1);
             }
@@ -571,7 +704,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
@@ -597,7 +730,7 @@ describe('buildPackage', () => {
             [`${repo.toUpperCase()}_PATH`]: installDir,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);
@@ -626,7 +759,7 @@ describe('buildPackage', () => {
             COVERAGE_DIR: coverageDir,
         };
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);
@@ -643,7 +776,7 @@ describe('buildPackage', () => {
             throw Error('spawn /bin/sh ENOENT');
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 

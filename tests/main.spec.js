@@ -32,6 +32,8 @@ const inputs = {
     ],
     dependency_branch: 'develop',
     force_build: false,
+    cache_suffix: null,
+    recreate_cache: false,
     os: 'ubuntu-20.04',
     compiler: 'gnu-10',
     compiler_cc: 'gcc-10',
@@ -138,6 +140,36 @@ describe('main', () => {
         core.getMultilineInput.mockReset();
     });
 
+    it('resolves the promise if restoring cache is being skipped', async () => {
+        expect.assertions(1);
+
+        core.getInput.mockImplementation((inputName) => inputs[inputName]);
+        core.getBooleanInput.mockImplementation((inputName) => {
+            if (inputName === 'recreate_cache') return true;
+            return inputs[inputName];
+        });
+        core.getMultilineInput.mockImplementation((inputName) => inputs[inputName]);
+
+        setupEnv.mockResolvedValue(env);
+        downloadArtifact.mockResolvedValue(false);
+        downloadRepository.mockResolvedValue(true);
+        buildPackage.mockResolvedValue(true);
+        saveCache.mockResolvedValue(true);
+        uploadArtifact.mockResolvedValue(true);
+
+        await expect(main.call()).resolves.toStrictEqual(outputs);
+
+        setupEnv.mockReset();
+        downloadArtifact.mockReset();
+        downloadRepository.mockReset();
+        buildPackage.mockReset();
+        saveCache.mockReset();
+        uploadArtifact.mockReset();
+        core.getInput.mockReset();
+        core.getBooleanInput.mockReset();
+        core.getMultilineInput.mockReset();
+    });
+
     it('resolves the promise if dependencies are built', async () => {
         expect.assertions(1);
 
@@ -170,12 +202,49 @@ describe('main', () => {
     it('resolves the promise if cmake options are passed', async () => {
         expect.assertions(2);
 
-        const cmakeOptions = [
-            "owner/repo: '-DCMAKE_VAR=1 -DJSON_VAR={\"key\": \"value\"}'",
-            'other/repo: "--DOPT1=ON -DOPT2=OFF"',
+        const cmakeOptions = '-DCMAKE_VAR=1 -DJSON_VAR={"key": "value"}';
+
+        const testCmakeOptions = cmakeOptions.replace(/^['"]|['"]$/g, '');
+
+        const testEnv = {
+            ...env,
+        };
+
+        core.getInput.mockImplementation((inputName) => {
+            if (inputName === 'cmake_options') return cmakeOptions;
+            return inputs[inputName];
+        });
+        core.getBooleanInput.mockImplementation((inputName) => inputs[inputName]);
+        core.getMultilineInput.mockImplementation((inputName) => inputs[inputName]);
+
+        setupEnv.mockResolvedValue(env);
+        downloadArtifact.mockResolvedValue(true);
+        buildPackage.mockResolvedValue(true);
+        uploadArtifact.mockResolvedValue(true);
+
+        await expect(main.call()).resolves.toStrictEqual(outputs);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.repository, inputs.workspace, `${inputs.install_dir}/repo`, inputs.cmake, testCmakeOptions, undefined, inputs.self_test, inputs.self_coverage, inputs.os, inputs.compiler, testEnv);
+
+        setupEnv.mockReset();
+        downloadArtifact.mockReset();
+        buildPackage.mockReset();
+        uploadArtifact.mockReset();
+        core.getInput.mockReset();
+        core.getBooleanInput.mockReset();
+        core.getMultilineInput.mockReset();
+    });
+
+    it('resolves the promise if dependency cmake options are passed', async () => {
+        expect.assertions(4);
+
+        const dependencyCmakeOptions = [
+            'owner/repo1: "--DOPT1=ON -DOPT2=OFF"',
+            'owner/repo3: --DOPT3=ON',
         ];
 
-        const testCmakeOptions = cmakeOptions[0].split(/:\s?(.+)/)[1].replace(/^['"]|['"]$/g, '');
+        const testDependencyCmakeOptions1 = dependencyCmakeOptions[0].split(/:\s?(.+)/)[1].replace(/^['"]|['"]$/g, '');
+        const testDependencyCmakeOptions2 = undefined;
+        const testDependencyCmakeOptions3 = dependencyCmakeOptions[1].split(/:\s?(.+)/)[1].replace(/^['"]|['"]$/g, '');
 
         const testEnv = {
             ...env,
@@ -184,20 +253,26 @@ describe('main', () => {
         core.getInput.mockImplementation((inputName) => inputs[inputName]);
         core.getBooleanInput.mockImplementation((inputName) => inputs[inputName]);
         core.getMultilineInput.mockImplementation((inputName) => {
-            if (inputName === 'cmake_options') return cmakeOptions;
+            if (inputName === 'dependency_cmake_options') return dependencyCmakeOptions;
             return inputs[inputName];
         });
 
         setupEnv.mockResolvedValue(env);
-        downloadArtifact.mockResolvedValue(true);
+        downloadArtifact.mockResolvedValue(false);
+        restoreCache.mockResolvedValue(false);
+        downloadRepository.mockResolvedValue(true);
         buildPackage.mockResolvedValue(true);
         uploadArtifact.mockResolvedValue(true);
 
         await expect(main.call()).resolves.toStrictEqual(outputs);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.repository, inputs.workspace, `${inputs.install_dir}/repo`, inputs.cmake, testCmakeOptions, inputs.self_test, inputs.self_coverage, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, undefined, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, undefined, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, undefined, false, false, inputs.os, inputs.compiler, testEnv);
 
         setupEnv.mockReset();
         downloadArtifact.mockReset();
+        restoreCache.mockReset();
+        downloadRepository.mockReset();
         buildPackage.mockReset();
         uploadArtifact.mockReset();
         core.getInput.mockReset();
@@ -348,23 +423,23 @@ describe('main', () => {
         core.getMultilineInput.mockReset();
     });
 
-    it('rejects the promise if cmake options are not in expected format', async () => {
+    it('rejects the promise if dependency cmake options are not in expected format', async () => {
         expect.assertions(1);
 
-        const cmakeOptions = [
-            'owner/repo "-DCMAKE_VAR=1"',
+        const dependencyCmakeOptions = [
+            'owner/repo1 "-DCMAKE_VAR=1"',
         ];
 
         core.getInput.mockImplementation((inputName) => inputs[inputName]);
         core.getBooleanInput.mockImplementation((inputName) => inputs[inputName]);
         core.getMultilineInput.mockImplementation((inputName) => {
-            if (inputName === 'cmake_options') return cmakeOptions;
+            if (inputName === 'dependency_cmake_options') return dependencyCmakeOptions;
             return inputs[inputName];
         });
 
         setupEnv.mockResolvedValue(env);
 
-        await expect(main.call()).rejects.toBe(`Unexpected CMake option, must be in 'owner/repo: option' format: ${cmakeOptions[0]}`);
+        await expect(main.call()).rejects.toBe(`Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptions[0]}`);
 
         setupEnv.mockReset();
         core.getInput.mockReset();
