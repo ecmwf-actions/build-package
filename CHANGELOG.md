@@ -5,13 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v1.1.0](https://github.com/ecmwf-actions/build-package/compare/v1.0.4...v1.1.0)
+## [v2.0.0](https://github.com/ecmwf-actions/build-package/compare/v1.1.0...v2.0.0)
+
+### Fixed
+
+- Fixed #1: Magic file .compiler-flags can not be overridden. [`#1`](https://github.com/ecmwf-actions/build-package/issues/1)
+
+### Commits
+
+- Added support for checking out repository tags. [`ac214fb`](https://github.com/ecmwf-actions/build-package/commit/ac214fb20a6d514e8c0e2f38602f2b1bed6aca65)
+- Added cache invalidation mechanism via cache_suffix input. [`a8da891`](https://github.com/ecmwf-actions/build-package/commit/a8da8919131dbe86eb378524f8f77d4284127682)
+- Implemented ctest_options input. [`5243daf`](https://github.com/ecmwf-actions/build-package/commit/5243dafa989248aa709b2cc118a0a1a1b38df756)
+- Split CMake options input into current repository and dependency specific ones. [`9cf6e6c`](https://github.com/ecmwf-actions/build-package/commit/9cf6e6cff6c0cc65e1d0b7324cc6d21157c0fefc)
+- Improved parsing of CMake options. [`d02f692`](https://github.com/ecmwf-actions/build-package/commit/d02f692b24dbb341f5785ffd9ba9a6c0add94183)
+- Added input for cache recreation. [`7949e28`](https://github.com/ecmwf-actions/build-package/commit/7949e28ce97fe9ad4c7d7bdac91014a898f14e65)
+- Allowed overriding of default options via current environment variables. [`09d99ea`](https://github.com/ecmwf-actions/build-package/commit/09d99ea1ace4d65476b2215f3195a174745617e4)
+- Fixed issue with missing dependency SHA keys when restoring from cache. [`90b3dd4`](https://github.com/ecmwf-actions/build-package/commit/90b3dd4dcd1e8b8302bbe93138ab8f554c8f7ddb)
+- Abstracted building, test and install commands. [`ff352e8`](https://github.com/ecmwf-actions/build-package/commit/ff352e86a764f50c5f9e0f7dbb68c443eeab21cf)
+- Added missing split of CMake options on spaces. [`57e8381`](https://github.com/ecmwf-actions/build-package/commit/57e8381da75e21a8eacc92af1b25cd9c4174904e)
+- Bumped up dependency. [`aad8190`](https://github.com/ecmwf-actions/build-package/commit/aad81903d59022915ba1d3bd9a7169254ae0a2ee)
+- Tidied. [`5c8d1d0`](https://github.com/ecmwf-actions/build-package/commit/5c8d1d037e20c3fbd66704bfafcfc33b57b131b2)
+- Merge tag 'v1.1.0' into develop [`91cd585`](https://github.com/ecmwf-actions/build-package/commit/91cd585ffd6da505653fc920779a885ab066ed30)
+
+## [v1.1.0](https://github.com/ecmwf-actions/build-package/compare/v1.0.4...v1.1.0) - 2021-09-08
 
 ### Commits
 
 - Removed superfluous workflows. [`4bee22a`](https://github.com/ecmwf-actions/build-package/commit/4bee22a621a98beee263b269b553590d56011c0f)
 - Extended build environment with common package path variables. [`f30d2a9`](https://github.com/ecmwf-actions/build-package/commit/f30d2a947629e51f6a81cc803272c7101ec6ebb9)
-- Turned on verbose output for failing tests. [`ece85c2`](https://github.com/ecmwf-actions/build-package/commit/ece85c2fd2b571ded7ed6cca543446996fd96b54)
+- Bumped up version to v1.1.0. [`b917dc1`](https://github.com/ecmwf-actions/build-package/commit/b917dc16c711e9e04c28735afe1054c80cfaab83)
 
 ## [v1.0.4](https://github.com/ecmwf-actions/build-package/compare/v1.0.3...v1.0.4) - 2021-09-01
 
@@ -38,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v1.0.1](https://github.com/ecmwf-actions/build-package/compare/v1...v1.0.1) - 2021-08-05
 
-## [v1](https://github.com/ecmwf-actions/build-package/compare/v1.0.0...v1) - 2021-09-01
+## [v1](https://github.com/ecmwf-actions/build-package/compare/v1.0.0...v1) - 2021-09-08
 
 ### Commits
 
