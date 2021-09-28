@@ -33,7 +33,7 @@ steps:
   uses: actions/checkout@v2
 
 - name: Build & Test
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_coverage: true
     dependencies: |
@@ -50,7 +50,7 @@ steps:
   uses: actions/checkout@v2
 
 - name: Build & Test
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     cmake: true
     cmake_options: -DCMAKE_BUILD_TYPE=Debug
@@ -68,7 +68,7 @@ steps:
   uses: actions/checkout@v2
 
 - name: Build
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_test: false
 ```
@@ -82,7 +82,7 @@ steps:
 
 - name: Install Dependencies
   id: install-dependencies
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_build: false
     dependencies: |
@@ -256,7 +256,7 @@ To post-process the code coverage file in a later step, you can refer to it via 
 ```yaml
 - name: Build & Test
   id: build-test
-  uses: ecmwf-actions/build-package@v1
+  uses: ecmwf-actions/build-package@v2
   with:
     self_coverage: true
     dependencies: |
