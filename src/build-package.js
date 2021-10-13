@@ -154,7 +154,6 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         const options = {
             cwd: buildDir,
-            shell: '/bin/bash -eux',
             env: {
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',  // default for Github runners, equals `-j2`
                 ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only

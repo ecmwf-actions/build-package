@@ -352,7 +352,6 @@ describe('buildPackage', () => {
 
         const options = {
             cwd: buildDir,
-            shell: '/bin/bash -eux',
             env: {
                 ...process.env,
                 ...testEnv,
@@ -403,7 +402,6 @@ describe('buildPackage', () => {
 
         const options = {
             cwd: buildDir,
-            shell: '/bin/bash -eux',
             env: {
                 'CTEST_OUTPUT_ON_FAILURE': '1',
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',
@@ -435,7 +433,6 @@ describe('buildPackage', () => {
 
         const options = {
             cwd: buildDir,
-            shell: '/bin/bash -eux',
             env: {
                 'CTEST_OUTPUT_ON_FAILURE': '1',
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',
@@ -467,7 +464,6 @@ describe('buildPackage', () => {
 
         const options = {
             cwd: buildDir,
-            shell: '/bin/bash -eux',
             env: {
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',
                 ...process.env,
