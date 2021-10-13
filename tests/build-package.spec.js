@@ -263,6 +263,63 @@ describe('buildPackage', () => {
         readFileSync.mockReset();
     });
 
+    it('expands shell variables in all arguments', async () => {
+        expect.assertions(4);
+
+        const testCmakeOptions = [
+            '-DEXPANDED_OPT1=$VAR1',
+            '-DEXPANDED_OPT2=${VAR2}',
+            '-DEXPANDED_OPT3="A string with $VAR3 and $VAR4"',
+            '-DEXPANDED_OPT4="A string with double $VAR5 and $VAR5"',
+            '-DEXPANDED_OPT5=$MY_VAR',
+            '-DEXPANDED_OPT6=${MY_VAR}',
+        ];
+
+        const cmakeOptions = testCmakeOptions.join(' ');
+
+        const testEnv1 = {
+            ...env,
+            'VAR1': 'val1',
+            'VAR2': 'val2',
+            'VAR3': 'val3',
+            'VAR4': 'val4',
+            'VAR5': 'val5',
+            'MY_VAR': 'my-val',
+        };
+
+        const expandedTestCmakeOptions = [
+            `-DEXPANDED_OPT1=${testEnv1.VAR1}`,
+            `-DEXPANDED_OPT2=${testEnv1.VAR2}`,
+            `-DEXPANDED_OPT3="A string with ${testEnv1.VAR3} and ${testEnv1.VAR4}"`,
+            `-DEXPANDED_OPT4="A string with double ${testEnv1.VAR5} and ${testEnv1.VAR5}"`,
+            `-DEXPANDED_OPT5=${testEnv1.MY_VAR}`,
+            `-DEXPANDED_OPT6=${testEnv1.MY_VAR}`,
+        ]
+
+        const testCtestOptions = [
+            '-R',
+            '$VAR1',
+            '-E',
+            '$VAR2',
+        ];
+
+        const ctestOptions = testCtestOptions.join(' ');
+
+        const expandedTestCtestOptions = [
+            '-R',
+            testEnv1.VAR1,
+            '-E',
+            testEnv1.VAR2,
+        ];
+
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+
+        expect(isBuilt).toBe(true);
+        expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Expanded shell variables in configureOptions: --prefix=${installDir},${expandedTestCmakeOptions}`);
+        expect(core.info).toHaveBeenCalledWith(`==> Expanded shell variables in testOptions: ${expandedTestCtestOptions}`);
+    });
+
     it('catches errors when installing lcov', async () => {
         expect.assertions(1);
 
