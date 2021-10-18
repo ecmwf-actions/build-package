@@ -5,6 +5,7 @@ const core = require('@actions/core');
 const exec = require('@actions/exec');
 const { mkdirP } = require('@actions/io');
 const yargsParser = require('yargs-parser');
+const isEqual = require('lodash.isequal');
 
 const { extendPaths } = require('./env-functions');
 const { isError } = require('./helper-functions');
@@ -46,6 +47,53 @@ const parseOptions = (options) => {
 };
 
 /**
+ * Expands shell variables in passed options array and returns modified array.
+ *
+ * @param {Object} optionsObject Object containing options to expand as the only named key.
+ * @param {Object} env Object with shell variable values.
+ * @returns {Array} Array of expanded options, may be empty.
+ *
+ * @example
+ *   const configureOptions = expandShellVariables({
+ *      configureOptions: [
+ *          '-DEXPANDED_OPT1=$VAR1',
+ *          '-DEXPANDED_OPT2=${VAR2}',
+ *      ],
+ *   }, {
+ *      VAR1: 'val1',
+ *      VAR2: 'val2',
+ *   });
+ *
+ *   [
+ *     '-DEXPANDED_OPT1=val1',
+ *     '-DEXPANDED_OPT2=val2',
+ *   ]
+ */
+const expandShellVariables = (optionsObject, env) => {
+    const optionsName = Object.keys(optionsObject)[0];
+    const options = [...optionsObject[optionsName]];
+    const result = [];
+
+    options.forEach((option) => {
+        const variableRegex = new RegExp('\\$\\{?(\\w+)\\}?', 'g');
+        const matches = [...option.matchAll(variableRegex)];
+
+        matches.forEach((match) => {
+            const variableName = match[1];
+            option = option.replace(new RegExp(`\\$\\{?${variableName}\\}?`), env[variableName]);
+        });
+
+        result.push(option);
+    });
+
+    if (!isEqual(result, options)) {
+        core.info(`==> Expanded shell variables in ${optionsName}: ${result}`);
+    }
+
+    return result;
+};
+
+/**
  * Builds and installs a package from source. Optionally, runs tests and collects code coverage information.
  *
  * @param {String} repository Github repository owner and name.
@@ -69,7 +117,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
     try {
         let configurePath;
-        const configureOptions = [];
+        let configureOptions = [];
 
         if (cmake) {
             configurePath = 'cmake';
@@ -140,7 +188,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         core.info(`==> configureOptions: ${configureOptions}`);
 
-        const testOptions = [];
+        let testOptions = [];
 
         if (ctestOptions) {
             testOptions.push(...parseOptions(ctestOptions));
@@ -154,7 +202,6 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         const options = {
             cwd: buildDir,
-            shell: '/bin/bash -eux',
             env: {
                 'CMAKE_BUILD_PARALLEL_LEVEL': '2',  // default for Github runners, equals `-j2`
                 ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
@@ -165,6 +212,11 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
         };
 
         core.info(`==> options.env: ${JSON.stringify(options.env, null, 4)}`);
+
+        // Expand shell variables for all option arguments.
+        //   We must do this manually, because @actions/exec ignores them (`shell: false` option is passed to `spawn`).
+        configureOptions = expandShellVariables({configureOptions}, options.env);
+        testOptions = expandShellVariables({testOptions}, options.env);
 
         await mkdirP(installDir);
 

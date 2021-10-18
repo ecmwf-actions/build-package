@@ -53,6 +53,7 @@ const main = require('./main');
  *   @param {String} lib_path Library paths of all installed packages, delimited by colons (:).
  *   @param {String} coverage_file Absolute path to code coverage file, if collected.
  */
+// eslint-disable-next-line jest/require-hook
 main.call()
     .then((outputs) => {
         core.startGroup('Set Outputs');

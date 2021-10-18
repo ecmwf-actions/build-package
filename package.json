@@ -1,6 +1,6 @@
 {
   "name": "build-package",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "adm-zip": "^0.5.5",
     "fast-folder-size": "^1.4.0",
     "filesize": "^8.0.0",
+    "lodash.isequal": "^4.5.0",
     "tar": "^6.1.2",
     "yargs-parser": "^20.2.9"
   },
