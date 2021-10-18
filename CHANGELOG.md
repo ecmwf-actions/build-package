@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v2.0.0](https://github.com/ecmwf-actions/build-package/compare/v1.1.0...v2.0.0)
+## [v2.1.0](https://github.com/ecmwf-actions/build-package/compare/v2...v2.1.0)
+
+### Commits
+
+- Added shell expansion for all option arguments. [`e654a2f`](https://github.com/ecmwf-actions/build-package/commit/e654a2f184a617950bfec499c49c5665a96ee76b)
+- Ignore an errant rule. [`2630b3f`](https://github.com/ecmwf-actions/build-package/commit/2630b3f44d21a0cba18aa30bbe8ac895092a866b)
+- Removed unsupported option. [`530827b`](https://github.com/ecmwf-actions/build-package/commit/530827bce288f28e75d165846c78aaf2226cd17b)
+
+## [v2](https://github.com/ecmwf-actions/build-package/compare/v2.0.0...v2) - 2021-09-28
+
+## [v2.0.0](https://github.com/ecmwf-actions/build-package/compare/v1.1.0...v2.0.0) - 2021-09-28
 
 ### Fixed
 
@@ -22,8 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allowed overriding of default options via current environment variables. [`09d99ea`](https://github.com/ecmwf-actions/build-package/commit/09d99ea1ace4d65476b2215f3195a174745617e4)
 - Fixed issue with missing dependency SHA keys when restoring from cache. [`90b3dd4`](https://github.com/ecmwf-actions/build-package/commit/90b3dd4dcd1e8b8302bbe93138ab8f554c8f7ddb)
 - Abstracted building, test and install commands. [`ff352e8`](https://github.com/ecmwf-actions/build-package/commit/ff352e86a764f50c5f9e0f7dbb68c443eeab21cf)
+- Bumped up version to v2.0.0. [`7ec16c8`](https://github.com/ecmwf-actions/build-package/commit/7ec16c84895384ffc703ce477fd9ec7799fd14e4)
 - Added missing split of CMake options on spaces. [`57e8381`](https://github.com/ecmwf-actions/build-package/commit/57e8381da75e21a8eacc92af1b25cd9c4174904e)
 - Bumped up dependency. [`aad8190`](https://github.com/ecmwf-actions/build-package/commit/aad81903d59022915ba1d3bd9a7169254ae0a2ee)
+- Updated README. [`7f3e986`](https://github.com/ecmwf-actions/build-package/commit/7f3e986255fb4a0ef10b459adf17e0e48a899e28)
 - Tidied. [`5c8d1d0`](https://github.com/ecmwf-actions/build-package/commit/5c8d1d037e20c3fbd66704bfafcfc33b57b131b2)
 - Merge tag 'v1.1.0' into develop [`91cd585`](https://github.com/ecmwf-actions/build-package/commit/91cd585ffd6da505653fc920779a885ab066ed30)
 
