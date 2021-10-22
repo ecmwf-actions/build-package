@@ -1,6 +1,6 @@
 name: odc
 
-# Controls when the action will run
+# Controls when the workflow will run
 on:
 
   # Trigger the workflow on all pushes, except on tag creation
@@ -9,9 +9,6 @@ on:
     - '**'
     tags-ignore:
     - '**'
-
-  # Trigger the workflow on all pull requests
-  pull_request: ~
 
   # Allow workflow to be dispatched on demand
   workflow_dispatch: ~
