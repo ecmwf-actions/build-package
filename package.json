@@ -18,13 +18,13 @@
   "dependencies": {
     "@actions/artifact": "^0.5.2",
     "@actions/cache": "^1.0.7",
-    "@actions/core": "^1.4.0",
+    "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
     "@actions/http-client": "^1.0.11",
     "@actions/io": "^1.1.1",
     "@octokit/core": "^3.5.1",
-    "adm-zip": "^0.5.5",
-    "fast-folder-size": "^1.4.0",
+    "adm-zip": "^0.5.9",
+    "fast-folder-size": "^1.5.0",
     "filesize": "^8.0.0",
     "lodash.isequal": "^4.5.0",
     "tar": "^6.1.2",
@@ -34,7 +34,7 @@
     "auto-changelog": "^2.3.0",
     "eslint": "^8.1.0",
     "eslint-plugin-jest": "^25.2.2",
-    "jest": "^27.2.2"
+    "jest": "^27.3.1"
   },
   "jest": {
     "clearMocks": true,
