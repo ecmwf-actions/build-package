@@ -56,12 +56,12 @@ jobs:
           compiler_cc: gcc-10
           compiler_cxx: g++-10
           compiler_fc: gfortran-10
-        # Xcode compiler requires empty environment variables, so we pass null (~) here
+        # Xcode compiler requires empty environment variables, so we pass empty strings here
         - name: clang-12@macos-10.15
           os: macos-10.15
           compiler: clang-12
-          compiler_cc: ~
-          compiler_cxx: ~
+          compiler_cc: ''
+          compiler_cxx: ''
           compiler_fc: gfortran-10
     runs-on: ${{ matrix.os }}
     steps:

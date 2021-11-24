@@ -7,7 +7,7 @@
     "postinstall": "scripts/postinstall.sh",
     "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
     "test": "jest --ci --coverage",
-    "lint": "eslint --fix src/** tests/**",
+    "lint": "eslint --ext .js,.yml --fix action.yml .github src tests",
     "version": "auto-changelog && git add CHANGELOG.md"
   },
   "license": "Apache-2.0",
@@ -32,8 +32,10 @@
   },
   "devDependencies": {
     "auto-changelog": "^2.3.0",
-    "eslint": "^8.1.0",
+    "eslint": "^8.3.0",
     "eslint-plugin-jest": "^25.2.2",
+    "eslint-plugin-json-schema-validator": "^2.1.9",
+    "eslint-plugin-jsonc": "^2.0.0",
     "jest": "^27.3.1"
   },
   "jest": {
@@ -52,7 +54,8 @@
     },
     "extends": [
       "eslint:recommended",
-      "plugin:jest/all"
+      "plugin:jest/all",
+      "plugin:json-schema-validator/recommended"
     ],
     "parserOptions": {
       "ecmaVersion": 12
