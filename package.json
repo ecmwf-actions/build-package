@@ -4,11 +4,19 @@
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
-    "postinstall": "scripts/postinstall.sh",
     "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
+    "stage-build": "git add dist/*",
     "test": "jest --ci --coverage",
     "lint": "eslint --ext .js,.yml --fix action.yml .github src tests",
+    "lint-no-fix": "npm run lint -- --no-fix",
     "version": "auto-changelog && git add CHANGELOG.md"
+  },
+  "git": {
+    "pre-commit": [
+      "lint-no-fix",
+      "build",
+      "stage-build"
+    ]
   },
   "license": "Apache-2.0",
   "repository": {
@@ -31,6 +39,7 @@
     "yargs-parser": "^20.2.9"
   },
   "devDependencies": {
+    "@vercel/git-hooks": "^1.0.0",
     "auto-changelog": "^2.3.0",
     "eslint": "^8.3.0",
     "eslint-plugin-jest": "^25.2.2",

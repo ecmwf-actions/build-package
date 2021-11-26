@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -e
-
-npm run lint -- --no-fix
-
-npm run build
-git add dist/*

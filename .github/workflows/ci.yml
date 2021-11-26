@@ -36,7 +36,7 @@ jobs:
       run: npm install
 
     - name: Code QA
-      run: npm run lint -- --no-fix
+      run: npm run lint-no-fix
 
     - name: Test Build
       run: npm run build
