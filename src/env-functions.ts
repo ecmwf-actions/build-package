@@ -53,8 +53,8 @@ export const setupEnv = async (os: string, compilerCc: string, compilerCxx: stri
         const json = JSON.parse(output);
         cMakeVersion = json.version.string;
     }
-    catch (error: any) {
-        isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
+    catch (error) {
+        if (error instanceof Error) isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
         return env;
     }
 

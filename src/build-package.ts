@@ -81,7 +81,7 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
         const matches = [...option.matchAll(variableRegex)];
 
         matches.forEach((match) => {
-            const variableName = match[1];
+            const variableName: string = match[1];
             option = option.replace(new RegExp(`\\$\\{?${variableName}\\}?`), env[variableName]);
         });
 
@@ -266,8 +266,8 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
 
         await extendPaths(env, installDir, repo);
     }
-    catch (error: any) {
-        isError(true, error.message);
+    catch (error) {
+        if (error instanceof Error) isError(true, error.message);
         return false;
     }
 

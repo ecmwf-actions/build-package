@@ -122,8 +122,9 @@ const main = async () => {
 
         return Promise.resolve(outputs);
     }
-    catch (error: any) {
-        return Promise.reject(error.message);
+    catch (error) {
+        if (error instanceof Error) return Promise.reject(error.message);
+        return Promise.reject();
     }
 };
 

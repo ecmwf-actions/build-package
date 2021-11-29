@@ -1,7 +1,7 @@
-const process = require('process');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-const { setupEnv, extendPaths, extendDependencies } = require('../src/env-functions');
+import process from 'process';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import { setupEnv, extendPaths, extendDependencies } from '../src/env-functions';
 
 jest.mock('@actions/core');
 jest.mock('@actions/exec');
