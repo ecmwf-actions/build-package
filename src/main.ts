@@ -1,12 +1,12 @@
-const path = require('path');
-const core = require('@actions/core');
+import * as path from 'path';
+import * as core from '@actions/core';
 
-const { setupEnv } = require('./env-functions');
-const { restoreCache, saveCache } = require('./cache-functions');
-const downloadArtifact = require('./download-artifact');
-const uploadArtifact = require('./upload-artifact');
-const downloadRepository = require('./download-repository');
-const buildPackage = require('./build-package');
+import { setupEnv } from './env-functions';
+import { restoreCache, saveCache } from './cache-functions';
+import downloadArtifact from './download-artifact';
+import uploadArtifact from './upload-artifact';
+import downloadRepository from './download-repository';
+import buildPackage from './build-package';
 
 /**
  * First, the main function checks if a dependency build artifact can be found for current OS and compiler combination.
@@ -18,7 +18,7 @@ const buildPackage = require('./build-package');
  *
  * @returns {Promise} Outputs object on resolution, failure message on rejection.
  */
-module.exports = async () => {
+const main = async () => {
     try {
         const workspace = core.getInput('workspace', { required: true });
         const repository = core.getInput('repository', { required: true });
@@ -44,7 +44,7 @@ module.exports = async () => {
         const installDir = core.getInput('install_dir', { required: true });
         const downloadDir = core.getInput('download_dir', { required: true });
 
-        const dependencyCmakeOptionsLookup = {};
+        const dependencyCmakeOptionsLookup: { [key: string]: string } = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
             const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
             if (!repo || !options) return Promise.reject(`Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`);
@@ -86,7 +86,7 @@ module.exports = async () => {
             const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
 
             // Build the package locally. We don't run any tests or code coverage in this case.
-            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, undefined, false, false, os, compiler, env);
+            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, null, false, false, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
 
@@ -109,7 +109,7 @@ module.exports = async () => {
             if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR, null, os, compiler, env);
         }
 
-        const outputs = {
+        const outputs: ActionOutputs = {
             bin_path: env.BIN_PATH,
             include_path: env.INCLUDE_PATH,
             install_path: env.INSTALL_PATH,
@@ -122,7 +122,9 @@ module.exports = async () => {
 
         return Promise.resolve(outputs);
     }
-    catch (error) {
+    catch (error: any) {
         return Promise.reject(error.message);
     }
 };
+
+export default main;

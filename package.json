@@ -4,10 +4,10 @@
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
+    "build": "npx @vercel/ncc build src/index.ts --minify --license licenses.txt --no-cache",
     "stage-build": "git add dist/*",
     "test": "jest --ci --coverage",
-    "lint": "eslint --ext .js,.yml --fix action.yml .github src tests",
+    "lint": "eslint --ext .js,.ts,.yml --fix action.yml .github src tests",
     "lint-no-fix": "npm run lint -- --no-fix",
     "version": "auto-changelog && git add CHANGELOG.md"
   },
@@ -39,18 +39,41 @@
     "yargs-parser": "^20.2.9"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.16.4",
+    "@babel/preset-typescript": "^7.16.0",
+    "@types/jest": "^27.0.3",
+    "@types/lodash.isequal": "^4.5.5",
+    "@types/node": "^16.11.10",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "@vercel/git-hooks": "^1.0.0",
     "auto-changelog": "^2.3.0",
     "eslint": "^8.3.0",
     "eslint-plugin-jest": "^25.2.2",
     "eslint-plugin-json-schema-validator": "^2.1.9",
     "eslint-plugin-jsonc": "^2.0.0",
-    "jest": "^27.3.1"
+    "jest": "^27.3.1",
+    "typescript": "^4.5.2"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ],
+      "@babel/preset-typescript"
+    ]
   },
   "jest": {
     "clearMocks": true,
     "collectCoverageFrom": [
       "src/**/*.js",
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
       "!<rootDir>/node_modules/"
     ]
   },
@@ -61,9 +84,14 @@
       "commonjs": true,
       "es2021": true
     },
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "extends": [
       "eslint:recommended",
       "plugin:jest/all",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
       "plugin:json-schema-validator/recommended"
     ],
     "parserOptions": {

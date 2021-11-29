@@ -1,14 +1,16 @@
-const process = require('process');
-const fs = require('fs');
-const path = require('path');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-const { mkdirP } = require('@actions/io');
-const yargsParser = require('yargs-parser');
-const isEqual = require('lodash.isequal');
+import process from 'process';
+import fs from 'fs';
+import path from 'path';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import { mkdirP } from '@actions/io';
+import yargsParser from 'yargs-parser';
+import isEqual from 'lodash.isequal';
 
-const { extendPaths } = require('./env-functions');
-const { isError } = require('./helper-functions');
+import { extendPaths } from './env-functions';
+import { isError } from './helper-functions';
+import { BuildOptions } from './types/build-package';
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Parses a string of options and returns an array of items for each. Will handle quoting and prefixing of separate
@@ -28,7 +30,7 @@ const { isError } = require('./helper-functions');
  *     'OPT5=foo',
  *   ]
  */
-const parseOptions = (options) => {
+const parseOptions = (options: string): string[] => {
     const { _ } = yargsParser(options, {
         configuration: {
             'short-option-groups': false,
@@ -69,10 +71,10 @@ const parseOptions = (options) => {
  *     '-DEXPANDED_OPT2=val2',
  *   ]
  */
-const expandShellVariables = (optionsObject, env) => {
+const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVariables) => {
     const optionsName = Object.keys(optionsObject)[0];
     const options = [...optionsObject[optionsName]];
-    const result = [];
+    const result: string[] = [];
 
     options.forEach((option) => {
         const variableRegex = new RegExp('\\$\\{?(\\w+)\\}?', 'g');
@@ -110,7 +112,7 @@ const expandShellVariables = (optionsObject, env) => {
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the build and install process finished successfully.
  */
-module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, env) => {
+const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: { [key: string]: string }) => {
     core.startGroup(`Build ${repository}`);
 
     const [, repo] = repository.split('/');
@@ -264,7 +266,7 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
         await extendPaths(env, installDir, repo);
     }
-    catch (error) {
+    catch (error: any) {
         isError(true, error.message);
         return false;
     }
@@ -273,3 +275,5 @@ module.exports = async (repository, sourceDir, installDir, cmake, cmakeOptions, 
 
     return true;
 };
+
+export default buildPackage;

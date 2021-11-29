@@ -1,13 +1,13 @@
-const core = require('@actions/core');
+import * as core from '@actions/core';
 
-const main = require('../src/main');
+import main from '../src/main';
 
-const { setupEnv } = require('../src/env-functions');
-const { restoreCache, saveCache } = require('../src/cache-functions');
-const downloadArtifact = require('../src/download-artifact');
-const uploadArtifact = require('../src/upload-artifact');
-const downloadRepository = require('../src/download-repository');
-const buildPackage = require('../src/build-package');
+import { setupEnv } from '../src/env-functions';
+import { restoreCache, saveCache } from '../src/cache-functions';
+import downloadArtifact from '../src/download-artifact';
+import uploadArtifact from '../src/upload-artifact';
+import downloadRepository from '../src/download-repository';
+import buildPackage from '../src/build-package';
 
 jest.mock('@actions/core');
 jest.mock('../src/env-functions');
@@ -265,9 +265,9 @@ describe('main', () => {
         uploadArtifact.mockResolvedValue(true);
 
         await expect(main.call()).resolves.toStrictEqual(outputs);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, undefined, false, false, inputs.os, inputs.compiler, testEnv);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, undefined, false, false, inputs.os, inputs.compiler, testEnv);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, undefined, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, null, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, null, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, null, false, false, inputs.os, inputs.compiler, testEnv);
 
         setupEnv.mockReset();
         downloadArtifact.mockReset();

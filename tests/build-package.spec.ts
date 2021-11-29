@@ -1,11 +1,11 @@
-const process = require('process');
-const fs = require('fs');
-const path = require('path');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-const { mkdirP } = require('@actions/io');
+import process from 'process';
+import fs from 'fs';
+import path from 'path';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import { mkdirP } from '@actions/io';
 
-const buildPackage = require('../src/build-package');
+import buildPackage from '../src/build-package';
 
 jest.mock('@actions/core');
 jest.mock('@actions/exec');
@@ -72,7 +72,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
@@ -312,7 +312,7 @@ describe('buildPackage', () => {
             testEnv1.VAR2,
         ];
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);

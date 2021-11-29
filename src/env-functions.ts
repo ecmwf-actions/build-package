@@ -1,8 +1,9 @@
-const process = require('process');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
+import * as process from 'process';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
-const { isError } = require('./helper-functions');
+import { isError } from './helper-functions';
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Returns local environment variables:
@@ -20,10 +21,10 @@ const { isError } = require('./helper-functions');
  * @param {String} compilerFc Fortran compiler alias.
  * @returns {Object} Environment object with keys as variable names.
  */
-module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
+export const setupEnv = async (os: string, compilerCc: string, compilerCxx: string, compilerFc: string): Promise<EnvironmentVariables> => {
     core.startGroup('Setup Environment');
 
-    const env = {
+    const env: EnvironmentVariables = {
         CC: compilerCc,
         CXX: compilerCxx,
         FC: compilerFc,
@@ -31,10 +32,9 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
 
     core.info(`==> Compiler env: ${JSON.stringify(env)}`);
 
-    let output;
+    let output = '{}';
 
-    const options = {
-        shell: '/bin/bash -eux',
+    const options: exec.ExecOptions = {
         listeners: {
             stdout: (data) => {
                 output = data.toString();
@@ -53,7 +53,7 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
         const json = JSON.parse(output);
         cMakeVersion = json.version.string;
     }
-    catch (error) {
+    catch (error: any) {
         isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
         return env;
     }
@@ -94,7 +94,7 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
  * @param {String} installDir Path to installation directory.
  * @param {String} packageName Package name.
  */
-module.exports.extendPaths = async (env, installDir, packageName) => {
+export const extendPaths = async (env: EnvironmentVariables, installDir: string, packageName: string) => {
     if (!env) return;
 
     if (env.PATH) {
@@ -153,7 +153,7 @@ module.exports.extendPaths = async (env, installDir, packageName) => {
  * @param {String} repository Github repository owner and name.
  * @param {String} sha Github repository commit SHA.
  */
-module.exports.extendDependencies = async (env, repository, sha) => {
+export const extendDependencies = async (env: EnvironmentVariables, repository: string, sha: string) => {
     if (!env) return;
 
     if (env.DEPENDENCIES) {

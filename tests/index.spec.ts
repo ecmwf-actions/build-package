@@ -1,5 +1,5 @@
-const core = require('@actions/core');
-const main = require('../src/main');
+import * as core from '@actions/core';
+import main from '../src/main';
 
 jest.mock('@actions/core');
 jest.mock('../src/main');
@@ -61,7 +61,7 @@ describe('entry', () => {
         // For some reason, checking toHaveBeenCalledWith() on this mock function does not work, possibly because of
         //   some race condition at play. Instead, we mock its implementation and check if it's called with correct
         //   parameter.
-        core.setFailed.mockImplementation((failureMessage) => {
+        (core.setFailed as jest.Mock).mockImplementation((failureMessage) => {
             expect(failureMessage).toBe(errorMessage);
         });
 

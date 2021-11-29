@@ -1,4 +1,4 @@
-const core = require('@actions/core');
+import * as core from '@actions/core';
 
 /**
  * Checks an error condition, and displays error message if true.
@@ -7,7 +7,7 @@ const core = require('@actions/core');
  * @param {String} errorMessage Error message to display in the log (as a warning)
  * @returns {Boolean} Whether the error condition was true or not
  */
-module.exports.isError = (condition, errorMessage) => {
+export const isError = (condition: number | boolean, errorMessage: string): boolean => {
     if (condition) {
         core.warning(errorMessage);
         core.endGroup();

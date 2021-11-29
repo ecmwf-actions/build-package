@@ -1,5 +1,5 @@
-const core = require('@actions/core');
-const main = require('./main');
+import * as core from '@actions/core';
+import main from './main';
 
 /**
  * A Github action that builds an ecbuild/CMake-based project, optionally pulling in its dependencies, running tests and
@@ -54,8 +54,8 @@ const main = require('./main');
  *   @param {String} coverage_file Absolute path to code coverage file, if collected.
  */
 // eslint-disable-next-line jest/require-hook
-main.call()
-    .then((outputs) => {
+main()
+    .then((outputs: ActionOutputs) => {
         core.startGroup('Set Outputs');
 
         core.info(`==> bin_path: ${outputs.bin_path}`)
@@ -77,6 +77,6 @@ main.call()
         }
 
         core.endGroup();
-    }).catch((failureMessage) => {
+    }).catch((failureMessage: string) => {
         core.setFailed(failureMessage);
     });
