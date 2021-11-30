@@ -74,7 +74,6 @@
   "jest": {
     "clearMocks": true,
     "collectCoverageFrom": [
-      "src/**/*.js",
       "src/**/*.ts",
       "!src/**/*.d.ts",
       "!<rootDir>/node_modules/"
