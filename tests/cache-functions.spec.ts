@@ -1,10 +1,11 @@
-const cache = require('@actions/cache');
-const core = require('@actions/core');
-const { Octokit } = require('@octokit/core');
-const { getCacheKey, restoreCache, saveCache } = require('../src/cache-functions');
-const crypto = require('crypto');
-const fastFolderSize = require('fast-folder-size');
-const { version } = require('../package.json');
+import * as cache from '@actions/cache';
+import * as core from '@actions/core';
+import { Octokit } from '@octokit/core';
+import crypto from 'crypto';
+import fastFolderSize from 'fast-folder-size';
+
+import { getCacheKey, restoreCache, saveCache } from '../src/cache-functions';
+import { version } from '../package.json';
 
 jest.mock('@actions/core');
 jest.mock('@actions/cache');

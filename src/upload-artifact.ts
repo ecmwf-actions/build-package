@@ -1,11 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const core = require('@actions/core');
-const artifact = require('@actions/artifact');
-const tar = require('tar');
-const filesize = require('filesize');
+import fs from 'fs';
+import path from 'path';
+import * as core from '@actions/core';
+import * as artifact from '@actions/artifact';
+import tar from 'tar';
+import filesize from 'filesize';
 
-const { isError } = require('./helper-functions');
+import { isError } from './helper-functions';
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Archives and uploads package artifact.
@@ -19,10 +20,11 @@ const { isError } = require('./helper-functions');
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the archiving and upload was successful.
  */
-module.exports = async (repository, sha, targetDir, dependencies, os, compiler, env) => {
+const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
-    let [owner, repo] = repository.split('/');
+    const [owner] = repository.split('/');
+    let [, repo] = repository.split('/');
     if (!repo) repo = owner;
 
     let artifactName;
@@ -48,7 +50,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
         );
     }
     catch (error) {
-        isError(true, `Error creating artifact TAR for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error creating artifact TAR for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -72,7 +74,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
             fs.writeFileSync(dependenciesPath, dependenciesJson);
         }
         catch (error) {
-            isError(true, `Error writing dependencies file for ${repo}: ${error.message}`);
+            if (error instanceof Error) isError(true, `Error writing dependencies file for ${repo}: ${error.message}`);
             return false;
         }
 
@@ -92,7 +94,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
         });
     }
     catch (error) {
-        isError(true, `Error uploading artifact for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error uploading artifact for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -117,3 +119,5 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
 
     return true;
 };
+
+export default uploadArtifact;

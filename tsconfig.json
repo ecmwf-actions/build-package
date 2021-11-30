@@ -2,13 +2,15 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "lib": [
-      "esnext"
+      "es2015"
     ],
     "module": "commonjs",
+    "moduleResolution": "node",
     "outDir": "dist",
+    "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "esnext"
+    "target": "es2015"
   },
   "include": [
     "src"

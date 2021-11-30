@@ -1,13 +1,13 @@
-const process = require('process');
-const fs = require('fs');
-const { Buffer } = require('buffer');
-const core = require('@actions/core');
-const { Octokit } = require('@octokit/core');
-const AdmZip = require('adm-zip');
-const filesize = require('filesize');
-const tar = require('tar');
+import process from 'process';
+import fs from 'fs';
+import { Buffer } from 'buffer';
+import * as core from '@actions/core';
+import { Octokit } from '@octokit/core';
+import AdmZip from 'adm-zip';
+import filesize from 'filesize';
+import tar from 'tar';
 
-const downloadArtifact = require('../src/download-artifact');
+import downloadArtifact from '../src/download-artifact';
 
 jest.mock('@actions/core');
 jest.mock('@actions/io');

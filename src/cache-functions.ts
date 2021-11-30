@@ -1,13 +1,14 @@
-const core = require('@actions/core');
-const { restoreCache, saveCache } = require('@actions/cache');
-const { Octokit } = require('@octokit/core');
-const crypto = require('crypto');
-const { promisify } = require('util')
-const fastFolderSize = require('fast-folder-size');
+import * as core from '@actions/core';
+import { restoreCache as aRestoreCache, saveCache as aSaveCache } from '@actions/cache';
+import { Octokit } from '@octokit/core';
+import crypto from 'crypto';
+import { promisify } from 'util';
+import fastFolderSize from 'fast-folder-size';
 
-const { version } = require('../package.json');
-const { extendPaths, extendDependencies } = require('./env-functions');
-const { isError } = require('./helper-functions');
+import { version } from '../package.json';
+import { extendPaths, extendDependencies } from './env-functions';
+import { isError } from './helper-functions';
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Returns cache key for a package.
@@ -21,7 +22,7 @@ const { isError } = require('./helper-functions');
  * @param {Object} env Local environment object.
  * @returns {Object} An object with package cache key and head SHA used to calculate it.
  */
-const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheSuffix, env) => {
+export const getCacheKey = async (repository: string, branch: string, githubToken: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<CacheObject> => {
     core.startGroup(`Cache Key for ${repository}`);
 
     const [owner, repo] = repository.split('/');
@@ -46,7 +47,7 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheS
         auth: githubToken,
     });
 
-    const result = {};
+    const result: { cacheKey?: string, headSha?: string } = {};
 
     try {
         const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
@@ -60,7 +61,7 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheS
         result.headSha = response.data.object.sha;
     }
     catch (error) {
-        isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
     }
 
     core.info(`==> result.headSha: ${result.headSha}`);
@@ -85,10 +86,8 @@ const getCacheKey = async (repository, branch, githubToken, os, compiler, cacheS
 
     core.endGroup();
 
-    return result;
+    return result as CacheObject;
 };
-
-module.exports.getCacheKey = getCacheKey;
 
 /**
  * Restores package from cache, if found.
@@ -104,7 +103,7 @@ module.exports.getCacheKey = getCacheKey;
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the package cache was found.
  */
-module.exports.restoreCache = async (repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env) => {
+export const restoreCache = async (repository: string, branch: string, githubToken: string, installDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<boolean> => {
     const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Restore ${repository} Cache`);
@@ -112,10 +111,10 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
     let cacheHit;
 
     try {
-        cacheHit = Boolean(await restoreCache([installDir], cacheKey));
+        cacheHit = Boolean(await aRestoreCache([installDir], cacheKey));
     }
     catch (error) {
-        isError(true, `Error restoring cache for ${repository}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error restoring cache for ${repository}: ${error.message}`);
         return false;
     }
 
@@ -146,7 +145,7 @@ module.exports.restoreCache = async (repository, branch, githubToken, installDir
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the package was cached successfully.
  */
-module.exports.saveCache = async (repository, branch, githubToken, targetDir, os, compiler, cacheSuffix, env) => {
+export const saveCache = async (repository: string, branch: string, githubToken: string, targetDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<boolean> => {
     const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
 
     core.startGroup(`Save ${repository} Cache`);
@@ -163,10 +162,10 @@ module.exports.saveCache = async (repository, branch, githubToken, targetDir, os
     let isSaved;
 
     try {
-        isSaved = Boolean(await saveCache([targetDir], cacheKey));
+        isSaved = Boolean(await aSaveCache([targetDir], cacheKey));
     }
     catch (error) {
-        isError(true, `Error saving cache for ${repository}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error saving cache for ${repository}: ${error.message}`);
         return false;
     }
 

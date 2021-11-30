@@ -1,11 +1,11 @@
-const fs = require('fs');
-const core = require('@actions/core');
-const { Octokit } = require('@octokit/core');
-const filesize = require('filesize');
-const tar = require('tar');
+import fs from 'fs';
+import * as core from '@actions/core';
+import { Octokit } from '@octokit/core';
+import filesize from 'filesize';
+import tar from 'tar';
 
-const downloadFile = require('../src/download-file');
-const downloadRepository = require('../src/download-repository');
+import downloadFile from '../src/download-file';
+import downloadRepository from '../src/download-repository';
 
 jest.mock('@actions/core');
 jest.mock('@actions/http-client');

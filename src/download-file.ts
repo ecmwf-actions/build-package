@@ -1,5 +1,5 @@
-const fs = require('fs');
-const { HttpClient } = require('@actions/http-client');
+import fs from 'fs';
+import { HttpClient } from '@actions/http-client';
 
 /**
  * Downloads a file using `HttpClient` class. Supports HTTP redirection out-of-box.
@@ -8,7 +8,7 @@ const { HttpClient } = require('@actions/http-client');
  * @param {String} dest Destination path where to save the downloaded file.
  * @returns {Promise}
  */
-module.exports = (url, dest) => new Promise((resolve, reject) => {
+const downloadFile = (url: string, dest: string): Promise<void> => new Promise((resolve, reject) => {
     return new HttpClient().get(url)
         .then((res) => {
             const file = fs.createWriteStream(dest);
@@ -28,3 +28,5 @@ module.exports = (url, dest) => new Promise((resolve, reject) => {
             reject(error.message);
         });
 });
+
+export default downloadFile;

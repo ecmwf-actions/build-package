@@ -1,7 +1,7 @@
-const fs = require('fs');
-const { HttpClient } = require('@actions/http-client');
+import fs from 'fs';
+import { HttpClient } from '@actions/http-client';
 
-const downloadFile = require('../src/download-file');
+import downloadFile from '../src/download-file';
 
 jest.mock('@actions/http-client');
 
@@ -20,7 +20,9 @@ describe('downloadFile', () => {
                             cb();
 
                             return {
-                                on: () => {},
+                                on: () => {
+                                    // noop
+                                },
                             };
                         }
                     }),

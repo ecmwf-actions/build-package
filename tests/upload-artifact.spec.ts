@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const core = require('@actions/core');
-const artifact = require('@actions/artifact');
-const filesize = require('filesize');
-const tar = require('tar');
+import fs from 'fs';
+import path from 'path';
+import * as core from '@actions/core';
+import * as artifact from '@actions/artifact';
+import filesize from 'filesize';
+import tar from 'tar';
 
-const uploadArtifact = require('../src/upload-artifact');
+import uploadArtifact from '../src/upload-artifact';
 
 jest.mock('@actions/core');
 jest.mock('@actions/artifact');
