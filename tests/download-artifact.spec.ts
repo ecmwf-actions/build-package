@@ -33,7 +33,8 @@ const artifactPath = `${downloadDir}/${artifactName}`;
 const tarPath = `${artifactPath}/${artifactName}.tar`;
 const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 const errorStatusCode = 500;
-const errorMessage = 'Oops!';
+const errorObject = new Error('Oops!');
+const emptyObject = {};
 
 const resolveWorkflowRuns = () => Promise.resolve({
     status: 200,
@@ -444,8 +445,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('returns false if request for workflow runs fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if request for workflow runs fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -455,7 +460,7 @@ describe('downloadArtifact', () => {
             request: (route) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
-                    throw Error(errorMessage);
+                    throw error;
                 }
             },
         }));
@@ -463,9 +468,11 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow runs for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
+
+        if (error) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow runs for ${repo}: ${error.message}`);
     });
 
     it('returns false if request for workflow artifacts errors out', async () => {
@@ -496,8 +503,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('returns false if request for workflow artifacts fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if request for workflow artifacts fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -509,7 +520,7 @@ describe('downloadArtifact', () => {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
-                    throw Error(errorMessage);
+                    throw error;
                 }
             },
         }));
@@ -517,9 +528,11 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow run artifacts for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow run artifacts for ${repo}: ${error.message}`);
     });
 
     it('returns false if no workflow artifacts are found', async () => {
@@ -670,8 +683,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('returns false if request for repository HEAD runs fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if request for repository HEAD fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -685,7 +702,8 @@ describe('downloadArtifact', () => {
                 case 'GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts':
                     return resolveWorkflowRunArtifacts(artifactName);
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    throw Error(errorMessage);
+                    // eslint-disable-next-line jest/no-if
+                    throw error;
                 }
             },
         }));
@@ -693,9 +711,11 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${error.message}`);
     });
 
     it('returns false if request for downloading workflow run artifact errors out', async () => {
@@ -730,8 +750,12 @@ describe('downloadArtifact', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('returns false if request for downloading workflow run artifact fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if request for downloading workflow run artifact fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -747,7 +771,7 @@ describe('downloadArtifact', () => {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    throw Error(errorMessage);
+                    throw error;
                 }
             },
         }));
@@ -755,13 +779,19 @@ describe('downloadArtifact', () => {
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error downloading workflow run artifact for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error downloading workflow run artifact for ${repo}: ${error.message}`);
     });
 
-    it('returns false if extracting artifact TAR fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if extracting artifact TAR fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -788,17 +818,19 @@ describe('downloadArtifact', () => {
         }));
 
         tar.x.mockImplementation(() => {
-            throw new Error(errorMessage);
+            throw error;
         });
 
         const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv);
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error extracting artifact TAR for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         AdmZip.prototype.constructor.mockReset();
         tar.x.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error extracting artifact TAR for ${repo}: ${error.message}`);
     });
 
     it('returns false if dependencies do not match', async () => {

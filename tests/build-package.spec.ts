@@ -27,6 +27,8 @@ const codeCoverage = true;
 const os = 'ubuntu-20.04';
 const macOs = 'macos-10.15';
 const compiler = 'gnu-10';
+const errorObject = new Error('spawn /bin/sh ENOENT');
+const emptyObject = {};
 
 // Base environment object, we will take care not to modify it.
 const env = {
@@ -818,7 +820,11 @@ describe('buildPackage', () => {
         expect(testEnv).toStrictEqual(expectedEnv);
     });
 
-    it('returns false if command throws an error', async () => {
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if command throws an error', async ({ error }) => {
         expect.assertions(1);
 
         const testEnv = {
@@ -826,13 +832,12 @@ describe('buildPackage', () => {
         };
 
         exec.exec.mockImplementation(() => {
-            throw Error('spawn /bin/sh ENOENT');
+            throw error;
         });
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
         exec.exec.mockReset();
     });
 });

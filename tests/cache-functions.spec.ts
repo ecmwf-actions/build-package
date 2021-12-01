@@ -22,6 +22,8 @@ const compiler = 'gnu-10';
 const cacheSuffix = '';
 const installDir = '/path/to/install/repo';
 const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
+const errorObject = new Error('Oops!');
+const emptyObject = {};
 
 const env = {
     CMAKE_VERSION: '3.20.5',
@@ -191,8 +193,12 @@ describe('getCacheKey', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('logs error if repository HEAD fetch fails', async () => {
-        expect.assertions(3);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('logs error if repository HEAD fetch fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -207,11 +213,9 @@ describe('getCacheKey', () => {
 
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
 
-        const errorMessage = 'Oops!';
-
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: () => {
-                throw new Error(errorMessage);
+                throw error;
             },
         }));
 
@@ -219,9 +223,11 @@ describe('getCacheKey', () => {
 
         expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> result.headSha: undefined`);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`)
 
         Octokit.prototype.constructor.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${error.message}`)
     });
 
     it('invalidates the cache if suffix is supplied', async () => {
@@ -291,24 +297,28 @@ describe('restoreCache', () => {
         cache.restoreCache.mockReset();
     });
 
-    it('catches unexpected restore cache errors', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('catches unexpected restore cache errors', async ({ error }) => {
+        expect.hasAssertions();
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: resolveHeadSha,
         }));
 
-        const errorMessage = 'Oops!';
-
-        cache.restoreCache.mockRejectedValue(new Error(errorMessage));
+        cache.restoreCache.mockRejectedValue(error);
 
         const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
         expect(cacheHit).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error restoring cache for ${repository}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         cache.restoreCache.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error restoring cache for ${repository}: ${error.message}`);
     });
 });
 
@@ -383,8 +393,12 @@ describe('saveCache', () => {
         cache.saveCache.mockReset();
     });
 
-    it('catches unexpected save cache errors', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('catches unexpected save cache errors', async ({ error }) => {
+        expect.hasAssertions();
 
         Octokit.prototype.constructor.mockImplementation(() => ({
             request: resolveHeadSha,
@@ -394,17 +408,19 @@ describe('saveCache', () => {
             if (f) cb(null, 1024);
         });
 
-        const errorMessage = 'Oops!';
-
-        cache.saveCache.mockRejectedValue(new Error(errorMessage));
+        cache.saveCache.mockImplementation(() => {
+            throw error;
+        });
 
         const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env);
 
         expect(isSaved).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error saving cache for ${repository}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         fastFolderSize.mockReset();
         cache.saveCache.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error saving cache for ${repository}: ${error.message}`);
     });
 });

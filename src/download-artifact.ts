@@ -77,7 +77,7 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     if (isError(!workflowRuns.length, `No completed successful workflow runs found for ${repo}`)) return false;
 
     const lastRun = workflowRuns.shift();
-    const runId = lastRun?.id || 0;
+    const runId = lastRun?.id;
 
     core.info(`==> RunID: ${runId}`);
 
@@ -87,7 +87,7 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
         const response = await octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts', {
             owner,
             repo,
-            run_id: runId,
+            run_id: runId as number,
         });
 
         if (isError(response.status != 200, `Wrong response code while fetching workflow run artifacts for ${repo}: ${response.status}`))
@@ -150,7 +150,7 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
         const response = await octokit.request('GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}', {
             owner,
             repo,
-            artifact_id: artifact?.id || 0,
+            artifact_id: artifact?.id as number,
             archive_format: 'zip',
         });
 

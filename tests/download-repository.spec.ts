@@ -26,7 +26,8 @@ const size = 123456789;
 const tarName = 'repo.tar.gz';
 const sourceDir = '/path/to/download/repo';
 const errorStatusCode = 500;
-const errorMessage = 'Oops!';
+const errorObject = new Error('Oops!');
+const emptyObject = {};
 
 const resolveHeadSha = () => Promise.resolve({
     status: 200,
@@ -172,8 +173,12 @@ describe('downloadRepository', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('returns false if request for repository HEAD fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if request for repository HEAD fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -183,7 +188,7 @@ describe('downloadRepository', () => {
             request: (route) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    throw new Error(errorMessage);
+                    throw error;
                 }
             },
         }));
@@ -191,9 +196,11 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${error.message}`);
     });
 
     it('returns false if request for repository download URL errors out', async () => {
@@ -224,8 +231,12 @@ describe('downloadRepository', () => {
         Octokit.prototype.constructor.mockReset();
     });
 
-    it('returns false if request for repository download URL fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if request for repository download URL fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -237,7 +248,7 @@ describe('downloadRepository', () => {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
                 case 'GET /repos/{owner}/{repo}/tarball/{ref}':
-                    throw new Error(errorMessage);
+                    throw error;
                 }
             },
         }));
@@ -245,13 +256,19 @@ describe('downloadRepository', () => {
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository download URL for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error getting repository download URL for ${repo}: ${error.message}`);
     });
 
-    it('returns false if download fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if download fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -269,16 +286,18 @@ describe('downloadRepository', () => {
         }));
 
         downloadFile.mockImplementation(() => {
-            throw Error(errorMessage);
+            throw error;
         });
 
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error downloading repository archive for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         downloadFile.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error downloading repository archive for ${repo}: ${error.message}`);
     });
 
     it('returns false if determining archive size errors out', async () => {
@@ -316,8 +335,12 @@ describe('downloadRepository', () => {
         statSync.mockReset();
     });
 
-    it('returns false if extracting repository archive fails', async () => {
-        expect.assertions(2);
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('returns false if extracting repository archive fails', async ({ error }) => {
+        expect.hasAssertions();
 
         const testEnv = {
             ...env,
@@ -342,18 +365,20 @@ describe('downloadRepository', () => {
         }));
 
         tar.x.mockImplementation(() => {
-            throw new Error(errorMessage);
+            throw error;
         });
 
         const isRepositoryDownloaded = await downloadRepository(repository, branch, githubToken, downloadDir, testEnv);
 
         expect(isRepositoryDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error extracting repository archive for ${repo}: ${errorMessage}`);
 
         Octokit.prototype.constructor.mockReset();
         downloadFile.mockReset();
         statSync.mockReset();
         tar.x.mockReset();
+
+        if (!(error instanceof Error)) return;
+        expect(core.warning).toHaveBeenCalledWith(`Error extracting repository archive for ${repo}: ${error.message}`);
     });
 
     it('extends environment object with install paths and dependency', async () => {

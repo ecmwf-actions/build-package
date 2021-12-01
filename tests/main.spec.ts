@@ -61,6 +61,9 @@ const env = {
     COVERAGE_DIR: '/path/to/work/repo/repo/build/coverage',
 };
 
+const errorObject = new Error('Oops!');
+const emptyObject = {};
+
 describe('main', () => {
     it('resolves the promise if dependency artifacts are found', async () => {
         expect.assertions(1);
@@ -558,20 +561,22 @@ describe('main', () => {
         core.getMultilineInput.mockReset();
     });
 
-    it('rejects the promise if an error is thrown', async () => {
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('rejects the promise if an error is thrown', async ({ error }) => {
         expect.assertions(1);
 
         core.getInput.mockImplementation((inputName) => inputs[inputName]);
         core.getBooleanInput.mockImplementation((inputName) => inputs[inputName]);
         core.getMultilineInput.mockImplementation((inputName) => inputs[inputName]);
 
-        const errorMessage = 'Oops!';
-
         setupEnv.mockImplementation(() => {
-            throw Error(errorMessage);
+            throw error;
         });
 
-        await expect(main.call()).rejects.toBe(errorMessage);
+        await expect(main.call()).rejects.toBe(error.message);
 
         setupEnv.mockReset();
         core.getInput.mockReset();

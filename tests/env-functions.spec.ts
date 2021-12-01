@@ -28,6 +28,9 @@ const repo3 = 'PACKAGE3';
 
 const env = {};
 
+const errorObject = new Error('Oops!');
+const emptyObject = {};
+
 describe('setupEnv', () => {
     it('returns compiler and cmake version environment variables', async () => {
         expect.assertions(1);
@@ -64,17 +67,19 @@ describe('setupEnv', () => {
             CXX: compilerCxx,
             FC: compilerFc,
         });
+
+        exec.exec.mockReset();
     });
 
-    it('works around JSON parsing errors in cmake command', async () => {
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('works around JSON parsing errors in cmake command', async ({ error }) => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
-            if (args[0] === 'cmake') {
-                options.listeners.stdout('Oops!');
-            }
-
-            return Promise.resolve(0);
+        jest.spyOn(JSON, 'parse').mockImplementationOnce(() => {
+            throw error;
         });
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
@@ -84,6 +89,8 @@ describe('setupEnv', () => {
             CXX: compilerCxx,
             FC: compilerFc,
         });
+
+        jest.spyOn(JSON, 'parse').mockRestore();
     });
 
     it('works around empty version key in cmake command', async () => {
@@ -104,6 +111,8 @@ describe('setupEnv', () => {
             CXX: compilerCxx,
             FC: compilerFc,
         });
+
+        exec.exec.mockReset();
     });
 
     it('returns OpenSSL environment variables on macOS', async () => {
@@ -135,6 +144,8 @@ describe('setupEnv', () => {
             OPENSSL_ROOT_DIR: macOsOpenSslPathSanitized,
             OPENSSL_INCLUDE_DIR: `${macOsOpenSslPathSanitized}/include`,
         });
+
+        exec.exec.mockReset();
     });
 
     it('works around failed brew command on macOS', async () => {
@@ -161,6 +172,8 @@ describe('setupEnv', () => {
             FC: compilerFc,
             CMAKE_VERSION: cmakeVersion2,
         });
+
+        exec.exec.mockReset();
     });
 
     it('works around empty output of brew command on macOS', async () => {
@@ -188,6 +201,8 @@ describe('setupEnv', () => {
             FC: compilerFc,
             CMAKE_VERSION: cmakeVersion2,
         });
+
+        exec.exec.mockReset();
     });
 
 });
