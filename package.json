@@ -4,7 +4,7 @@
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx ncc build src/index.ts --minify --license licenses.txt --no-cache",
+    "build": "ncc build src/index.ts --minify --license licenses.txt",
     "stage-build": "git add dist/*",
     "test": "jest --ci --coverage",
     "lint": "eslint --ext .ts,.yml --fix action.yml .github src tests",
