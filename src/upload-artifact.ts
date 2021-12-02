@@ -20,7 +20,7 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the archiving and upload was successful.
  */
-const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
+const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
     const [owner] = repository.split('/');

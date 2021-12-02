@@ -112,7 +112,7 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the build and install process finished successfully.
  */
-const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: { [key: string]: string }) => {
+const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: { [key: string]: string }) => {
     core.startGroup(`Build ${repository}`);
 
     const [, repo] = repository.split('/');

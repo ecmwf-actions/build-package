@@ -50,7 +50,7 @@ const resolveWorkflowRuns = () => Promise.resolve({
     },
 });
 
-const resolveWorkflowRunArtifacts = (targetArtifactName) => Promise.resolve({
+const resolveWorkflowRunArtifacts = (targetArtifactName: string): Promise<Record<string, unknown>> => Promise.resolve({
     status: 200,
     data: {
         artifacts: [
@@ -132,11 +132,11 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation((options) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation((options) => {
             if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
 
             return {
-                request: (route) => {
+                request: (route: string) => {
                     switch (route) {
                     case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                         return resolveWorkflowRuns();
@@ -151,7 +151,7 @@ describe('downloadArtifact', () => {
             };
         });
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -159,6 +159,7 @@ describe('downloadArtifact', () => {
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
             if (path === dependenciesPath) return false;
+            return true;
         });
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
@@ -189,8 +190,8 @@ describe('downloadArtifact', () => {
             expect(core.info).toHaveBeenCalledWith(`  ${action}: ${filepath}`);
         });
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 
@@ -210,8 +211,8 @@ describe('downloadArtifact', () => {
             },
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -225,7 +226,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -233,6 +234,7 @@ describe('downloadArtifact', () => {
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
             if (path === dependenciesPath) return true;
+            return false;
         });
 
         const readFileSync = jest.spyOn(fs, 'readFileSync');
@@ -241,6 +243,7 @@ describe('downloadArtifact', () => {
                 [dependency1]: dependency1Sha,
                 [dependency2]: dependency2Sha,
             });
+            return '';
         });
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
@@ -251,8 +254,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         existsSync.mockReset();
         readFileSync.mockReset();
         unlinkSync.mockReset();
@@ -267,8 +270,8 @@ describe('downloadArtifact', () => {
 
         const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`;
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -282,7 +285,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -295,8 +298,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${ecbuildArtifactName}`);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 
@@ -307,8 +310,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
@@ -327,7 +330,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -340,8 +343,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found for ecbuild');
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 
@@ -352,8 +355,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
@@ -372,7 +375,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -385,8 +388,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found for ecbuild');
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 
@@ -397,8 +400,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
@@ -413,7 +416,7 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow runs for ${repo}: ${errorStatusCode}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it('returns false if no workflow runs were found', async () => {
@@ -423,8 +426,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return Promise.resolve({
@@ -442,7 +445,7 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No workflow runs found for ${repo}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it.each`
@@ -456,8 +459,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     throw error;
@@ -469,7 +472,7 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
 
         if (error) return;
         expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow runs for ${repo}: ${error.message}`);
@@ -482,8 +485,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -500,7 +503,7 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow run artifacts for ${repo}: ${errorStatusCode}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it.each`
@@ -514,8 +517,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -529,7 +532,7 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error fetching workflow run artifacts for ${repo}: ${error.message}`);
@@ -542,8 +545,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -563,7 +566,7 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No workflow artifacts found for ${repo}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it('returns false if repository HEAD state does not match', async () => {
@@ -575,8 +578,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -597,7 +600,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -610,8 +613,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ${repo}-${os}-${compiler}-${newSha}`);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 
@@ -622,8 +625,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -635,7 +638,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -648,8 +651,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 
@@ -660,8 +663,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -680,7 +683,7 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it.each`
@@ -694,8 +697,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -712,7 +715,7 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${error.message}`);
@@ -725,8 +728,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -747,7 +750,7 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while downloading workflow run artifact for ${repo}: ${errorStatusCode}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it.each`
@@ -761,8 +764,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -780,7 +783,7 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error downloading workflow run artifact for ${repo}: ${error.message}`);
@@ -797,8 +800,8 @@ describe('downloadArtifact', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -812,12 +815,12 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
 
-        tar.x.mockImplementation(() => {
+        (tar.x as jest.Mock).mockImplementation(() => {
             throw error;
         });
 
@@ -825,9 +828,9 @@ describe('downloadArtifact', () => {
 
         expect(isArtifactDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
-        tar.x.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
+        (tar.x as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error extracting artifact TAR for ${repo}: ${error.message}`);
@@ -850,8 +853,8 @@ describe('downloadArtifact', () => {
             },
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -865,7 +868,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -873,6 +876,7 @@ describe('downloadArtifact', () => {
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
             if (path === dependenciesPath) return true;
+            return false;
         });
 
         const readFileSync = jest.spyOn(fs, 'readFileSync');
@@ -881,6 +885,7 @@ describe('downloadArtifact', () => {
                 [dependency1]: dependency1Sha,
                 [dependency2]: dependency2OldSha,
             });
+            return '';
         });
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
@@ -892,8 +897,8 @@ describe('downloadArtifact', () => {
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
         expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency2} for ${repo}: ${dependency2NewSha} !== ${dependency2OldSha}`);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         existsSync.mockReset();
         readFileSync.mockReset();
         unlinkSync.mockReset();
@@ -921,8 +926,8 @@ describe('downloadArtifact', () => {
             },
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs':
                     return resolveWorkflowRuns();
@@ -936,7 +941,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        AdmZip.prototype.constructor.mockImplementation(() => ({
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementation(() => ({
             getEntries,
             extractAllTo,
         }));
@@ -949,8 +954,8 @@ describe('downloadArtifact', () => {
         expect(isArtifactDownloaded).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);
 
-        Octokit.prototype.constructor.mockReset();
-        AdmZip.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (AdmZip.prototype.constructor as jest.Mock).mockReset();
         unlinkSync.mockReset();
     });
 });

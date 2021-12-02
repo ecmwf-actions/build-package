@@ -21,7 +21,7 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {String} compilerFc Fortran compiler alias.
  * @returns {Object} Environment object with keys as variable names.
  */
-export const setupEnv = async (os: string, compilerCc: string, compilerCxx: string, compilerFc: string): Promise<EnvironmentVariables> => {
+export const setupEnv = async (os: string, compilerCc: string | null, compilerCxx: string | null, compilerFc: string): Promise<EnvironmentVariables> => {
     core.startGroup('Setup Environment');
 
     const env: EnvironmentVariables = {
@@ -94,7 +94,7 @@ export const setupEnv = async (os: string, compilerCc: string, compilerCxx: stri
  * @param {String} installDir Path to installation directory.
  * @param {String} packageName Package name.
  */
-export const extendPaths = async (env: EnvironmentVariables, installDir: string, packageName: string) => {
+export const extendPaths = async (env: EnvironmentVariables | null, installDir: string, packageName: string) => {
     if (!env) return;
 
     if (env.PATH) {
@@ -153,7 +153,7 @@ export const extendPaths = async (env: EnvironmentVariables, installDir: string,
  * @param {String} repository Github repository owner and name.
  * @param {String} sha Github repository commit SHA.
  */
-export const extendDependencies = async (env: EnvironmentVariables, repository: string, sha: string) => {
+export const extendDependencies = async (env: EnvironmentVariables | null, repository: string, sha: string) => {
     if (!env) return;
 
     if (env.DEPENDENCIES) {

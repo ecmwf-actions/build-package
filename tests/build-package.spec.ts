@@ -6,6 +6,7 @@ import * as exec from '@actions/exec';
 import { mkdirP } from '@actions/io';
 
 import buildPackage from '../src/build-package';
+import { EnvironmentVariables } from '../src/types/env-functions';
 
 jest.mock('@actions/core');
 jest.mock('@actions/exec');
@@ -31,7 +32,7 @@ const errorObject = new Error('spawn /bin/sh ENOENT');
 const emptyObject = {};
 
 // Base environment object, we will take care not to modify it.
-const env = {
+const env: EnvironmentVariables = {
     CC: 'gcc-10',
     CXX: 'g++-10',
     FC: 'gfortran-10',
@@ -58,13 +59,13 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation(() => Promise.resolve(1));
+        (exec.exec as jest.Mock).mockImplementation(() => Promise.resolve(1));
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('supports cmake switch', async () => {
@@ -94,7 +95,7 @@ describe('buildPackage', () => {
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir}`);
 
-        core.info.mockReset();
+        (core.info as jest.Mock).mockReset();
 
         const testEnv2 = {
             ...env,
@@ -130,7 +131,7 @@ describe('buildPackage', () => {
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},${testCmakeOptions}`);
 
-        core.info.mockReset();
+        (core.info as jest.Mock).mockReset();
 
         const testEnv2 = {
             ...env,
@@ -164,7 +165,7 @@ describe('buildPackage', () => {
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> testOptions: ${testCtestOptions}`);
 
-        core.info.mockReset();
+        (core.info as jest.Mock).mockReset();
 
         const testEnv2 = {
             ...env,
@@ -210,11 +211,13 @@ describe('buildPackage', () => {
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
             if (path === cmakeOptionsFile) return true;
+            return false;
         });
 
         const readFileSync = jest.spyOn(fs, 'readFileSync');
         readFileSync.mockImplementation((path) => {
             if (path === cmakeOptionsFile) return cmakeOptionsFileContent;
+            return '';
         });
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
@@ -252,6 +255,7 @@ describe('buildPackage', () => {
         const readFileSync = jest.spyOn(fs, 'readFileSync');
         readFileSync.mockImplementation((path) => {
             if (path === deprecatedCmakeOptionsFile) return deprecatedCmakeOptionsFileContent;
+            return '';
         });
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
@@ -329,7 +333,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'sudo'
                 && args[0] === 'apt-get'
@@ -348,7 +352,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('adds code coverage compiler flags on supported platform', async () => {
@@ -389,7 +393,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(true);
 
-        core.info.mock.calls.forEach((call) => {
+        (core.info as jest.Mock).mock.calls.forEach((call) => {
             const arg = call[0];
             if (!/^==> options\.env:/.test(arg)) return;
 
@@ -402,7 +406,7 @@ describe('buildPackage', () => {
     it('allows overriding of default options via current environment variables', async () => {
         expect.assertions(12);
 
-        const testEnv = {
+        const testEnv: EnvironmentVariables = {
             ...env,
             'CTEST_OUTPUT_ON_FAILURE': '0',
             'CMAKE_BUILD_PARALLEL_LEVEL': '1',
@@ -429,7 +433,7 @@ describe('buildPackage', () => {
         expect(exec.exec).toHaveBeenCalledWith('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
         expect(exec.exec).toHaveBeenCalledWith('env', ['cmake', '--install', '.'], options);
 
-        core.info.mock.calls.forEach((call) => {
+        (core.info as jest.Mock).mock.calls.forEach((call) => {
             const arg = call[0];
             if (!/^==> options\.env:/.test(arg)) return;
 
@@ -550,7 +554,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'ecbuild'
@@ -567,7 +571,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if build command failed', async () => {
@@ -577,7 +581,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'cmake'
@@ -594,7 +598,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if test command failed', async () => {
@@ -604,7 +608,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'ctest'
@@ -619,7 +623,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage collection command failed', async () => {
@@ -629,7 +633,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'lcov'
@@ -649,7 +653,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage cleanup command failed', async () => {
@@ -659,7 +663,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'lcov'
@@ -681,7 +685,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage report listing command failed', async () => {
@@ -691,7 +695,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'lcov'
@@ -708,7 +712,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage report generation command failed', async () => {
@@ -718,7 +722,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'genhtml'
@@ -736,7 +740,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if install command failed', async () => {
@@ -746,7 +750,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation((command, args) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
                 command === 'env'
                 && args[0] === 'cmake'
@@ -763,7 +767,7 @@ describe('buildPackage', () => {
 
         expect(isBuilt).toBe(false);
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('extends environment object with install paths', async () => {
@@ -831,13 +835,13 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        exec.exec.mockImplementation(() => {
+        (exec.exec as jest.Mock).mockImplementation(() => {
             throw error;
         });
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 });

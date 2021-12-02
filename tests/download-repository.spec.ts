@@ -59,11 +59,11 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation((options) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation((options) => {
             if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
 
             return {
-                request: (route) => {
+                request: (route: string) => {
                     switch (route) {
                     case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                         return resolveHeadSha();
@@ -74,15 +74,15 @@ describe('downloadRepository', () => {
             };
         });
 
-        downloadFile.mockImplementation(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockImplementation(() => Promise.resolve());
 
         const statSync = jest.spyOn(fs, 'statSync');
-        statSync.mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementation(() => ({
             size,
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        (unlinkSync as jest.Mock).mockImplementation(() => {
             return true;
         });
 
@@ -96,10 +96,10 @@ describe('downloadRepository', () => {
         expect(core.info).toHaveBeenCalledWith(`==> Downloaded: ${tarName} (${filesize(size)})`);
         expect(core.info).toHaveBeenCalledWith(`==> Extracted ${tarName} to ${sourceDir}`);
 
-        Octokit.prototype.constructor.mockReset();
-        downloadFile.mockReset();
-        statSync.mockReset();
-        unlinkSync.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (downloadFile as jest.Mock).mockReset();
+        (statSync as jest.Mock).mockReset();
+        (unlinkSync as jest.Mock).mockReset();
     });
 
     it('supports tags', async () => {
@@ -112,8 +112,8 @@ describe('downloadRepository', () => {
         const testTag = '1.0.0';
         const testBranch = `refs/tags/${testTag}`;
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -123,15 +123,15 @@ describe('downloadRepository', () => {
             },
         }));
 
-        downloadFile.mockImplementation(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockImplementation(() => Promise.resolve());
 
         const statSync = jest.spyOn(fs, 'statSync');
-        statSync.mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementation(() => ({
             size,
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        (unlinkSync as jest.Mock).mockImplementation(() => {
             return true;
         });
 
@@ -141,10 +141,10 @@ describe('downloadRepository', () => {
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
         expect(core.info).toHaveBeenCalledWith(`==> Ref: tags/${testTag}`);
 
-        Octokit.prototype.constructor.mockReset();
-        downloadFile.mockReset();
-        statSync.mockReset();
-        unlinkSync.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (downloadFile as jest.Mock).mockReset();
+        (statSync as jest.Mock).mockReset();
+        (unlinkSync as jest.Mock).mockReset();
     });
 
     it('returns false if request for repository HEAD errors out', async () => {
@@ -154,8 +154,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return Promise.resolve({
@@ -170,7 +170,7 @@ describe('downloadRepository', () => {
         expect(isRepositoryDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it.each`
@@ -184,8 +184,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     throw error;
@@ -197,7 +197,7 @@ describe('downloadRepository', () => {
 
         expect(isRepositoryDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${error.message}`);
@@ -210,8 +210,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -228,7 +228,7 @@ describe('downloadRepository', () => {
         expect(isRepositoryDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository download URL for ${repo}: ${errorStatusCode}`);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
     });
 
     it.each`
@@ -242,8 +242,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -257,7 +257,7 @@ describe('downloadRepository', () => {
 
         expect(isRepositoryDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error getting repository download URL for ${repo}: ${error.message}`);
@@ -274,8 +274,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -285,7 +285,7 @@ describe('downloadRepository', () => {
             },
         }));
 
-        downloadFile.mockImplementation(() => {
+        (downloadFile as jest.Mock).mockImplementation(() => {
             throw error;
         });
 
@@ -293,8 +293,8 @@ describe('downloadRepository', () => {
 
         expect(isRepositoryDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
-        downloadFile.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (downloadFile as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error downloading repository archive for ${repo}: ${error.message}`);
@@ -307,8 +307,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -318,10 +318,10 @@ describe('downloadRepository', () => {
             },
         }));
 
-        downloadFile.mockImplementation(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockImplementation(() => Promise.resolve());
 
         const statSync = jest.spyOn(fs, 'statSync');
-        statSync.mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementation(() => ({
             size: 0,
         }));
 
@@ -330,9 +330,9 @@ describe('downloadRepository', () => {
         expect(isRepositoryDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error determining size of repository archive for ${repo}`);
 
-        Octokit.prototype.constructor.mockReset();
-        downloadFile.mockReset();
-        statSync.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (downloadFile as jest.Mock).mockReset();
+        (statSync as jest.Mock).mockReset();
     });
 
     it.each`
@@ -346,8 +346,8 @@ describe('downloadRepository', () => {
             ...env,
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -357,14 +357,14 @@ describe('downloadRepository', () => {
             },
         }));
 
-        downloadFile.mockImplementation(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockImplementation(() => Promise.resolve());
 
         const statSync = jest.spyOn(fs, 'statSync');
-        statSync.mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementation(() => ({
             size,
         }));
 
-        tar.x.mockImplementation(() => {
+        (tar.x as jest.Mock).mockImplementation(() => {
             throw error;
         });
 
@@ -372,10 +372,10 @@ describe('downloadRepository', () => {
 
         expect(isRepositoryDownloaded).toBe(false);
 
-        Octokit.prototype.constructor.mockReset();
-        downloadFile.mockReset();
-        statSync.mockReset();
-        tar.x.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (downloadFile as jest.Mock).mockReset();
+        (statSync as jest.Mock).mockReset();
+        (tar.x as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error extracting repository archive for ${repo}: ${error.message}`);
@@ -395,8 +395,8 @@ describe('downloadRepository', () => {
             },
         };
 
-        Octokit.prototype.constructor.mockImplementation(() => ({
-            request: (route) => {
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
                 switch (route) {
                 case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
                     return resolveHeadSha();
@@ -406,15 +406,15 @@ describe('downloadRepository', () => {
             },
         }));
 
-        downloadFile.mockImplementation(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockImplementation(() => Promise.resolve());
 
         const statSync = jest.spyOn(fs, 'statSync');
-        statSync.mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementation(() => ({
             size,
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        (unlinkSync as jest.Mock).mockImplementation(() => {
             return true;
         });
 
@@ -423,9 +423,9 @@ describe('downloadRepository', () => {
         expect(isRepositoryDownloaded).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);
 
-        Octokit.prototype.constructor.mockReset();
-        downloadFile.mockReset();
-        statSync.mockReset();
-        unlinkSync.mockReset();
+        (Octokit.prototype.constructor as jest.Mock).mockReset();
+        (downloadFile as jest.Mock).mockReset();
+        (statSync as jest.Mock).mockReset();
+        (unlinkSync as jest.Mock).mockReset();
     });
 });

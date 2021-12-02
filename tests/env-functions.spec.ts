@@ -35,7 +35,7 @@ describe('setupEnv', () => {
     it('returns compiler and cmake version environment variables', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             return new Promise((resolve) => {
                 if (args[0] === 'cmake') {
                     options.listeners.stdout(`{"version":{"string":"${cmakeVersion1}"}}`);
@@ -52,13 +52,15 @@ describe('setupEnv', () => {
             FC: compilerFc,
             CMAKE_VERSION: cmakeVersion1,
         });
+
+        (exec.exec as jest.Mock).mockReset();
     });
 
 
     it('works around failed cmake command', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation(() => Promise.resolve(1));
+        (exec.exec as jest.Mock).mockImplementation(() => Promise.resolve(1));
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
@@ -68,7 +70,7 @@ describe('setupEnv', () => {
             FC: compilerFc,
         });
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it.each`
@@ -96,7 +98,7 @@ describe('setupEnv', () => {
     it('works around empty version key in cmake command', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             if (args[0] === 'cmake') {
                 options.listeners.stdout('{"version":{"string":""}}');
             }
@@ -112,13 +114,13 @@ describe('setupEnv', () => {
             FC: compilerFc,
         });
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns OpenSSL environment variables on macOS', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             switch (args[0]) {
             case 'cmake':
                 options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
@@ -145,13 +147,13 @@ describe('setupEnv', () => {
             OPENSSL_INCLUDE_DIR: `${macOsOpenSslPathSanitized}/include`,
         });
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('works around failed brew command on macOS', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             switch (args[0]) {
             case 'cmake':
                 options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
@@ -173,13 +175,13 @@ describe('setupEnv', () => {
             CMAKE_VERSION: cmakeVersion2,
         });
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
     it('works around empty output of brew command on macOS', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             switch (args[0]) {
             case 'cmake':
                 options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
@@ -202,7 +204,7 @@ describe('setupEnv', () => {
             CMAKE_VERSION: cmakeVersion2,
         });
 
-        exec.exec.mockReset();
+        (exec.exec as jest.Mock).mockReset();
     });
 
 });

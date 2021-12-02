@@ -4,7 +4,7 @@ import main from '../src/main';
 jest.mock('@actions/core');
 jest.mock('../src/main');
 
-const outputs = {
+const outputs: { [key: string]: string } = {
     bin_path: '/path/to/install/repo2/bin:/path/to/install/repo2/bin',
     include_path: '/path/to/install/repo2/include:/path/to/install/repo2/include',
     install_path: '/path/to/install/repo2:/path/to/install/repo2',
@@ -15,7 +15,7 @@ describe('entry', () => {
     it('sets path outputs and logs values', async () => {
         expect.assertions(8);
 
-        main.mockImplementation(() => Promise.resolve(outputs));
+        (main as jest.Mock).mockImplementation(() => Promise.resolve(outputs));
 
         await jest.isolateModules(() => require('../src/index'));
 
@@ -26,18 +26,18 @@ describe('entry', () => {
             expect(core.info).toHaveBeenCalledWith(`==> ${outputName}: ${outputValue}`);
         });
 
-        main.mockReset();
+        (main as jest.Mock).mockReset();
     });
 
     it('sets outputs with coverage file and logs values', async () => {
         expect.assertions(10);
 
-        const outputsWithCoverageFile = {
+        const outputsWithCoverageFile: { [key: string]: string } = {
             ...outputs,
             coverage_file: '/path/to/repo/build/coverage.info',
         };
 
-        main.mockImplementation(() => Promise.resolve(outputsWithCoverageFile));
+        (main as jest.Mock).mockImplementation(() => Promise.resolve(outputsWithCoverageFile));
 
         await jest.isolateModules(() => require('../src/index'));
 
@@ -48,7 +48,7 @@ describe('entry', () => {
             expect(core.info).toHaveBeenCalledWith(`==> ${outputName}: ${outputValue}`);
         });
 
-        main.mockReset();
+        (main as jest.Mock).mockReset();
     });
 
     it('sets failure on errors', async () => {
@@ -56,7 +56,7 @@ describe('entry', () => {
 
         const errorMessage = 'Oops!';
 
-        main.mockImplementation(() => Promise.reject(errorMessage));
+        (main as jest.Mock).mockImplementation(() => Promise.reject(errorMessage));
 
         // For some reason, checking toHaveBeenCalledWith() on this mock function does not work, possibly because of
         //   some race condition at play. Instead, we mock its implementation and check if it's called with correct
@@ -67,6 +67,6 @@ describe('entry', () => {
 
         await jest.isolateModules(() => require('../src/index'));
 
-        main.mockReset();
+        (main as jest.Mock).mockReset();
     });
 });
