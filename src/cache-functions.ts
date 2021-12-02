@@ -8,6 +8,7 @@ import fastFolderSize from 'fast-folder-size';
 import { version } from '../package.json';
 import { extendPaths, extendDependencies } from './env-functions';
 import { isError } from './helper-functions';
+
 import { EnvironmentVariables } from './types/env-functions';
 
 /**

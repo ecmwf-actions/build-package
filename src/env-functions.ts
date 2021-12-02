@@ -3,6 +3,7 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 
 import { isError } from './helper-functions';
+
 import { EnvironmentVariables } from './types/env-functions';
 
 /**
@@ -156,8 +157,11 @@ export const extendPaths = async (env: EnvironmentVariables | null, installDir: 
 export const extendDependencies = async (env: EnvironmentVariables | null, repository: string, sha: string) => {
     if (!env) return;
 
-    if (env.DEPENDENCIES) {
-        env.DEPENDENCIES[repository] = sha;
+    if (env.DEPENDENCIES instanceof Object) {
+        Object.assign(env.DEPENDENCIES, {
+            ...env.DEPENDENCIES,
+            [repository]: sha,
+        });
     }
     else {
         env.DEPENDENCIES = {

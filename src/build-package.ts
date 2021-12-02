@@ -9,6 +9,7 @@ import isEqual from 'lodash.isequal';
 
 import { extendPaths } from './env-functions';
 import { isError } from './helper-functions';
+
 import { BuildOptions } from './types/build-package';
 import { EnvironmentVariables } from './types/env-functions';
 
@@ -81,8 +82,8 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
         const matches = [...option.matchAll(variableRegex)];
 
         matches.forEach((match) => {
-            const variableName: string = match[1];
-            option = option.replace(new RegExp(`\\$\\{?${variableName}\\}?`), env[variableName]);
+            const variableName = match[1];
+            option = option.replace(new RegExp(`\\$\\{?${variableName}\\}?`), env[variableName] as string);
         });
 
         result.push(option);
@@ -112,7 +113,7 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
  * @param {Object} env Local environment object.
  * @returns {Boolean} Whether the build and install process finished successfully.
  */
-const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: { [key: string]: string }) => {
+const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: EnvironmentVariables) => {
     core.startGroup(`Build ${repository}`);
 
     const [, repo] = repository.split('/');

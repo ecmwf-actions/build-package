@@ -7,6 +7,7 @@ import downloadArtifact from './download-artifact';
 import uploadArtifact from './upload-artifact';
 import downloadRepository from './download-repository';
 import buildPackage from './build-package';
+import { CmakeOptionsLookup } from './types/main';
 
 /**
  * First, the main function checks if a dependency build artifact can be found for current OS and compiler combination.
@@ -44,7 +45,7 @@ const main = async () => {
         const installDir = core.getInput('install_dir', { required: true });
         const downloadDir = core.getInput('download_dir', { required: true });
 
-        const dependencyCmakeOptionsLookup: { [key: string]: string } = {};
+        const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
             const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
             if (!repo || !options) return Promise.reject(`Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`);
@@ -103,21 +104,21 @@ const main = async () => {
             if (!isBuilt) return Promise.reject('Error building package');
 
             // Upload build artifact.
-            await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES, os, compiler, env);
+            await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env);
 
             // Upload coverage artifact.
-            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR, null, os, compiler, env);
+            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env);
         }
 
         const outputs: ActionOutputs = {
-            bin_path: env.BIN_PATH,
-            include_path: env.INCLUDE_PATH,
-            install_path: env.INSTALL_PATH,
-            lib_path: env.LIB_PATH,
+            bin_path: env.BIN_PATH as string,
+            include_path: env.INCLUDE_PATH as string,
+            install_path: env.INSTALL_PATH as string,
+            lib_path: env.LIB_PATH as string,
         };
 
         if (selfCoverage && env.COVERAGE_FILE) {
-            outputs.coverage_file = env.COVERAGE_FILE;
+            outputs.coverage_file = env.COVERAGE_FILE as string;
         }
 
         return Promise.resolve(outputs);

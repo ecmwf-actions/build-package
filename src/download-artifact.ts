@@ -10,6 +10,7 @@ import tar from 'tar';
 
 import { extendPaths, extendDependencies } from './env-functions';
 import { isError } from './helper-functions';
+
 import { EnvironmentVariables } from './types/env-functions';
 
 /**
@@ -199,13 +200,13 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
         for (const [dependency, dependencySha] of Object.entries(dependencies)) {
             if (
                 env.DEPENDENCIES
-                && env.DEPENDENCIES[dependency]
-                && env.DEPENDENCIES[dependency] !== dependencySha
+                && env.DEPENDENCIES[dependency as keyof DependenciesObject]
+                && env.DEPENDENCIES[dependency as keyof DependenciesObject] !== dependencySha
             ) {
                 fs.unlinkSync(tarPath);
                 fs.unlinkSync(dependenciesPath);
 
-                isError(true, `Error matching dependency ${dependency} for ${repo}: ${env.DEPENDENCIES[dependency]} !== ${dependencySha}`);
+                isError(true, `Error matching dependency ${dependency} for ${repo}: ${env.DEPENDENCIES[dependency as keyof DependenciesObject]} !== ${dependencySha}`);
 
                 return false;
             }

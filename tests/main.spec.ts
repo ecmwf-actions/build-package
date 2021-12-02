@@ -18,8 +18,7 @@ jest.mock('../src/upload-artifact');
 jest.mock('../src/download-repository');
 jest.mock('../src/build-package');
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const inputs: { [key: string ]: any } = {
+const inputs: ActionInputs = {
     workspace: '/path/to/work/repo/repo',
     repository: 'owner/repo',
     cmake: false,
@@ -46,7 +45,7 @@ const inputs: { [key: string ]: any } = {
     download_dir: '/path/to/download',
 };
 
-const outputs = {
+const outputs: ActionOutputs = {
     bin_path: '/path/to/install/repo2/bin:/path/to/install/repo2/bin',
     include_path: '/path/to/install/repo2/include:/path/to/install/repo2/include',
     install_path: '/path/to/install/repo2:/path/to/install/repo2',
@@ -54,12 +53,12 @@ const outputs = {
     coverage_file: '/path/to/work/repo/repo/build/coverage.info',
 };
 
-const env = {
+const env: EnvironmentVariables = {
     BIN_PATH: outputs.bin_path,
     INCLUDE_PATH: outputs.include_path,
     INSTALL_PATH: outputs.install_path,
     LIB_PATH: outputs.lib_path,
-    COVERAGE_FILE: outputs.coverage_file,
+    COVERAGE_FILE: outputs.coverage_file as string,
     COVERAGE_DIR: '/path/to/work/repo/repo/build/coverage',
 };
 
@@ -321,8 +320,7 @@ describe('main', () => {
         delete testEnv.COVERAGE_FILE;
         delete testEnv.COVERAGE_DIR;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const expectedOutputs: { [key: string]: any } = {
+        const expectedOutputs = {
             ...outputs,
         };
 
