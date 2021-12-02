@@ -7,6 +7,7 @@ import downloadArtifact from './download-artifact';
 import uploadArtifact from './upload-artifact';
 import downloadRepository from './download-repository';
 import buildPackage from './build-package';
+
 import { CmakeOptionsLookup } from './types/main';
 
 /**
@@ -17,7 +18,7 @@ import { CmakeOptionsLookup } from './types/main';
  * Then, the main function will build currently checked out repository, run tests, collect code coverage and create
  * artifacts for later use.
  *
- * @returns {Promise} Outputs object on resolution, failure message on rejection.
+ * @returns {Promise<ActionOutputs>} Outputs object on resolution, failure message on rejection.
  */
 const main = async () => {
     try {

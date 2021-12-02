@@ -16,17 +16,17 @@ import { EnvironmentVariables } from './types/env-functions';
 /**
  * Downloads and extracts package artifact.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} downloadDir Directory where the artifact will be downloaded.
- * @param {String} installDir Directory where to extract the artifact
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the download and extraction was successful
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch name.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} downloadDir Directory where the artifact will be downloaded.
+ * @param {string} installDir Directory where to extract the artifact.
+ * @param {string} os Current OS platform.
+ * @param {string} compiler Current compiler family.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables) => {
+const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';

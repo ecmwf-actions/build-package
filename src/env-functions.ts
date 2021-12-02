@@ -16,11 +16,11 @@ import { EnvironmentVariables } from './types/env-functions';
  *   OPENSSL_ROOT_DIR
  *   OPENSSL_INCLUDE_DIR
  *
- * @param {String} os Current OS platform.
- * @param {String} compilerCc C compiler alias.
- * @param {String} compilerCxx C++ compiler alias.
- * @param {String} compilerFc Fortran compiler alias.
- * @returns {Object} Environment object with keys as variable names.
+ * @param {string} os Current OS platform.
+ * @param {string|null} compilerCc C compiler alias.
+ * @param {string|null} compilerCxx C++ compiler alias.
+ * @param {string} compilerFc Fortran compiler alias.
+ * @returns {Promise<EnvironmentVariables>} Environment object with keys as variable names.
  */
 export const setupEnv = async (os: string, compilerCc: string | null, compilerCxx: string | null, compilerFc: string): Promise<EnvironmentVariables> => {
     core.startGroup('Setup Environment');
@@ -91,9 +91,9 @@ export const setupEnv = async (os: string, compilerCc: string | null, compilerCx
 /**
  * Extends environment object with installation paths.
  *
- * @param {Object} env Environment object.
- * @param {String} installDir Path to installation directory.
- * @param {String} packageName Package name.
+ * @param {EnvironmentVariables|null} env Environment object.
+ * @param {string} installDir Path to installation directory.
+ * @param {string} packageName Package name.
  */
 export const extendPaths = async (env: EnvironmentVariables | null, installDir: string, packageName: string) => {
     if (!env) return;
@@ -150,9 +150,9 @@ export const extendPaths = async (env: EnvironmentVariables | null, installDir: 
 /**
  * Extends environment object with dependencies.
  *
- * @param {Object} env Environment object.
- * @param {String} repository Github repository owner and name.
- * @param {String} sha Github repository commit SHA.
+ * @param {EnvironmentVariables|null} env Environment object.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} sha Github repository commit SHA.
  */
 export const extendDependencies = async (env: EnvironmentVariables | null, repository: string, sha: string) => {
     if (!env) return;

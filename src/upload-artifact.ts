@@ -12,14 +12,14 @@ import { EnvironmentVariables } from './types/env-functions';
 /**
  * Archives and uploads package artifact.
  *
- * @param {String} repository Github repository owner and name to upload artifact for.
- * @param {String} sha Github repository commit SHA.
- * @param {String} targetDir Target directory to upload as artifact.
- * @param {Object} dependencies Dependencies object.
- * @param {String} os Current OS platform.
- * @param {String} compiler Current compiler family.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the archiving and upload was successful.
+ * @param {string} repository Github repository owner and name to upload artifact for.
+ * @param {string} sha Github repository commit SHA.
+ * @param {string} targetDir Target directory to upload as artifact.
+ * @param {DependenciesObject} dependencies Dependencies object.
+ * @param {string} os Current OS platform.
+ * @param {string|null} compiler Current compiler family.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the archiving and upload was successful.
  */
 const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);

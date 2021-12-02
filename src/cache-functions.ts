@@ -14,14 +14,14 @@ import { EnvironmentVariables } from './types/env-functions';
 /**
  * Returns cache key for a package.
  *
- * @param {String} repository Github repository owner and name.
- * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
- * @param {String} os Current OS platform.
- * @param {String} compiler Current compiler family.
- * @param {String} cacheSuffix A string which will be appended to the cache key.
- * @param {Object} env Local environment object.
- * @returns {Object} An object with package cache key and head SHA used to calculate it.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} os Current OS platform.
+ * @param {string} compiler Current compiler family.
+ * @param {string} cacheSuffix A string which will be appended to the cache key.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<CacheObject>} An object with package cache key and head SHA used to calculate it.
  */
 export const getCacheKey = async (repository: string, branch: string, githubToken: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<CacheObject> => {
     core.startGroup(`Cache Key for ${repository}`);
@@ -93,16 +93,16 @@ export const getCacheKey = async (repository: string, branch: string, githubToke
 /**
  * Restores package from cache, if found.
  *
- * @param {String} repository Github repository owner and name.
- * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
- * @param {String} repo Name of the package to download, will be used as the final extraction directory.
- * @param {String} installDir Directory to restore to.
- * @param {String} os Current OS platform.
- * @param {String} compiler Current compiler family.
- * @param {String} cacheSuffix A string which will be appended to the cache key.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the package cache was found.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} repo Name of the package to download, will be used as the final extraction directory.
+ * @param {string} installDir Directory to restore to.
+ * @param {string} os Current OS platform.
+ * @param {string} compiler Current compiler family.
+ * @param {string} cacheSuffix A string which will be appended to the cache key.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the package cache was found.
  */
 export const restoreCache = async (repository: string, branch: string, githubToken: string, installDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<boolean> => {
     const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
@@ -136,15 +136,15 @@ export const restoreCache = async (repository: string, branch: string, githubTok
 /**
  * Saves target directory to cache.
  *
- * @param {String} repository Github repository owner and name.
- * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
- * @param {String} targetDir Target directory to save.
- * @param {String} os Current OS platform.
- * @param {String} compiler Current compiler family.
- * @param {String} cacheSuffix A string which will be appended to the cache key.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the package was cached successfully.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} targetDir Target directory to save.
+ * @param {string} os Current OS platform.
+ * @param {string} compiler Current compiler family.
+ * @param {string} cacheSuffix A string which will be appended to the cache key.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the package was cached successfully.
  */
 export const saveCache = async (repository: string, branch: string, githubToken: string, targetDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<boolean> => {
     const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);

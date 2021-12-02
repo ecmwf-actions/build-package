@@ -15,12 +15,12 @@ import { EnvironmentVariables } from './types/env-functions';
 /**
  * Downloads a Github repository state and extracts it to a directory with supplied name.
  *
- * @param {String} repository Github repository owner and name.
- * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
- * @param {String} downloadDir Directory where the repository will be downloaded.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the download and extraction was successful.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} downloadDir Directory where the repository will be downloaded.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
 const downloadRepository = async (repository: string, branch: string, githubToken: string, downloadDir: string, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Download ${repository} Repository`);

@@ -4,9 +4,9 @@ import { HttpClient } from '@actions/http-client';
 /**
  * Downloads a file using `HttpClient` class. Supports HTTP redirection out-of-box.
  *
- * @param {String} url Source URL of file to download.
- * @param {String} dest Destination path where to save the downloaded file.
- * @returns {Promise}
+ * @param {string} url Source URL of file to download.
+ * @param {string} dest Destination path where to save the downloaded file.
+ * @returns {Promise<true>}
  */
 const downloadFile = (url: string, dest: string): Promise<true> => new Promise((resolve, reject) => {
     return new HttpClient().get(url)

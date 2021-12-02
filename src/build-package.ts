@@ -17,8 +17,8 @@ import { EnvironmentVariables } from './types/env-functions';
  * Parses a string of options and returns an array of items for each. Will handle quoting and prefixing of separate
  *   options as expected.
  *
- * @param {String} options A list of options as one string.
- * @returns {Array} Array of parsed options, may be empty.
+ * @param {string} options A list of options as one string.
+ * @returns {string[]} Array of parsed options, may be empty.
  *
  * @example
  *   const opts = parseOptions('-DOPT1=ON -DOPT2=OFF -DOPT3="A string with spaces" OPT4=\'Hello, world!\' OPT5=foo');
@@ -52,9 +52,9 @@ const parseOptions = (options: string): string[] => {
 /**
  * Expands shell variables in passed options array and returns modified array.
  *
- * @param {Object} optionsObject Object containing options to expand as the only named key.
- * @param {Object} env Object with shell variable values.
- * @returns {Array} Array of expanded options, may be empty.
+ * @param {BuildOptions} optionsObject Object containing options to expand as the only named key.
+ * @param {EnvironmentVariables} env Object with shell variable values.
+ * @returns {string[]} Array of expanded options, may be empty.
  *
  * @example
  *   const configureOptions = expandShellVariables({
@@ -72,7 +72,7 @@ const parseOptions = (options: string): string[] => {
  *     '-DEXPANDED_OPT2=val2',
  *   ]
  */
-const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVariables) => {
+const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVariables): string[] => {
     const optionsName = Object.keys(optionsObject)[0];
     const options = [...optionsObject[optionsName]];
     const result: string[] = [];
@@ -99,21 +99,22 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
 /**
  * Builds and installs a package from source. Optionally, runs tests and collects code coverage information.
  *
- * @param {String} repository Github repository owner and name.
- * @param {String} sourceDir Path to source directory.
- * @param {String} installDir Directory where to install the package.
- * @param {Boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
- * @param {String} cmakeOptions The list of ecbuild/CMake options to be passed during the build configuration phase.
- * @param {String} ctestOptions The list of ctest options to be passed to the test command.
- * @param {Boolean} test Whether to run tests or not.
- * @param {Boolean} codeCoverage Whether to collect code coverage or not. Note that tests must be run for this to work.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} sourceDir Path to source directory.
+ * @param {string} installDir Directory where to install the package.
+ * @param {boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
+ * @param {string|null} cmakeOptions The list of ecbuild/CMake options to be passed during the build configuration
+ *   phase.
+ * @param {string|null} ctestOptions The list of ctest options to be passed to the test command.
+ * @param {boolean} test Whether to run tests or not.
+ * @param {boolean} codeCoverage Whether to collect code coverage or not. Note that tests must be run for this to work.
  *   Currently supported only on Ubuntu 20.04 platform with GNU 10 compiler.
- * @param {String} os Current OS platform.
- * @param {String} compiler Current compiler family.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the build and install process finished successfully.
+ * @param {string} os Current OS platform.
+ * @param {string} compiler Current compiler family.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the build and install process finished successfully.
  */
-const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: EnvironmentVariables) => {
+const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Build ${repository}`);
 
     const [, repo] = repository.split('/');
