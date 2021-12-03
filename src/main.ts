@@ -1,12 +1,14 @@
-const path = require('path');
-const core = require('@actions/core');
+import * as path from 'path';
+import * as core from '@actions/core';
 
-const { setupEnv } = require('./env-functions');
-const { restoreCache, saveCache } = require('./cache-functions');
-const downloadArtifact = require('./download-artifact');
-const uploadArtifact = require('./upload-artifact');
-const downloadRepository = require('./download-repository');
-const buildPackage = require('./build-package');
+import { setupEnv } from './env-functions';
+import { restoreCache, saveCache } from './cache-functions';
+import downloadArtifact from './download-artifact';
+import uploadArtifact from './upload-artifact';
+import downloadRepository from './download-repository';
+import buildPackage from './build-package';
+
+import { CmakeOptionsLookup } from './types/main';
 
 /**
  * First, the main function checks if a dependency build artifact can be found for current OS and compiler combination.
@@ -16,9 +18,9 @@ const buildPackage = require('./build-package');
  * Then, the main function will build currently checked out repository, run tests, collect code coverage and create
  * artifacts for later use.
  *
- * @returns {Promise} Outputs object on resolution, failure message on rejection.
+ * @returns {Promise<ActionOutputs>} Outputs object on resolution, failure message on rejection.
  */
-module.exports = async () => {
+const main = async () => {
     try {
         const workspace = core.getInput('workspace', { required: true });
         const repository = core.getInput('repository', { required: true });
@@ -44,7 +46,7 @@ module.exports = async () => {
         const installDir = core.getInput('install_dir', { required: true });
         const downloadDir = core.getInput('download_dir', { required: true });
 
-        const dependencyCmakeOptionsLookup = {};
+        const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
             const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
             if (!repo || !options) return Promise.reject(`Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`);
@@ -86,7 +88,7 @@ module.exports = async () => {
             const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
 
             // Build the package locally. We don't run any tests or code coverage in this case.
-            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, undefined, false, false, os, compiler, env);
+            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, null, false, false, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
 
@@ -103,26 +105,29 @@ module.exports = async () => {
             if (!isBuilt) return Promise.reject('Error building package');
 
             // Upload build artifact.
-            await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES, os, compiler, env);
+            await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env);
 
             // Upload coverage artifact.
-            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR, null, os, compiler, env);
+            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env);
         }
 
-        const outputs = {
-            bin_path: env.BIN_PATH,
-            include_path: env.INCLUDE_PATH,
-            install_path: env.INSTALL_PATH,
-            lib_path: env.LIB_PATH,
+        const outputs: ActionOutputs = {
+            bin_path: env.BIN_PATH as string,
+            include_path: env.INCLUDE_PATH as string,
+            install_path: env.INSTALL_PATH as string,
+            lib_path: env.LIB_PATH as string,
         };
 
         if (selfCoverage && env.COVERAGE_FILE) {
-            outputs.coverage_file = env.COVERAGE_FILE;
+            outputs.coverage_file = env.COVERAGE_FILE as string;
         }
 
         return Promise.resolve(outputs);
     }
     catch (error) {
-        return Promise.reject(error.message);
+        if (error instanceof Error) return Promise.reject(error.message);
+        return Promise.reject();
     }
 };
+
+export default main;

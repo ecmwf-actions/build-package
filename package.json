@@ -1,14 +1,22 @@
 {
   "name": "build-package",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
-    "postinstall": "scripts/postinstall.sh",
-    "build": "npx @vercel/ncc build src/index.js --minify --license licenses.txt --no-cache",
+    "build": "ncc build src/index.ts --minify --license licenses.txt",
+    "stage-build": "git add dist/*",
     "test": "jest --ci --coverage",
-    "lint": "eslint --fix src/** tests/**",
+    "lint": "eslint --ext .ts,.yml --fix action.yml .github src tests",
+    "lint-no-fix": "npm run lint -- --no-fix",
     "version": "auto-changelog && git add CHANGELOG.md"
+  },
+  "git": {
+    "pre-commit": [
+      "lint-no-fix",
+      "build",
+      "stage-build"
+    ]
   },
   "license": "Apache-2.0",
   "repository": {
@@ -18,30 +26,59 @@
   "dependencies": {
     "@actions/artifact": "^0.5.2",
     "@actions/cache": "^1.0.7",
-    "@actions/core": "^1.4.0",
+    "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
     "@actions/http-client": "^1.0.11",
     "@actions/io": "^1.1.1",
     "@octokit/core": "^3.5.1",
-    "adm-zip": "^0.5.5",
-    "fast-folder-size": "^1.4.0",
+    "adm-zip": "^0.5.9",
+    "fast-folder-size": "^1.5.0",
     "filesize": "^8.0.0",
     "lodash.isequal": "^4.5.0",
     "tar": "^6.1.2",
-    "yargs-parser": "^20.2.9"
+    "yargs-parser": "^21.0.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.16.4",
+    "@babel/preset-typescript": "^7.16.0",
+    "@types/adm-zip": "^0.4.34",
+    "@types/jest": "^27.0.3",
+    "@types/lodash.isequal": "^4.5.5",
+    "@types/node": "^16.11.10",
+    "@types/tar": "^6.1.1",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@vercel/git-hooks": "^1.0.0",
+    "@vercel/ncc": "^0.32.0",
     "auto-changelog": "^2.3.0",
-    "eslint": "^7.30.0",
-    "eslint-plugin-jest": "^24.3.6",
-    "jest": "^27.2.2"
+    "eslint": "^8.3.0",
+    "eslint-plugin-jest": "^25.2.2",
+    "eslint-plugin-json-schema-validator": "^2.1.9",
+    "eslint-plugin-jsonc": "^2.0.0",
+    "jest": "^27.4.3",
+    "typescript": "^4.5.2"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ],
+      "@babel/preset-typescript"
+    ]
   },
   "jest": {
     "clearMocks": true,
     "collectCoverageFrom": [
-      "src/**/*.js",
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
       "!<rootDir>/node_modules/"
-    ]
+    ],
+    "restoreMocks": true
   },
   "eslintConfig": {
     "env": {
@@ -50,9 +87,15 @@
       "commonjs": true,
       "es2021": true
     },
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "extends": [
       "eslint:recommended",
-      "plugin:jest/all"
+      "plugin:jest/all",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:json-schema-validator/recommended"
     ],
     "parserOptions": {
       "ecmaVersion": 12
@@ -61,6 +104,12 @@
       "indent": [
         "error",
         4
+      ],
+      "json-schema-validator/no-invalid": [
+        "error",
+        {
+          "useSchemastoreCatalog": true
+        }
       ]
     }
   },

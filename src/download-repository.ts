@@ -1,26 +1,28 @@
-const fs = require('fs');
-const path = require('path');
-const core = require('@actions/core');
-const { mkdirP } = require('@actions/io');
-const { Octokit } = require('@octokit/core');
-const filesize = require('filesize');
-const tar = require('tar');
+import fs from 'fs';
+import path from 'path';
+import * as core from '@actions/core';
+import { mkdirP } from '@actions/io';
+import { Octokit } from '@octokit/core';
+import filesize from 'filesize';
+import tar from 'tar';
 
-const downloadFile = require('./download-file');
-const { extendDependencies } = require('./env-functions');
-const { isError } = require('./helper-functions');
+import downloadFile from './download-file';
+import { extendDependencies } from './env-functions';
+import { isError } from './helper-functions';
+
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Downloads a Github repository state and extracts it to a directory with supplied name.
  *
- * @param {String} repository Github repository owner and name.
- * @param {String} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes.
- * @param {String} downloadDir Directory where the repository will be downloaded.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the download and extraction was successful.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} downloadDir Directory where the repository will be downloaded.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-module.exports = async (repository, branch, githubToken, downloadDir, env) => {
+const downloadRepository = async (repository: string, branch: string, githubToken: string, downloadDir: string, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Download ${repository} Repository`);
 
     const [owner, repo] = repository.split('/');
@@ -60,7 +62,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         headSha = response.data.object.sha;
     }
     catch (error) {
-        isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -73,13 +75,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
             ref,
         });
 
-        if (isError(response.status != 200, `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`))
+        if (isError(response.status === 302 || response.status !== 200, `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`))
             return false;
 
         url = response.url;
     }
     catch (error) {
-        isError(true, `Error getting repository download URL for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error getting repository download URL for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -91,7 +93,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         await downloadFile(url, tarName);
     }
     catch (error) {
-        isError(true, `Error downloading repository archive for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error downloading repository archive for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -115,7 +117,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
         });
     }
     catch (error) {
-        isError(true, `Error extracting repository archive for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error extracting repository archive for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -129,3 +131,5 @@ module.exports = async (repository, branch, githubToken, downloadDir, env) => {
 
     return true;
 };
+
+export default downloadRepository;

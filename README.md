@@ -279,7 +279,7 @@ To post-process the code coverage file in a later step, you can refer to it via 
 npm install
 ```
 
-A post-install script will deploy Git pre-commit hook, that conveniently runs a lint check, builds the action and stages the changes. To skip the hook, simply add `--no-verify` switch to the Git commit command.
+A courtesy Git pre-commit hook is provided, that conveniently runs a lint check, builds the action and stages any changes. To skip the hook, simply add `--no-verify` switch to the Git commit command.
 
 ### Build Action
 

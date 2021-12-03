@@ -1,30 +1,32 @@
-const fs = require('fs');
-const path = require('path');
-const { Buffer } = require('buffer');
-const core = require('@actions/core');
-const { mkdirP } = require('@actions/io');
-const { Octokit } = require('@octokit/core');
-const AdmZip = require('adm-zip');
-const filesize = require('filesize');
-const tar = require('tar');
+import fs from 'fs';
+import path from 'path';
+import { Buffer } from 'buffer';
+import * as core from '@actions/core';
+import { mkdirP } from '@actions/io';
+import { Octokit } from '@octokit/core';
+import AdmZip from 'adm-zip';
+import filesize from 'filesize';
+import tar from 'tar';
 
-const { extendPaths, extendDependencies } = require('./env-functions');
-const { isError } = require('./helper-functions');
+import { extendPaths, extendDependencies } from './env-functions';
+import { isError } from './helper-functions';
+
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Downloads and extracts package artifact.
  *
- * @param {String} repository Github repository owner and name
- * @param {String} branch Branch name
- * @param {String} githubToken Github access token, with `repo` and `actions:read` scopes
- * @param {String} downloadDir Directory where the artifact will be downloaded.
- * @param {String} installDir Directory where to extract the artifact
- * @param {String} os Current OS platform
- * @param {String} compiler Current compiler family
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the download and extraction was successful
+ * @param {string} repository Github repository owner and name.
+ * @param {string} branch Branch name.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} downloadDir Directory where the artifact will be downloaded.
+ * @param {string} installDir Directory where to extract the artifact.
+ * @param {string} os Current OS platform.
+ * @param {string} compiler Current compiler family.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-module.exports = async (repository, branch, githubToken, downloadDir, installDir, os, compiler, env) => {
+const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';
@@ -62,7 +64,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         workflowRuns = response.data.workflow_runs;
     }
     catch (error) {
-        isError(true, `Error fetching workflow runs for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error fetching workflow runs for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -76,7 +78,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     if (isError(!workflowRuns.length, `No completed successful workflow runs found for ${repo}`)) return false;
 
     const lastRun = workflowRuns.shift();
-    const runId = lastRun.id;
+    const runId = lastRun?.id;
 
     core.info(`==> RunID: ${runId}`);
 
@@ -86,7 +88,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         const response = await octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts', {
             owner,
             repo,
-            run_id: runId,
+            run_id: runId as number,
         });
 
         if (isError(response.status != 200, `Wrong response code while fetching workflow run artifacts for ${repo}: ${response.status}`))
@@ -95,7 +97,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         artifacts = response.data.artifacts;
     }
     catch (error) {
-        isError(true, `Error fetching workflow run artifacts for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error fetching workflow run artifacts for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -121,13 +123,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         headSha = response.data.object.sha;
     }
     catch (error) {
-        isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
         return false;
     }
 
     core.info(`==> headSha: ${headSha}`);
 
-    let artifactName;
+    let artifactName: string;
 
     // Ecbuild has a different artifact name, as it is not actually built.
     if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
@@ -141,33 +143,33 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
     const artifact = artifacts.shift();
 
     core.info(`==> artifactName: ${artifactName}`);
-    core.info(`==> artifactId: ${artifact.id}`);
+    core.info(`==> artifactId: ${artifact?.id}`);
 
-    let zip;
+    let zip: string;
 
     try {
         const response = await octokit.request('GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}', {
             owner,
             repo,
-            artifact_id: artifact.id,
+            artifact_id: artifact?.id as number,
             archive_format: 'zip',
         });
 
-        if (isError(response.status != 200, `Wrong response code while downloading workflow run artifact for ${repo}: ${response.status}`))
+        if (isError(response.status === 302 || response.status !== 200, `Wrong response code while downloading workflow run artifact for ${repo}: ${response.status}`))
             return false;
 
-        zip = response.data;
+        zip = response.data as string;
     }
     catch (error) {
-        isError(true, `Error downloading workflow run artifact for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error downloading workflow run artifact for ${repo}: ${error.message}`);
         return false;
     }
 
-    const size = filesize(artifact.size_in_bytes);
+    const size = filesize(artifact?.size_in_bytes as number);
 
-    core.info(`==> Downloaded: ${artifact.name}.zip (${size})`);
+    core.info(`==> Downloaded: ${artifact?.name}.zip (${size})`);
 
-    const artifactPath = path.resolve(path.join(downloadDir, artifact.name));
+    const artifactPath = path.resolve(path.join(downloadDir, artifact?.name as string));
 
     await mkdirP(artifactPath);
 
@@ -198,13 +200,13 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         for (const [dependency, dependencySha] of Object.entries(dependencies)) {
             if (
                 env.DEPENDENCIES
-                && env.DEPENDENCIES[dependency]
-                && env.DEPENDENCIES[dependency] !== dependencySha
+                && env.DEPENDENCIES[dependency as keyof DependenciesObject]
+                && env.DEPENDENCIES[dependency as keyof DependenciesObject] !== dependencySha
             ) {
                 fs.unlinkSync(tarPath);
                 fs.unlinkSync(dependenciesPath);
 
-                isError(true, `Error matching dependency ${dependency} for ${repo}: ${env.DEPENDENCIES[dependency]} !== ${dependencySha}`);
+                isError(true, `Error matching dependency ${dependency} for ${repo}: ${env.DEPENDENCIES[dependency as keyof DependenciesObject]} !== ${dependencySha}`);
 
                 return false;
             }
@@ -222,7 +224,7 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
         });
     }
     catch (error) {
-        isError(true, `Error extracting artifact TAR for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error extracting artifact TAR for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -238,3 +240,5 @@ module.exports = async (repository, branch, githubToken, downloadDir, installDir
 
     return true;
 };
+
+export default downloadArtifact;

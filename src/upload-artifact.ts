@@ -1,28 +1,31 @@
-const fs = require('fs');
-const path = require('path');
-const core = require('@actions/core');
-const artifact = require('@actions/artifact');
-const tar = require('tar');
-const filesize = require('filesize');
+import fs from 'fs';
+import path from 'path';
+import * as core from '@actions/core';
+import * as artifact from '@actions/artifact';
+import tar from 'tar';
+import filesize from 'filesize';
 
-const { isError } = require('./helper-functions');
+import { isError } from './helper-functions';
+
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Archives and uploads package artifact.
  *
- * @param {String} repository Github repository owner and name to upload artifact for.
- * @param {String} sha Github repository commit SHA.
- * @param {String} targetDir Target directory to upload as artifact.
- * @param {Object} dependencies Dependencies object.
- * @param {String} os Current OS platform.
- * @param {String} compiler Current compiler family.
- * @param {Object} env Local environment object.
- * @returns {Boolean} Whether the archiving and upload was successful.
+ * @param {string} repository Github repository owner and name to upload artifact for.
+ * @param {string} sha Github repository commit SHA.
+ * @param {string} targetDir Target directory to upload as artifact.
+ * @param {DependenciesObject} dependencies Dependencies object.
+ * @param {string} os Current OS platform.
+ * @param {string|null} compiler Current compiler family.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @returns {Promise<boolean>} Whether the archiving and upload was successful.
  */
-module.exports = async (repository, sha, targetDir, dependencies, os, compiler, env) => {
+const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
-    let [owner, repo] = repository.split('/');
+    const [owner] = repository.split('/');
+    let [, repo] = repository.split('/');
     if (!repo) repo = owner;
 
     let artifactName;
@@ -48,7 +51,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
         );
     }
     catch (error) {
-        isError(true, `Error creating artifact TAR for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error creating artifact TAR for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -72,7 +75,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
             fs.writeFileSync(dependenciesPath, dependenciesJson);
         }
         catch (error) {
-            isError(true, `Error writing dependencies file for ${repo}: ${error.message}`);
+            if (error instanceof Error) isError(true, `Error writing dependencies file for ${repo}: ${error.message}`);
             return false;
         }
 
@@ -92,7 +95,7 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
         });
     }
     catch (error) {
-        isError(true, `Error uploading artifact for ${repo}: ${error.message}`);
+        if (error instanceof Error) isError(true, `Error uploading artifact for ${repo}: ${error.message}`);
         return false;
     }
 
@@ -117,3 +120,5 @@ module.exports = async (repository, sha, targetDir, dependencies, os, compiler, 
 
     return true;
 };
+
+export default uploadArtifact;

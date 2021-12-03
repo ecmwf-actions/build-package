@@ -19,7 +19,7 @@ inputs:
   cmake:
     description: Whether to use CMake for build configuration, instead of ecbuild.
     required: true
-    default: false
+    default: 'false'
   cmake_options:
     description: 'The list of ecbuild/CMake options to be passed during the current repository build configuration
       phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple options. If left empty, the
@@ -33,16 +33,16 @@ inputs:
   self_build:
     description: Whether to build from currently checked out repository or not.
     required: true
-    default: true
+    default: 'true'
   self_test:
     description: Whether to run tests from currently checked out repository or not.
     required: true
-    default: true
+    default: 'true'
   self_coverage:
     description: Whether to collect code coverage from currently checked out repository or not. Note that `test` input
       must be set to true for this to work. Currently supported only on Ubuntu 20.04 platform and for GNU 10 compiler.
     required: true
-    default: false
+    default: 'false'
   dependencies:
     description: The list of dependency repositories to build from, in correct order. Repository names should follow
       the standard Github `owner/name` format. To specify different branch name per repository, use
@@ -64,7 +64,7 @@ inputs:
     description: Whether to always build dependencies from latest repository states or not. Otherwise, the action will
       first try to download a build artifact if it exists.
     required: true
-    default: false
+    default: 'false'
   cache_suffix:
     description: A string which will be appended to the cache key. To invalidate the build cache, simply change its
       value.
@@ -72,7 +72,7 @@ inputs:
   recreate_cache:
     description: Whether to skip restoring builds from cache and recreate them instead.
     required: true
-    default: false
+    default: 'false'
   os:
     description: Current OS platform.
     required: true

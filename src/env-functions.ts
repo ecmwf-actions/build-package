@@ -1,8 +1,10 @@
-const process = require('process');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
+import * as process from 'process';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
-const { isError } = require('./helper-functions');
+import { isError } from './helper-functions';
+
+import { EnvironmentVariables } from './types/env-functions';
 
 /**
  * Returns local environment variables:
@@ -14,16 +16,16 @@ const { isError } = require('./helper-functions');
  *   OPENSSL_ROOT_DIR
  *   OPENSSL_INCLUDE_DIR
  *
- * @param {String} os Current OS platform.
- * @param {String} compilerCc C compiler alias.
- * @param {String} compilerCxx C++ compiler alias.
- * @param {String} compilerFc Fortran compiler alias.
- * @returns {Object} Environment object with keys as variable names.
+ * @param {string} os Current OS platform.
+ * @param {string|null} compilerCc C compiler alias.
+ * @param {string|null} compilerCxx C++ compiler alias.
+ * @param {string} compilerFc Fortran compiler alias.
+ * @returns {Promise<EnvironmentVariables>} Environment object with keys as variable names.
  */
-module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
+export const setupEnv = async (os: string, compilerCc: string | null, compilerCxx: string | null, compilerFc: string): Promise<EnvironmentVariables> => {
     core.startGroup('Setup Environment');
 
-    const env = {
+    const env: EnvironmentVariables = {
         CC: compilerCc,
         CXX: compilerCxx,
         FC: compilerFc,
@@ -31,10 +33,9 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
 
     core.info(`==> Compiler env: ${JSON.stringify(env)}`);
 
-    let output;
+    let output = '{}';
 
-    const options = {
-        shell: '/bin/bash -eux',
+    const options: exec.ExecOptions = {
         listeners: {
             stdout: (data) => {
                 output = data.toString();
@@ -54,7 +55,7 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
         cMakeVersion = json.version.string;
     }
     catch (error) {
-        isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
+        if (error instanceof Error) isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
         return env;
     }
 
@@ -90,11 +91,11 @@ module.exports.setupEnv = async (os, compilerCc, compilerCxx, compilerFc) => {
 /**
  * Extends environment object with installation paths.
  *
- * @param {Object} env Environment object.
- * @param {String} installDir Path to installation directory.
- * @param {String} packageName Package name.
+ * @param {EnvironmentVariables|null} env Environment object.
+ * @param {string} installDir Path to installation directory.
+ * @param {string} packageName Package name.
  */
-module.exports.extendPaths = async (env, installDir, packageName) => {
+export const extendPaths = async (env: EnvironmentVariables | null, installDir: string, packageName: string) => {
     if (!env) return;
 
     if (env.PATH) {
@@ -149,15 +150,18 @@ module.exports.extendPaths = async (env, installDir, packageName) => {
 /**
  * Extends environment object with dependencies.
  *
- * @param {Object} env Environment object.
- * @param {String} repository Github repository owner and name.
- * @param {String} sha Github repository commit SHA.
+ * @param {EnvironmentVariables|null} env Environment object.
+ * @param {string} repository Github repository owner and name.
+ * @param {string} sha Github repository commit SHA.
  */
-module.exports.extendDependencies = async (env, repository, sha) => {
+export const extendDependencies = async (env: EnvironmentVariables | null, repository: string, sha: string) => {
     if (!env) return;
 
-    if (env.DEPENDENCIES) {
-        env.DEPENDENCIES[repository] = sha;
+    if (env.DEPENDENCIES instanceof Object) {
+        Object.assign(env.DEPENDENCIES, {
+            ...env.DEPENDENCIES,
+            [repository]: sha,
+        });
     }
     else {
         env.DEPENDENCIES = {

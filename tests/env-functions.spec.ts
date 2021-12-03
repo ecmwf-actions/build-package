@@ -1,7 +1,7 @@
-const process = require('process');
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-const { setupEnv, extendPaths, extendDependencies } = require('../src/env-functions');
+import process from 'process';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import { setupEnv, extendPaths, extendDependencies } from '../src/env-functions';
 
 jest.mock('@actions/core');
 jest.mock('@actions/exec');
@@ -28,11 +28,14 @@ const repo3 = 'PACKAGE3';
 
 const env = {};
 
+const errorObject = new Error('Oops!');
+const emptyObject = {};
+
 describe('setupEnv', () => {
     it('returns compiler and cmake version environment variables', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             return new Promise((resolve) => {
                 if (args[0] === 'cmake') {
                     options.listeners.stdout(`{"version":{"string":"${cmakeVersion1}"}}`);
@@ -55,7 +58,7 @@ describe('setupEnv', () => {
     it('works around failed cmake command', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation(() => Promise.resolve(1));
+        (exec.exec as jest.Mock).mockImplementationOnce(() => Promise.resolve(1));
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
@@ -66,15 +69,15 @@ describe('setupEnv', () => {
         });
     });
 
-    it('works around JSON parsing errors in cmake command', async () => {
+    it.each`
+        error
+        ${errorObject}
+        ${emptyObject}
+    `('works around JSON parsing errors in cmake command ($error)', async ({ error }) => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
-            if (args[0] === 'cmake') {
-                options.listeners.stdout('Oops!');
-            }
-
-            return Promise.resolve(0);
+        jest.spyOn(JSON, 'parse').mockImplementationOnce(() => {
+            throw error;
         });
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
@@ -89,7 +92,7 @@ describe('setupEnv', () => {
     it('works around empty version key in cmake command', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             if (args[0] === 'cmake') {
                 options.listeners.stdout('{"version":{"string":""}}');
             }
@@ -109,7 +112,7 @@ describe('setupEnv', () => {
     it('returns OpenSSL environment variables on macOS', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             switch (args[0]) {
             case 'cmake':
                 options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
@@ -140,7 +143,7 @@ describe('setupEnv', () => {
     it('works around failed brew command on macOS', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             switch (args[0]) {
             case 'cmake':
                 options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
@@ -166,7 +169,7 @@ describe('setupEnv', () => {
     it('works around empty output of brew command on macOS', async () => {
         expect.assertions(1);
 
-        exec.exec.mockImplementation((command, args, options) => {
+        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
             switch (args[0]) {
             case 'cmake':
                 options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
@@ -189,7 +192,6 @@ describe('setupEnv', () => {
             CMAKE_VERSION: cmakeVersion2,
         });
     });
-
 });
 
 describe('extendPaths', () => {

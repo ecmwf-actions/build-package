@@ -1,6 +1,6 @@
 name: eckit
 
-# Controls when the action will run
+# Controls when the workflow will run
 on:
 
   # Trigger the workflow on all pushes, except on tag creation
@@ -9,9 +9,6 @@ on:
     - '**'
     tags-ignore:
     - '**'
-
-  # Trigger the workflow on all pull requests
-  pull_request: ~
 
   # Allow workflow to be dispatched on demand
   workflow_dispatch: ~
@@ -59,12 +56,12 @@ jobs:
           compiler_cc: gcc-10
           compiler_cxx: g++-10
           compiler_fc: gfortran-10
-        # Xcode compiler requires empty environment variables, so we pass null (~) here
+        # Xcode compiler requires empty environment variables, so we pass empty strings here
         - name: clang-12@macos-10.15
           os: macos-10.15
           compiler: clang-12
-          compiler_cc: ~
-          compiler_cxx: ~
+          compiler_cc: ''
+          compiler_cxx: ''
           compiler_fc: gfortran-10
     runs-on: ${{ matrix.os }}
     steps:

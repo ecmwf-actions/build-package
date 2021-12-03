@@ -1,5 +1,6 @@
-const core = require('@actions/core');
-const { isError } = require('../src/helper-functions');
+import * as core from '@actions/core';
+
+import { isError } from '../src/helper-functions';
 
 jest.mock('@actions/core');
 
@@ -8,7 +9,7 @@ describe('isError', () => {
         expect.assertions(2);
 
         [true, false].forEach((condition) => {
-            expect(isError(condition)).toBe(condition);
+            expect(isError(condition, 'foobar')).toBe(condition);
         });
     });
 
@@ -33,7 +34,7 @@ describe('isError', () => {
     it('ends group on error', () => {
         expect.assertions(2);
 
-        expect(isError(true)).toBe(true);
+        expect(isError(true, 'foobar')).toBe(true);
         expect(core.endGroup).toHaveBeenCalledWith();
     });
 });
