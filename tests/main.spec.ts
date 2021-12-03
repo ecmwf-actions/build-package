@@ -566,7 +566,7 @@ describe('main', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('rejects the promise if an error is thrown', async ({ error }) => {
+    `('rejects the promise if an error is thrown ($error)', async ({ error }) => {
         expect.assertions(1);
 
         (core.getInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);

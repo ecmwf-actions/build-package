@@ -452,7 +452,7 @@ describe('downloadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for workflow runs fails', async ({ error }) => {
+    `('returns false if request for workflow runs fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -510,7 +510,7 @@ describe('downloadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for workflow artifacts fails', async ({ error }) => {
+    `('returns false if request for workflow artifacts fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -690,7 +690,7 @@ describe('downloadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for repository HEAD fails', async ({ error }) => {
+    `('returns false if request for repository HEAD fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -757,7 +757,7 @@ describe('downloadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for downloading workflow run artifact fails', async ({ error }) => {
+    `('returns false if request for downloading workflow run artifact fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -793,7 +793,7 @@ describe('downloadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if extracting artifact TAR fails', async ({ error }) => {
+    `('returns false if extracting artifact TAR fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {

@@ -828,7 +828,7 @@ describe('buildPackage', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if command throws an error', async ({ error }) => {
+    `('returns false if command throws an error ($error)', async ({ error }) => {
         expect.assertions(1);
 
         const testEnv = {

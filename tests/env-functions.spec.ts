@@ -77,7 +77,7 @@ describe('setupEnv', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('works around JSON parsing errors in cmake command', async ({ error }) => {
+    `('works around JSON parsing errors in cmake command ($error)', async ({ error }) => {
         expect.assertions(1);
 
         jest.spyOn(JSON, 'parse').mockImplementationOnce(() => {

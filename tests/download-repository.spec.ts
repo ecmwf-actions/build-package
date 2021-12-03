@@ -177,7 +177,7 @@ describe('downloadRepository', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for repository HEAD fails', async ({ error }) => {
+    `('returns false if request for repository HEAD fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -235,7 +235,7 @@ describe('downloadRepository', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for repository download URL fails', async ({ error }) => {
+    `('returns false if request for repository download URL fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -267,7 +267,7 @@ describe('downloadRepository', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if download fails', async ({ error }) => {
+    `('returns false if download fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -339,7 +339,7 @@ describe('downloadRepository', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if extracting repository archive fails', async ({ error }) => {
+    `('returns false if extracting repository archive fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {

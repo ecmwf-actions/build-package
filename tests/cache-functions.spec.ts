@@ -198,7 +198,7 @@ describe('getCacheKey', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('logs error if repository HEAD fetch fails', async ({ error }) => {
+    `('logs error if repository HEAD fetch fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -302,7 +302,7 @@ describe('restoreCache', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('catches unexpected restore cache errors', async ({ error }) => {
+    `('catches unexpected restore cache errors ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
@@ -398,7 +398,7 @@ describe('saveCache', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('catches unexpected save cache errors', async ({ error }) => {
+    `('catches unexpected save cache errors ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({

@@ -172,7 +172,7 @@ describe('uploadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if creating artifact TAR fails', async ({ error }) => {
+    `('returns false if creating artifact TAR fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -222,7 +222,7 @@ describe('uploadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if writing dependencies file errors out', async ({ error }) => {
+    `('returns false if writing dependencies file errors out ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
@@ -333,7 +333,7 @@ describe('uploadArtifact', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if artifact item upload fails', async ({ error }) => {
+    `('returns false if artifact item upload fails ($error)', async ({ error }) => {
         expect.hasAssertions();
 
         const testEnv = {
