@@ -47,6 +47,8 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
@@ -59,13 +61,11 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation(() => Promise.resolve(1));
+        (exec.exec as jest.Mock).mockResolvedValue(1);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('supports cmake switch', async () => {
@@ -74,6 +74,8 @@ describe('buildPackage', () => {
         const testEnv = {
             ...env,
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
@@ -88,6 +90,8 @@ describe('buildPackage', () => {
         const testEnv1 = {
             ...env,
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
@@ -125,6 +129,8 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
@@ -160,6 +166,8 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
@@ -183,6 +191,8 @@ describe('buildPackage', () => {
         const testEnv = {
             ...env,
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
@@ -208,6 +218,8 @@ describe('buildPackage', () => {
         const cmakeOptionsFile = path.join(sourceDir, '.github', '.cmake-options');
         const cmakeOptionsFileContent = testCmakeOptions.join(' ');
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
             if (path === cmakeOptionsFile) return true;
@@ -225,9 +237,6 @@ describe('buildPackage', () => {
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
-
-        existsSync.mockReset();
-        readFileSync.mockReset();
     });
 
     it('supports backwards compatible magic path for cmake options', async () => {
@@ -245,6 +254,8 @@ describe('buildPackage', () => {
 
         const deprecatedCmakeOptionsFile = path.join(sourceDir, '.github', '.compiler-flags');
         const deprecatedCmakeOptionsFileContent = testDeprecatedCmakeOptions.join(' ');
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const existsSync = jest.spyOn(fs, 'existsSync');
         existsSync.mockImplementation((path) => {
@@ -264,9 +275,6 @@ describe('buildPackage', () => {
         expect(core.info).toHaveBeenCalledWith(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
         expect(core.warning).toHaveBeenCalledWith('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testDeprecatedCmakeOptions}`);
-
-        existsSync.mockReset();
-        readFileSync.mockReset();
     });
 
     it('expands shell variables in all arguments', async () => {
@@ -318,6 +326,8 @@ describe('buildPackage', () => {
             testEnv1.VAR2,
         ];
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
 
         expect(isBuilt).toBe(true);
@@ -351,8 +361,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('adds code coverage compiler flags on supported platform', async () => {
@@ -361,6 +369,8 @@ describe('buildPackage', () => {
         const testEnv = {
             ...env,
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
@@ -376,6 +386,8 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, macOs, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
@@ -388,6 +400,8 @@ describe('buildPackage', () => {
         const testEnv = {
             ...env,
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
@@ -421,6 +435,8 @@ describe('buildPackage', () => {
             },
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
@@ -450,6 +466,8 @@ describe('buildPackage', () => {
             ...env,
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
@@ -473,6 +491,8 @@ describe('buildPackage', () => {
                 ...testEnv,
             },
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
@@ -505,6 +525,8 @@ describe('buildPackage', () => {
             },
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
@@ -533,6 +555,8 @@ describe('buildPackage', () => {
                 ...testEnv,
             },
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
 
@@ -570,8 +594,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if build command failed', async () => {
@@ -597,8 +619,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if test command failed', async () => {
@@ -622,8 +642,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage collection command failed', async () => {
@@ -652,8 +670,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage cleanup command failed', async () => {
@@ -684,8 +700,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage report listing command failed', async () => {
@@ -711,8 +725,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if code coverage report generation command failed', async () => {
@@ -739,8 +751,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns false if install command failed', async () => {
@@ -766,8 +776,6 @@ describe('buildPackage', () => {
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('extends environment object with install paths', async () => {
@@ -788,6 +796,8 @@ describe('buildPackage', () => {
             [`${repo.toUpperCase()}_DIR`]: installDir,
             [`${repo.toUpperCase()}_PATH`]: installDir,
         };
+
+        (exec.exec as jest.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
 
@@ -818,6 +828,8 @@ describe('buildPackage', () => {
             COVERAGE_DIR: coverageDir,
         };
 
+        (exec.exec as jest.Mock).mockResolvedValue(0);
+
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(true);
@@ -835,13 +847,12 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation(() => {
+        (exec.exec as jest.Mock).mockImplementationOnce(() => {
             throw error;
         });
 
         const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
 
         expect(isBuilt).toBe(false);
-        (exec.exec as jest.Mock).mockReset();
     });
 });

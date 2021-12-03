@@ -12,7 +12,7 @@ describe('downloadFile', () => {
     it('returns promise that resolves on success', async () => {
         expect.assertions(1);
 
-        (HttpClient.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (HttpClient.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
             get: () => Promise.resolve({
                 message: {
                     pipe: () => ({
@@ -31,7 +31,7 @@ describe('downloadFile', () => {
         }));
 
         const createWriteStream = jest.spyOn(fs, 'createWriteStream');
-        createWriteStream.mockImplementation((path): WriteStream => {
+        createWriteStream.mockImplementationOnce((path): WriteStream => {
             if (path === dest) return {
                 close: (cb: () => void) => cb(),
             } as WriteStream;
@@ -39,9 +39,6 @@ describe('downloadFile', () => {
         });
 
         await expect(downloadFile(url, dest)).resolves.toBe(true);
-
-        (HttpClient.prototype.constructor as jest.Mock).mockReset();
-        createWriteStream.mockImplementation();
     });
 
     it('returns promise that rejects on failure', async () => {
@@ -49,7 +46,7 @@ describe('downloadFile', () => {
 
         const errorMessage = 'Oops!';
 
-        (HttpClient.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (HttpClient.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
             get: () => Promise.resolve({
                 message: {
                     pipe: () => ({
@@ -64,16 +61,14 @@ describe('downloadFile', () => {
         }));
 
         const createWriteStream = jest.spyOn(fs, 'createWriteStream');
-        createWriteStream.mockImplementation((path): WriteStream => {
+        createWriteStream.mockImplementationOnce((path): WriteStream => {
             if (path === dest) return {
                 close: (cb: () => void) => cb(),
             } as WriteStream;
             return new WriteStream;
         });
-        await expect(downloadFile(url, dest)).rejects.toBe(errorMessage);
 
-        (HttpClient.prototype.constructor as jest.Mock).mockReset();
-        createWriteStream.mockImplementation();
+        await expect(downloadFile(url, dest)).rejects.toBe(errorMessage);
     });
 
     it('catches failed request', async () => {
@@ -81,12 +76,10 @@ describe('downloadFile', () => {
 
         const errorMessage = 'Oops!';
 
-        (HttpClient.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (HttpClient.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
             get: () => Promise.reject(new Error(errorMessage)),
         }));
 
         await expect(downloadFile(url, dest)).rejects.toBe(errorMessage);
-
-        (HttpClient.prototype.constructor as jest.Mock).mockReset();
     });
 });

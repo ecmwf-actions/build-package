@@ -15,7 +15,7 @@ describe('entry', () => {
     it('sets path outputs and logs values', async () => {
         expect.assertions(8);
 
-        (main as jest.Mock).mockImplementation(() => Promise.resolve(outputs));
+        (main as jest.Mock).mockImplementationOnce(() => Promise.resolve(outputs));
 
         await jest.isolateModules(() => require('../src/index'));
 
@@ -25,8 +25,6 @@ describe('entry', () => {
             expect(core.setOutput).toHaveBeenCalledWith(outputName, outputValue);
             expect(core.info).toHaveBeenCalledWith(`==> ${outputName}: ${outputValue}`);
         });
-
-        (main as jest.Mock).mockReset();
     });
 
     it('sets outputs with coverage file and logs values', async () => {
@@ -37,7 +35,7 @@ describe('entry', () => {
             coverage_file: '/path/to/repo/build/coverage.info',
         };
 
-        (main as jest.Mock).mockImplementation(() => Promise.resolve(outputsWithCoverageFile));
+        (main as jest.Mock).mockImplementationOnce(() => Promise.resolve(outputsWithCoverageFile));
 
         await jest.isolateModules(() => require('../src/index'));
 
@@ -47,8 +45,6 @@ describe('entry', () => {
             expect(core.setOutput).toHaveBeenCalledWith(outputName, outputValue);
             expect(core.info).toHaveBeenCalledWith(`==> ${outputName}: ${outputValue}`);
         });
-
-        (main as jest.Mock).mockReset();
     });
 
     it('sets failure on errors', async () => {
@@ -56,7 +52,7 @@ describe('entry', () => {
 
         const errorMessage = 'Oops!';
 
-        (main as jest.Mock).mockImplementation(() => Promise.reject(errorMessage));
+        (main as jest.Mock).mockImplementationOnce(() => Promise.reject(errorMessage));
 
         // For some reason, checking toHaveBeenCalledWith() on this mock function does not work, possibly because of
         //   some race condition at play. Instead, we mock its implementation and check if it's called with correct
@@ -66,7 +62,5 @@ describe('entry', () => {
         });
 
         await jest.isolateModules(() => require('../src/index'));
-
-        (main as jest.Mock).mockReset();
     });
 });

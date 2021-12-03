@@ -77,7 +77,8 @@
       "src/**/*.ts",
       "!src/**/*.d.ts",
       "!<rootDir>/node_modules/"
-    ]
+    ],
+    "restoreMocks": true
   },
   "eslintConfig": {
     "env": {

@@ -56,22 +56,22 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: uploadResult,
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementation((path) => {
+        writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
@@ -81,11 +81,6 @@ describe('uploadArtifact', () => {
         expect(core.info).toHaveBeenCalledWith(`==> Created artifact TAR: ${tarPath} (${filesize(size)})`);
         expect(core.info).toHaveBeenCalledWith(`==> Created dependencies file: ${dependenciesPath}`);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${artifactName} (${filesize(size)})`);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        writeFileSync.mockReset();
-        unlinkSync.mockReset();
     });
 
     it('supports invalid repository name', async () => {
@@ -97,7 +92,7 @@ describe('uploadArtifact', () => {
 
         const coverageArtifactName = `coverage-${repo}-${os}-${compiler}`;
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () => Promise.resolve({
                 artifactName: coverageArtifactName,
                 size,
@@ -106,12 +101,12 @@ describe('uploadArtifact', () => {
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
@@ -119,10 +114,6 @@ describe('uploadArtifact', () => {
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        unlinkSync.mockReset();
     });
 
     it('constructs a different artifact name in case of ecbuild', async () => {
@@ -134,7 +125,7 @@ describe('uploadArtifact', () => {
 
         const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${sha}`;
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () => Promise.resolve({
                 artifactName: ecbuildArtifactName,
                 size,
@@ -143,17 +134,17 @@ describe('uploadArtifact', () => {
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementation((path) => {
+        writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
@@ -161,11 +152,6 @@ describe('uploadArtifact', () => {
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        writeFileSync.mockReset();
-        unlinkSync.mockReset();
     });
 
     it.each`
@@ -179,15 +165,13 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        (tar.c as jest.Mock).mockImplementation(() => {
+        (tar.c as jest.Mock).mockImplementationOnce(() => {
             throw error;
         });
 
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-
-        (tar.c as jest.Mock).mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error creating artifact TAR for ${repo}: ${error.message}`);
@@ -205,7 +189,7 @@ describe('uploadArtifact', () => {
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size: 0,
         }));
 
@@ -213,9 +197,6 @@ describe('uploadArtifact', () => {
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error determining size of artifact TAR for ${repo}`);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
     });
 
     it.each`
@@ -229,22 +210,22 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: uploadResult,
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementation((path) => {
+        writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) throw error;
         });
 
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementation(() => {
+        unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
@@ -253,9 +234,6 @@ describe('uploadArtifact', () => {
         expect(isUploaded).toBe(false);
 
         (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        writeFileSync.mockReset();
-        unlinkSync.mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error writing dependencies file for ${repo}: ${error.message}`);
@@ -268,7 +246,7 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () => Promise.resolve({
                 artifactName,
                 size,
@@ -279,12 +257,12 @@ describe('uploadArtifact', () => {
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementation((path) => {
+        writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
@@ -292,10 +270,6 @@ describe('uploadArtifact', () => {
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${artifactName}`);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        writeFileSync.mockReset();
     });
 
     it('returns false if artifact item upload returns empty result', async () => {
@@ -305,17 +279,17 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () => Promise.resolve(),
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementation((path) => {
+        writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
@@ -323,10 +297,6 @@ describe('uploadArtifact', () => {
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}`);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        writeFileSync.mockReset();
     });
 
     it.each`
@@ -340,27 +310,23 @@ describe('uploadArtifact', () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () => Promise.reject(error),
         }));
 
         const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementation(() => ({
+        (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
         const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementation((path) => {
+        writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
         const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv);
 
         expect(isUploaded).toBe(false);
-
-        (artifact.create as jest.Mock).mockReset();
-        (statSync as jest.Mock).mockReset();
-        writeFileSync.mockReset();
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${error.message}`);

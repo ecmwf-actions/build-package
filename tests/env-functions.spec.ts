@@ -52,15 +52,13 @@ describe('setupEnv', () => {
             FC: compilerFc,
             CMAKE_VERSION: cmakeVersion1,
         });
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
 
     it('works around failed cmake command', async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation(() => Promise.resolve(1));
+        (exec.exec as jest.Mock).mockImplementationOnce(() => Promise.resolve(1));
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
@@ -69,8 +67,6 @@ describe('setupEnv', () => {
             CXX: compilerCxx,
             FC: compilerFc,
         });
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it.each`
@@ -91,8 +87,6 @@ describe('setupEnv', () => {
             CXX: compilerCxx,
             FC: compilerFc,
         });
-
-        jest.spyOn(JSON, 'parse').mockRestore();
     });
 
     it('works around empty version key in cmake command', async () => {
@@ -113,8 +107,6 @@ describe('setupEnv', () => {
             CXX: compilerCxx,
             FC: compilerFc,
         });
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('returns OpenSSL environment variables on macOS', async () => {
@@ -146,8 +138,6 @@ describe('setupEnv', () => {
             OPENSSL_ROOT_DIR: macOsOpenSslPathSanitized,
             OPENSSL_INCLUDE_DIR: `${macOsOpenSslPathSanitized}/include`,
         });
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('works around failed brew command on macOS', async () => {
@@ -174,8 +164,6 @@ describe('setupEnv', () => {
             FC: compilerFc,
             CMAKE_VERSION: cmakeVersion2,
         });
-
-        (exec.exec as jest.Mock).mockReset();
     });
 
     it('works around empty output of brew command on macOS', async () => {
@@ -203,10 +191,7 @@ describe('setupEnv', () => {
             FC: compilerFc,
             CMAKE_VERSION: cmakeVersion2,
         });
-
-        (exec.exec as jest.Mock).mockReset();
     });
-
 });
 
 describe('extendPaths', () => {
