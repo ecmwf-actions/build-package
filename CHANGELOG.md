@@ -5,13 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v2.1.0](https://github.com/ecmwf-actions/build-package/compare/v2...v2.1.0)
+## [v2.2.0](https://github.com/ecmwf-actions/build-package/compare/v2.1.0...v2.2.0)
+
+### Merged
+
+- Bump yargs-parser from 20.2.9 to 21.0.0 [`#5`](https://github.com/ecmwf-actions/build-package/pull/5)
+- Bump eslint from 7.32.0 to 8.1.0 [`#4`](https://github.com/ecmwf-actions/build-package/pull/4)
+- Bump eslint-plugin-jest from 24.7.0 to 25.2.2 [`#2`](https://github.com/ecmwf-actions/build-package/pull/2)
+
+### Commits
+
+- Added tracking of package-lock.json. [`26d6e53`](https://github.com/ecmwf-actions/build-package/commit/26d6e532d6cd84c4bef48a37cdebbaf02a8e7373)
+- Improved typing in tests. [`40ec039`](https://github.com/ecmwf-actions/build-package/commit/40ec039a29385c4ca206208d9a12bfe578ea6501)
+- Made test mocks more explicit. [`ed02bc3`](https://github.com/ecmwf-actions/build-package/commit/ed02bc37313f11f2c26252bc4860c4e987163afc)
+- Migrated code to TypeScript. [`475f57f`](https://github.com/ecmwf-actions/build-package/commit/475f57f436853d390f5a84723bac94317040e6ee)
+- Improved code coverage. [`48f97bb`](https://github.com/ecmwf-actions/build-package/commit/48f97bbdf0586a1e058d3e5674d126b7337babef)
+- Migrated code to TypeScript (WIP). [`e8ccdba`](https://github.com/ecmwf-actions/build-package/commit/e8ccdba4338228985a4ab8ffe30dab145283cb23)
+- Improved documentation. [`eed9cb8`](https://github.com/ecmwf-actions/build-package/commit/eed9cb82ff57e3379367209f089762630bf29566)
+- Improved typing of complex types. [`26ebfe4`](https://github.com/ecmwf-actions/build-package/commit/26ebfe4189d59371139f9556d3e6e0ebd3371a72)
+- Added plugin for linting YAML files. [`b223dc8`](https://github.com/ecmwf-actions/build-package/commit/b223dc8bcd836ca3819222e1bc10467656a7a118)
+- Bumped up dependencies. [`1b8f1d7`](https://github.com/ecmwf-actions/build-package/commit/1b8f1d7173e2e91a05ea7cca129ba79904585cf2)
+- Switched to reusable workflow. [`b63c385`](https://github.com/ecmwf-actions/build-package/commit/b63c385ac725ff9de8aca89ea8673d9de616d7a6)
+- Enhanced names of parametrised tests. [`6565570`](https://github.com/ecmwf-actions/build-package/commit/6565570eb294eb974244e41f1df705133257d8c6)
+- Migrated code to TypeScript (WIP). [`9536f86`](https://github.com/ecmwf-actions/build-package/commit/9536f866e9d7c6689cd7ca53d485ba64d8a28d25)
+- Switched to vercel git hook manager. [`90cafd6`](https://github.com/ecmwf-actions/build-package/commit/90cafd62370b1b06977fe8600092ce3a3f11c959)
+- Removed unnecessary workflow triggers. [`41aa90b`](https://github.com/ecmwf-actions/build-package/commit/41aa90ba1b6164303aad3fbf19ff657502faa53d)
+- Removed unnecessary workflow. [`e6f2329`](https://github.com/ecmwf-actions/build-package/commit/e6f232957f46334801bbd661034aade878b4d6fd)
+- Added dependabot configuration. [`a3f27ce`](https://github.com/ecmwf-actions/build-package/commit/a3f27cee3a29d15f7f79d09ab7fab23a81b246b9)
+- Updated TS targets for Node 12. [`a4cfd49`](https://github.com/ecmwf-actions/build-package/commit/a4cfd49ca021e62e8d3d60bfb1a77ea6cb997a36)
+- Modified the error level of JSON schema linter. [`c7c6ccb`](https://github.com/ecmwf-actions/build-package/commit/c7c6ccb2110fe94611b29ade0b4f61f9b836714c)
+- Bumped up jest to 27.4.3. [`ad659e3`](https://github.com/ecmwf-actions/build-package/commit/ad659e35d16b2d226d10f90a0af13befa7a27679)
+- Migrated code to TypeScript (WIP). [`a27491b`](https://github.com/ecmwf-actions/build-package/commit/a27491b8530654d7253a07fa262a4f2922185791)
+- Updated build script. [`f446f53`](https://github.com/ecmwf-actions/build-package/commit/f446f53a87495251a969ba1bcb13bde38259c0cd)
+- Updated README. [`2bde6ca`](https://github.com/ecmwf-actions/build-package/commit/2bde6ca696357787855eca80213d7e961ea94de5)
+- Removed obsolete coverage path. [`af7df5f`](https://github.com/ecmwf-actions/build-package/commit/af7df5fbcd8dc3ec2c5b7d5bf955e757205cfcc9)
+
+## [v2.1.0](https://github.com/ecmwf-actions/build-package/compare/v2...v2.1.0) - 2021-10-18
 
 ### Commits
 
 - Added shell expansion for all option arguments. [`e654a2f`](https://github.com/ecmwf-actions/build-package/commit/e654a2f184a617950bfec499c49c5665a96ee76b)
+- Bumped up version to v2.1.0. [`55d6eeb`](https://github.com/ecmwf-actions/build-package/commit/55d6eebbf4fb4a0899e74d7e50935fda7133d41a)
 - Ignore an errant rule. [`2630b3f`](https://github.com/ecmwf-actions/build-package/commit/2630b3f44d21a0cba18aa30bbe8ac895092a866b)
-- Removed unsupported option. [`530827b`](https://github.com/ecmwf-actions/build-package/commit/530827bce288f28e75d165846c78aaf2226cd17b)
 
 ## [v2](https://github.com/ecmwf-actions/build-package/compare/v2.0.0...v2) - 2021-09-28
 

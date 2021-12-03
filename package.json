@@ -1,6 +1,6 @@
 {
   "name": "build-package",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A Github action to build ECMWF software",
   "main": "dist/index.js",
   "scripts": {
