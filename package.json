@@ -24,7 +24,7 @@
     "url": "git+https://github.com/ecmwf-actions/build-package"
   },
   "dependencies": {
-    "@actions/artifact": "^0.5.2",
+    "@actions/artifact": "^0.6.0",
     "@actions/cache": "^1.0.7",
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
@@ -49,7 +49,7 @@
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vercel/git-hooks": "^1.0.0",
-    "@vercel/ncc": "^0.32.0",
+    "@vercel/ncc": "^0.33.0",
     "auto-changelog": "^2.3.0",
     "eslint": "^8.3.0",
     "eslint-plugin-jest": "^25.2.2",
