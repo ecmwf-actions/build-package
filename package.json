@@ -52,7 +52,7 @@
     "@vercel/ncc": "^0.33.0",
     "auto-changelog": "^2.3.0",
     "eslint": "^8.3.0",
-    "eslint-plugin-jest": "^25.2.2",
+    "eslint-plugin-jest": "^25.3.3",
     "eslint-plugin-json-schema-validator": "^2.1.9",
     "eslint-plugin-jsonc": "^2.0.0",
     "jest": "^27.4.3",
