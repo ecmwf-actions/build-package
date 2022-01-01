@@ -24,7 +24,7 @@
     "url": "git+https://github.com/ecmwf-actions/build-package"
   },
   "dependencies": {
-    "@actions/artifact": "^0.6.0",
+    "@actions/artifact": "^0.6.1",
     "@actions/cache": "^1.0.7",
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
