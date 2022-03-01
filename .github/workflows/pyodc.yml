@@ -95,7 +95,7 @@ jobs:
         dependency_branch: develop
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: 3.9
 
