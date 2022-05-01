@@ -49,7 +49,7 @@
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vercel/git-hooks": "^1.0.0",
-    "@vercel/ncc": "^0.33.0",
+    "@vercel/ncc": "^0.33.4",
     "auto-changelog": "^2.3.0",
     "eslint": "^8.3.0",
     "eslint-plugin-jest": "^25.2.2",
