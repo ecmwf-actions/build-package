@@ -38,6 +38,7 @@ const downloadRepository = async (repository: string, branch: string, githubToke
 
     if (/^[0-9a-f]{40}$/i.test(branch)) {
         // We've been given a commit hash instead of a branch or tag.
+        core.info(`==> Hash: ${branch}`);
         headSha = branch;
         ref = headSha;
     }
@@ -53,8 +54,6 @@ const downloadRepository = async (repository: string, branch: string, githubToke
 
         core.info(`==> Branch: ${branch}`);
         core.info(`==> Ref: ${ref}`);
-
-
 
         try {
             const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
