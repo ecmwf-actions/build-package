@@ -47,7 +47,7 @@ inputs:
     description: The list of dependency repositories to build from, in correct order. Repository names should follow
       the standard Github `owner/name` format. To specify different branch name per repository, use
       `owner/name@branch_name` format. To specify specific tag name per repository, use `owner/name@refs/tags/tag_name`
-      format.
+      format. To specify a commit hash per repository, use `owner/name@hash`.
     required: false
   dependency_branch:
     description: The default branch (or tag) name for dependency repositories. Will be ignored if the branch (or tag)
