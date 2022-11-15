@@ -30,40 +30,47 @@ const downloadRepository = async (repository: string, branch: string, githubToke
     core.info(`==> Repository: ${owner}/${repo}`);
 
     let ref;
-
-    if (/^refs\/tags\//.test(branch)) {
-        branch = branch.replace(/^refs\/tags\//, '');
-        ref = `tags/${branch}`;
-    }
-    else {
-        branch = branch.replace(/^refs\/heads\//, '');
-        ref = `heads/${branch}`;
-    }
-
-    core.info(`==> Branch: ${branch}`);
-    core.info(`==> Ref: ${ref}`);
+    let headSha;
 
     const octokit = new Octokit({
         auth: githubToken,
     });
 
-    let headSha;
-
-    try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-            owner,
-            repo,
-            ref,
-        });
-
-        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
-            return false;
-
-        headSha = response.data.object.sha;
+    if (/^[0-9a-f]{40}$/i.test(branch)) {
+        // We've been given a commit hash instead of a branch or tag.
+        core.info(`==> Hash: ${branch}`);
+        headSha = branch;
+        ref = headSha;
     }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
-        return false;
+    else {
+        if (/^refs\/tags\//.test(branch)) {
+            branch = branch.replace(/^refs\/tags\//, '');
+            ref = `tags/${branch}`;
+        }
+        else {
+            branch = branch.replace(/^refs\/heads\//, '');
+            ref = `heads/${branch}`;
+        }
+
+        core.info(`==> Branch: ${branch}`);
+        core.info(`==> Ref: ${ref}`);
+
+        try {
+            const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
+                owner,
+                repo,
+                ref,
+            });
+
+            if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
+                return false;
+
+            headSha = response.data.object.sha;
+        }
+        catch (error) {
+            if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+            return false;
+        }
     }
 
     let url;

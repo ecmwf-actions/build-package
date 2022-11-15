@@ -98,17 +98,30 @@ const main = async () => {
 
         if (selfBuild) {
             const [ , repo] = repository.split('/');
+            let cacheHit;
 
-            // Build the currently checked out repository.
-            const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, ctestOptions, selfTest, selfCoverage, os, compiler, env);
+            // Check if we already cached the build of this package.
+            //   Skip this part if we were told to always recreate cache.
+            if (!recreateCache) {
+                cacheHit = await restoreCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+            }
 
-            if (!isBuilt) return Promise.reject('Error building package');
+            if (recreateCache || !cacheHit) {
+                // Build the currently checked out repository.
+                const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, ctestOptions, selfTest, selfCoverage, os, compiler, env);
 
-            // Upload build artifact.
-            await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env);
+                if (!isBuilt) return Promise.reject('Error building package');
 
-            // Upload coverage artifact.
-            if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env);
+                // Save built package to the cache.
+                await saveCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+
+                // Upload build artifact.
+                await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env);
+
+                // Upload coverage artifact.
+                if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env);
+            }
+
         }
 
         const outputs: ActionOutputs = {
