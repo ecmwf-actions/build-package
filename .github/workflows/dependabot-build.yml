@@ -36,8 +36,8 @@ jobs:
 
       - name: push index.js
         run: |
-          git config --global user.email "dependabot@example.com"
-          git config --global user.name "dependabot"
+          git config --global user.email "github-actions@example.com"
+          git config --global user.name "github-actions[bot]"
           git checkout -b ${{ github.head_ref }}
           git add dist/index.js
           git commit -m "Rebuild with updated deps from dependabot"
