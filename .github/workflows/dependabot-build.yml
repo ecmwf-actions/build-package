@@ -40,5 +40,5 @@ jobs:
           git config --global user.name "dependabot"
           git checkout -b ${{ github.head_ref }}
           git add dist/index.js
-          git commit -m "Rebuild with updated deps from dependabot."
+          git commit -m "Rebuild with updated deps from dependabot"
           git push -f origin ${{ github.head_ref }}
