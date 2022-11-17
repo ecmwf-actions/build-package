@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     name: Build
-    if: github.actor == 'dependabot[bot]'
+    if: github.actor == 'dependabot[bot]' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,8 +29,8 @@ jobs:
         run: |
           git config --global user.email "github-actions@example.com"
           git config --global user.name "github-actions[bot]"
-          git fetch origin ${{ github.head_ref }}
-          git checkout ${{ github.head_ref  }}
+          git fetch origin ${{ github.head_ref || github.ref }}
+          git checkout ${{ github.head_ref || github.ref  }}
 
       - name: Setup node
         uses: actions/setup-node@v3
@@ -45,4 +45,4 @@ jobs:
         run: |
           git add dist/index.js
           git commit -m "Rebuild with updated deps from dependabot"
-          git push origin ${{ github.head_ref  }}
+          git push origin ${{ github.head_ref || github.ref  }}
