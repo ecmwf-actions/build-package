@@ -1,0 +1,44 @@
+# This workflow rebuilds dist/index.js on opened pull request by Dependabot and adds it to the PR
+name: dependabot-build
+
+# trigger workflow only on opened PRs or on demand
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+
+  workflow_dispatch:
+
+# permissions needed for git push
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build index.js
+        run: npm run build
+
+      - name: push index.js
+        run: |
+          git config --global user.email "github-actions@example.com"
+          git config --global user.name "github-actions[bot]"
+          git checkout -b ${{ github.head_ref }}
+          git add dist/index.js
+          git commit -m "Rebuild with updated deps from dependabot"
+          git push -f origin ${{ github.head_ref }}
