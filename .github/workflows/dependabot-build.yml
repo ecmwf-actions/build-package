@@ -24,13 +24,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref || github.ref  }}
 
       - name: Git config
         run: |
           git config --global user.email "github-actions@example.com"
           git config --global user.name "github-actions[bot]"
-          git fetch origin ${{ github.head_ref || github.ref }}
-          git checkout ${{ github.head_ref || github.ref  }}
 
       - name: Setup node
         uses: actions/setup-node@v3
