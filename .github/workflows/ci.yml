@@ -16,11 +16,18 @@ on:
   # Allow workflow to be dispatched on demand
   workflow_dispatch: ~
 
+  # Trigger the workflow after dependabot-build workflow completes
+  workflow_run:
+    workflows: [dependabot-build]
+    types: [completed]
+
 jobs:
 
   # Calls a reusable CI NodeJS workflow to qa & test the current repository.
   #   It will install dependencies and produce a code coverage report on success.
   ci:
+    # Do not run if triggered by another workflow run which failed 
+    if: ${{ !(github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success') }}
     name: ci
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-node.yml@v1
     with:

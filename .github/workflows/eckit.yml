@@ -13,8 +13,15 @@ on:
   # Allow workflow to be dispatched on demand
   workflow_dispatch: ~
 
+  # Trigger the workflow after dependabot-build workflow completes
+  workflow_run:
+    workflows: [dependabot-build]
+    types: [completed]
+
 jobs:
   eckit:
+    # Do not run if triggered by another workflow run which failed 
+    if: ${{ !(github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success') }}
     name: eckit
     strategy:
       matrix:
