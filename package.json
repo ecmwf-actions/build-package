@@ -39,7 +39,7 @@
     "yargs-parser": "^21.0.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.16.4",
+    "@babel/preset-env": "^7.20.2",
     "@babel/preset-typescript": "^7.16.0",
     "@types/adm-zip": "^0.4.34",
     "@types/jest": "^27.0.3",
