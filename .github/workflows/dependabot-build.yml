@@ -3,18 +3,13 @@ name: dependabot-build
 
 # trigger workflow only on opened PRs or on demand
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
     paths:
       - 'package.json'
       - 'package-lock.json'
 
   workflow_dispatch:
-
-# permissions needed for git push
-permissions:
-  contents: write
-  pull-requests: write
 
 jobs:
   build:
@@ -26,6 +21,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref || github.ref  }}
+          token: ${{ secrets.REBUILD_PUSH_TOKEN }}
 
       - name: Git config
         run: |
