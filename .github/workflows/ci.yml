@@ -3,10 +3,10 @@ name: ci
 # Controls when the workflow will run
 on:
 
-  # Trigger the workflow on all pushes, except on tag creation
+  # Trigger the workflow on all pushes to main, except on tag creation
   push:
     branches:
-    - '**'
+    - main
     tags-ignore:
     - '**'
 
