@@ -4,7 +4,7 @@ import { Octokit } from '@octokit/core';
 import crypto from 'crypto';
 import fastFolderSize from 'fast-folder-size';
 
-import { getCacheKey, restoreCache, saveCache } from '../src/cache-functions';
+import { getCacheKey, getCacheKeyHash, restoreCache, saveCache } from '../src/cache-functions';
 import { version } from '../package.json';
 import { EnvironmentVariables } from '../src/types/env-functions';
 import { parseOptions } from '../src/build-package';
@@ -87,6 +87,77 @@ describe('getCacheKey', () => {
 
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${branch}`);
         expect(core.info).toHaveBeenCalledWith(`==> Ref: heads/${branch}`);
+    });
+
+    it('returns correct cache key hash', () => {
+        expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+        };
+
+        const buildOptions = [];
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
+        buildOptions.sort();
+
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
+            request: resolveHeadSha,
+        }));
+
+        const result = getCacheKeyHash(repo, cacheSuffix, testEnv, cmakeOptions, sha);
+        
+        expect(result).toStrictEqual(cacheKeySha);
+
+    });
+
+    it('returns cache key if cmakeOptions parameter is undefined', async () => {
+        expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+        };        
+
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler, cacheSuffix, testEnv, undefined);
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+    });
+
+    it('returns cache key if cmakeOptions parameter is empty', async () => {
+        expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+        };
+
+
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+        
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, '');
+
+        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it('supports tags', async () => {
