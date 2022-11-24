@@ -26,7 +26,7 @@ const installDir = '/path/to/install/repo';
 const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
 const errorObject = new Error('Oops!');
 const emptyObject = {};
-const cmakeOptions = '-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF'
+const cmakeOptions = '-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF';
 
 const env = {
     CMAKE_VERSION: '3.20.5',
@@ -56,7 +56,7 @@ describe('getCacheKey', () => {
         };
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
@@ -100,7 +100,7 @@ describe('getCacheKey', () => {
         const testBranch = `refs/tags/${testTag}`;
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
@@ -135,7 +135,7 @@ describe('getCacheKey', () => {
         };
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
@@ -167,7 +167,7 @@ describe('getCacheKey', () => {
         delete testEnv.DEPENDENCIES;
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         const cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
@@ -191,7 +191,7 @@ describe('getCacheKey', () => {
         };
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         const cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
@@ -219,7 +219,7 @@ describe('getCacheKey', () => {
         };
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=undefined`;
@@ -254,7 +254,7 @@ describe('getCacheKey', () => {
         };
 
         const buildOptions = [];
-        buildOptions.push(...parseOptions(cmakeOptions))
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
         buildOptions.sort();
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;

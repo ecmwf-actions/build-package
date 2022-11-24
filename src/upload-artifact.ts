@@ -22,10 +22,10 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {EnvironmentVariables} env Local environment object.
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
- * @param {string} cmakeOptions Build options string which is added to cache key hash
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<boolean>} Whether the archiving and upload was successful.
  */
-const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables, githubToken: string, cacheSuffix: string, cmakeOptions: string): Promise<boolean> => {
+const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables, githubToken: string, cacheSuffix: string, cmakeOptions: string | undefined): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
     const [owner] = repository.split('/');

@@ -26,10 +26,10 @@ import { getCacheKey } from './cache-functions';
  * @param {string} compiler Current compiler family.
  * @param {EnvironmentVariables} env Local environment object.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
- * @param {string} cmakeOptions Build options string which is added to cache key hash
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, cacheSuffix: string, cmakeOptions: string): Promise<boolean> => {
+const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, cacheSuffix: string, cmakeOptions: string | undefined): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';

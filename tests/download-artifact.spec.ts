@@ -18,7 +18,7 @@ jest.mock('adm-zip');
 jest.mock('tar');
 
 const getArtifactName = (repo: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string, headSha: string) => {
-    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, cmakeOptions, headSha)    
+    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, cmakeOptions, headSha);
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
 }
 
