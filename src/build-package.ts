@@ -31,7 +31,7 @@ import { EnvironmentVariables } from './types/env-functions';
  *     'OPT5=foo',
  *   ]
  */
-const parseOptions = (options: string): string[] => {
+export const parseOptions = (options: string): string[] => {
     const { _ } = yargsParser(options, {
         configuration: {
             'short-option-groups': false,
