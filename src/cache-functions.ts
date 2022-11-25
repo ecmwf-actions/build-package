@@ -8,8 +8,43 @@ import fastFolderSize from 'fast-folder-size';
 import { version } from '../package.json';
 import { extendPaths, extendDependencies } from './env-functions';
 import { isError } from './helper-functions';
+import { parseOptions } from './build-package';
 
 import { EnvironmentVariables } from './types/env-functions';
+
+
+/**
+ * Returns cache key hash
+ * 
+ * @param {string} repo Github repository name
+ * @param {string} cacheSuffix A string which will be appended to the cache key.
+ * @param {EnvironmentVariables} env Local environment object.
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
+ * @param {string|undefined} sha Github repository commit SHA
+ * @returns {string} Cache key hash
+ */
+export const getCacheKeyHash = (repo: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string | undefined, sha: string | undefined): string => {
+    const buildOptions = [];    
+    if(cmakeOptions){    
+        buildOptions.push(...parseOptions(cmakeOptions));
+        buildOptions.sort();
+    }
+
+    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
+
+    for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+        const [ , dependencyRepo] = dependency.split('/');
+        if (dependencyRepo === repo) continue;
+        cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+    }
+
+    core.info(`==> cacheKeyStr: ${cacheKeyStr}`);
+
+    const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+    return cacheKeySha;
+}
+
 
 /**
  * Returns cache key for a package.
@@ -21,9 +56,10 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {string} compiler Current compiler family.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {EnvironmentVariables} env Local environment object.
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<CacheObject>} An object with package cache key and head SHA used to calculate it.
  */
-export const getCacheKey = async (repository: string, branch: string, githubToken: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<CacheObject> => {
+export const getCacheKey = async (repository: string, branch: string, githubToken: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string | undefined): Promise<CacheObject> => {
     core.startGroup(`Cache Key for ${repository}`);
 
     const [owner, repo] = repository.split('/');
@@ -73,17 +109,7 @@ export const getCacheKey = async (repository: string, branch: string, githubToke
 
     core.info(`==> result.headSha: ${result.headSha}`);
 
-    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::${repo}=${result.headSha}`;
-
-    for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
-        const [ , dependencyRepo] = dependency.split('/');
-        if (dependencyRepo === repo) continue;
-        cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
-    }
-
-    core.info(`==> cacheKeyStr: ${cacheKeyStr}`);
-
-    const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, cmakeOptions, result.headSha);    
 
     core.info(`==> cacheKeySha: ${cacheKeySha}`);
 
@@ -108,10 +134,11 @@ export const getCacheKey = async (repository: string, branch: string, githubToke
  * @param {string} compiler Current compiler family.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {EnvironmentVariables} env Local environment object.
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<boolean>} Whether the package cache was found.
  */
-export const restoreCache = async (repository: string, branch: string, githubToken: string, installDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<boolean> => {
-    const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
+export const restoreCache = async (repository: string, branch: string, githubToken: string, installDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string | undefined): Promise<boolean> => {
+    const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env, cmakeOptions);
 
     core.startGroup(`Restore ${repository} Cache`);
 
@@ -150,10 +177,11 @@ export const restoreCache = async (repository: string, branch: string, githubTok
  * @param {string} compiler Current compiler family.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {EnvironmentVariables} env Local environment object.
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<boolean>} Whether the package was cached successfully.
  */
-export const saveCache = async (repository: string, branch: string, githubToken: string, targetDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables): Promise<boolean> => {
-    const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env);
+export const saveCache = async (repository: string, branch: string, githubToken: string, targetDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string | undefined): Promise<boolean> => {
+    const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env, cmakeOptions);
 
     core.startGroup(`Save ${repository} Cache`);
 

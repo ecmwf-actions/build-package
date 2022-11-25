@@ -60,6 +60,7 @@ const main = async () => {
         for (const dependency of dependencies) {
             const [dependencyRepository, dependencyBranchSpecific] = dependency.split('@');
             const [owner, repo] = dependencyRepository.split('/');
+            const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
 
             if (!owner || !repo) return Promise.reject(`Unexpected dependency name, must be in 'owner/repo[@branch]' format: ${dependency}`);
 
@@ -67,7 +68,7 @@ const main = async () => {
 
             // If the build is not forced, first try to download an artifact.
             if (!forceBuild) {
-                const isArtifactDownloaded = await downloadArtifact(dependencyRepository, dependencyBranch, githubToken, downloadDir, path.join(installDir, repo), os, compiler, env);
+                const isArtifactDownloaded = await downloadArtifact(dependencyRepository, dependencyBranch, githubToken, downloadDir, path.join(installDir, repo), os, compiler, env, cacheSuffix, dependencyCmakeOptions);
 
                 if (isArtifactDownloaded) continue;
             }
@@ -75,7 +76,7 @@ const main = async () => {
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
             if (!recreateCache) {
-                const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+                const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, dependencyCmakeOptions);
 
                 if (cacheHit) continue;
             }
@@ -85,15 +86,13 @@ const main = async () => {
 
             if (!isRepositoryDownloaded) return Promise.reject('Error downloading repository');
 
-            const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
-
             // Build the package locally. We don't run any tests or code coverage in this case.
             const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, null, false, false, os, compiler, env);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
 
             // Save built package to the cache.
-            await saveCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+            await saveCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, dependencyCmakeOptions);
         }
 
         if (selfBuild) {
@@ -103,7 +102,7 @@ const main = async () => {
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
             if (!recreateCache) {
-                cacheHit = await restoreCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+                cacheHit = await restoreCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, cmakeOptions);
             }
 
             if (recreateCache || !cacheHit) {
@@ -113,13 +112,13 @@ const main = async () => {
                 if (!isBuilt) return Promise.reject('Error building package');
 
                 // Save built package to the cache.
-                await saveCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env);
+                await saveCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, cmakeOptions);
 
                 // Upload build artifact.
-                await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env);
+                await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env, githubToken, cacheSuffix, cmakeOptions);
 
                 // Upload coverage artifact.
-                if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env);
+                if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env, githubToken, cacheSuffix, cmakeOptions);
             }
 
         }

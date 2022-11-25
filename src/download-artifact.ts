@@ -12,6 +12,7 @@ import { extendPaths, extendDependencies } from './env-functions';
 import { isError } from './helper-functions';
 
 import { EnvironmentVariables } from './types/env-functions';
+import { getCacheKey } from './cache-functions';
 
 /**
  * Downloads and extracts package artifact.
@@ -24,9 +25,11 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {string} os Current OS platform.
  * @param {string} compiler Current compiler family.
  * @param {EnvironmentVariables} env Local environment object.
+ * @param {string} cacheSuffix A string which will be appended to the cache key.
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
+const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, cacheSuffix: string, cmakeOptions: string | undefined): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';
@@ -132,8 +135,12 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     let artifactName: string;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
-    else artifactName = `${repo}-${os}-${compiler}-${headSha}`;
+    if (repo === 'ecbuild') {
+        artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
+    } else {
+        const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, cmakeOptions);
+        artifactName = cacheKey;
+    }
 
     // Consider only artifacts with expected name.
     artifacts = artifacts.filter((artifact) => artifact.name === artifactName);

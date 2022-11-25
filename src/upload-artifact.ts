@@ -6,6 +6,7 @@ import tar from 'tar';
 import filesize from 'filesize';
 
 import { isError } from './helper-functions';
+import { getCacheKey } from './cache-functions';
 
 import { EnvironmentVariables } from './types/env-functions';
 
@@ -19,9 +20,12 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {string} os Current OS platform.
  * @param {string|null} compiler Current compiler family.
  * @param {EnvironmentVariables} env Local environment object.
+ * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
+ * @param {string} cacheSuffix A string which will be appended to the cache key.
+ * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
  * @returns {Promise<boolean>} Whether the archiving and upload was successful.
  */
-const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables): Promise<boolean> => {
+const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables, githubToken: string, cacheSuffix: string, cmakeOptions: string | undefined): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
     const [owner] = repository.split('/');
@@ -31,9 +35,13 @@ const uploadArtifact = async (repository: string, sha: string, targetDir: string
     let artifactName;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === 'ecbuild') artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
-    else artifactName = `${repo}-${os}-${compiler}-${sha}`;
-
+    if (repo === 'ecbuild') {
+        artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
+    }
+    else {
+        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler || '', cacheSuffix, env, cmakeOptions);
+        artifactName = cacheKey;
+    }
     const tarName = `${artifactName}.tar`;
     const rootDirectory = path.dirname(targetDir);
     const tarPath = path.join(rootDirectory, tarName);
