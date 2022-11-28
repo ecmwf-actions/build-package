@@ -74,7 +74,7 @@ describe('downloadRepository', () => {
             };
         });
 
-        (downloadFile as jest.Mock).mockImplementationOnce(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
 
         const statSync = jest.spyOn(fs, 'statSync');
         (statSync as jest.Mock).mockImplementationOnce(() => ({
@@ -118,7 +118,7 @@ describe('downloadRepository', () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockImplementationOnce(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
 
         const statSync = jest.spyOn(fs, 'statSync');
         (statSync as jest.Mock).mockImplementationOnce(() => ({
@@ -297,7 +297,7 @@ describe('downloadRepository', () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockImplementationOnce(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
 
         const statSync = jest.spyOn(fs, 'statSync');
         (statSync as jest.Mock).mockImplementationOnce(() => ({
@@ -332,7 +332,7 @@ describe('downloadRepository', () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockImplementationOnce(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
 
         const statSync = jest.spyOn(fs, 'statSync');
         (statSync as jest.Mock).mockImplementationOnce(() => ({
@@ -376,7 +376,7 @@ describe('downloadRepository', () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockImplementationOnce(() => Promise.resolve());
+        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
 
         const statSync = jest.spyOn(fs, 'statSync');
         (statSync as jest.Mock).mockImplementationOnce(() => ({

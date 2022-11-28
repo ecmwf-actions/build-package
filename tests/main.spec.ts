@@ -346,7 +346,7 @@ describe('main', () => {
         (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);
         (core.getMultilineInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);
 
-        (setupEnv as jest.Mock).mockImplementationOnce(() => Promise.resolve());
+        (setupEnv as jest.Mock).mockResolvedValueOnce(undefined);
 
         await expect(main()).rejects.toBe('Error setting up build environment');
     });

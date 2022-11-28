@@ -79,7 +79,7 @@ describe('getCacheKey', () => {
         for (let i = 0; i < 10; i++) {
             const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-            expect(result.cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+            expect(result.cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
             expect(result.headSha).toStrictEqual(sha);
 
             cacheKey = result.cacheKey;  // Save for later tests.
@@ -136,7 +136,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler, cacheSuffix, testEnv, undefined);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it('returns cache key if cmakeOptions parameter is empty', async () => {
@@ -157,7 +157,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, '');
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it('supports tags', async () => {
@@ -189,7 +189,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, testBranch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
         expect(core.info).toHaveBeenCalledWith(`==> Ref: tags/${testTag}`);
     });
@@ -225,7 +225,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it('returns cache key if dependencies object is undefined', async () => {
@@ -250,7 +250,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it('returns cache key if dependencies object is empty', async () => {
@@ -275,7 +275,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it.each`
@@ -310,7 +310,7 @@ describe('getCacheKey', () => {
 
         const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-        expect(cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(core.info).toHaveBeenCalledWith(`==> result.headSha: undefined`);
 
         if (!(error instanceof Error)) return;
@@ -343,7 +343,7 @@ describe('getCacheKey', () => {
 
         const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
 
-        expect(result.cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(result.cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
         expect(result.headSha).toStrictEqual(sha);
 
         const testCacheSuffix = 'foobar';
@@ -359,7 +359,7 @@ describe('getCacheKey', () => {
 
         const newResult = await getCacheKey(repository, branch, githubToken, os, compiler, testCacheSuffix, testEnv, cmakeOptions);
 
-        expect(newResult.cacheKey).toStrictEqual(`${os}-${compiler}-${repo}-${newCacheKeySha}`);
+        expect(newResult.cacheKey).toBe(`${os}-${compiler}-${repo}-${newCacheKeySha}`);
         expect(newResult.cacheKey).not.toStrictEqual(result.cacheKey);
         expect(newResult.headSha).toStrictEqual(result.headSha);
     });
