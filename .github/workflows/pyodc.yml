@@ -26,7 +26,7 @@ jobs:
         - clang-12@ubuntu-20.04
         - gnu-10@ubuntu-22.04
         - clang-12@ubuntu-22.04
-        - gnu-10@macos-12
+        - gnu-11@macos-12
         - clang-12@macos-12
         include:
         - name: gnu-10@ubuntu-20.04
@@ -53,12 +53,12 @@ jobs:
           compiler_cc: clang-12
           compiler_cxx: clang++-12
           compiler_fc: gfortran-10
-        - name: gnu-10@macos-12
+        - name: gnu-11@macos-12
           os: macos-12
-          compiler: gnu-10
-          compiler_cc: gcc-10
-          compiler_cxx: g++-10
-          compiler_fc: gfortran-10
+          compiler: gnu-11
+          compiler_cc: gcc-11
+          compiler_cxx: g++-11
+          compiler_fc: gfortran-11
         # Xcode compiler requires empty environment variables, so we pass empty strings here
         - name: clang-12@macos-12
           os: macos-12
