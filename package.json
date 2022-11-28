@@ -81,6 +81,7 @@
     "restoreMocks": true
   },
   "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
     "env": {
       "browser": false,
       "node": true,
@@ -98,13 +99,18 @@
       "plugin:json-schema-validator/recommended"
     ],
     "parserOptions": {
-      "ecmaVersion": 12
+      "ecmaVersion": 12,
+      "project": [
+        "./tsconfig.json"
+      ]
     },
     "rules": {
       "indent": [
         "error",
         4
       ],
+      "jest/no-conditional-in-test": "off",
+      "jest/max-expects": "off",
       "json-schema-validator/no-invalid": [
         "error",
         {
