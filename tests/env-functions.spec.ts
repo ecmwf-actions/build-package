@@ -58,7 +58,7 @@ describe('setupEnv', () => {
     it('works around failed cmake command', async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementationOnce(() => Promise.resolve(1));
+        (exec.exec as jest.Mock).mockResolvedValueOnce(1);
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
