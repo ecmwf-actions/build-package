@@ -35,10 +35,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Checkout ecbuild Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: ecmwf/ecbuild
         ref: develop
