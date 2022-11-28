@@ -61,7 +61,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -102,7 +102,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -127,7 +127,7 @@ describe('getCacheKey', () => {
         };        
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -148,7 +148,7 @@ describe('getCacheKey', () => {
 
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -176,7 +176,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -211,7 +211,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             if (dependency === repository) continue;
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
@@ -295,7 +295,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=undefined`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -330,7 +330,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -350,7 +350,7 @@ describe('getCacheKey', () => {
 
         let newCacheKeyStr = `v=${version}${testCacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             newCacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }

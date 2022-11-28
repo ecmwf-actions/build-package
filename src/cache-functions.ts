@@ -32,7 +32,7 @@ export const getCacheKeyHash = (repo: string, cacheSuffix: string, env: Environm
 
     let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-    for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {})) {
+    for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
         const [ , dependencyRepo] = dependency.split('/');
         if (dependencyRepo === repo) continue;
         cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
