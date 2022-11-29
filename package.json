@@ -56,6 +56,7 @@
     "eslint-plugin-json-schema-validator": "^2.1.9",
     "eslint-plugin-jsonc": "^2.0.0",
     "eslint-plugin-yml": "^1.2.0",
+    "yaml-eslint-parser": "^1.1.0",
     "jest": "^27.4.3",
     "typescript": "^4.5.2"
   },
@@ -94,7 +95,6 @@
     ],
     "extends": [
       "eslint:recommended",
-      "plugin:jest/all",
       "plugin:@typescript-eslint/eslint-recommended",
       "plugin:@typescript-eslint/recommended",
       "plugin:json-schema-validator/recommended",
@@ -111,8 +111,6 @@
         "error",
         4
       ],
-      "jest/no-conditional-in-test": "off",
-      "jest/max-expects": "off",
       "json-schema-validator/no-invalid": [
         "error",
         {
@@ -122,8 +120,21 @@
     },
     "overrides": [
       {
-        "files": ["*.yaml", "*.yml"],
+        "files": ["tests/**"],
+        "plugins": ["jest"],
+        "extends":["plugin:jest/all"],
+        "rules": {
+          "jest/no-conditional-in-test": "off",
+          "jest/max-expects": "off"
+        }
+      },
+      {
+        "files": [
+          "*.yaml",
+          "*.yml"
+        ],
         "parser": "yaml-eslint-parser",
+        "plugins": ["yml"],
         "parserOptions": {
           "defaultYAMLVersion": "1.2"
         }
