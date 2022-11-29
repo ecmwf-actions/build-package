@@ -8,6 +8,7 @@ import { getCacheKey, getCacheKeyHash, restoreCache, saveCache } from '../src/ca
 import { version } from '../package.json';
 import { EnvironmentVariables } from '../src/types/env-functions';
 import { parseOptions } from '../src/build-package';
+import { CmakeOptionsLookup } from '../src/types/main';
 
 jest.mock('@actions/core');
 jest.mock('@actions/cache');
@@ -36,6 +37,11 @@ const env = {
     },
 };
 
+const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {
+    'repo1': '-DENABLE_MEMFS=0 -DENABLE_ECCODES_THREADS=1 -DENABLE_AEC=1 -DECCODES_INSTALL_EXTRA_TOOLS=1',
+    'repo2': '-DENABLE_MEMFS=1 -DENABLE_AEC=1'
+};
+
 const resolveHeadSha = () => Promise.resolve({
     status: 200,
     data: {
@@ -61,9 +67,16 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+
+            if (dependencyCmakeOptionsLookup[dependencyRepo]) {
+                const dependencyCmakeOptions = [];
+                dependencyCmakeOptions.push(...parseOptions(dependencyCmakeOptionsLookup[dependencyRepo]));
+                dependencyCmakeOptions.sort();
+                cacheKeyStr += `::${dependencyRepo}-options=${dependencyCmakeOptions.join()}`;
+            }
         }
 
         const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
@@ -77,7 +90,7 @@ describe('getCacheKey', () => {
         });
 
         for (let i = 0; i < 10; i++) {
-            const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
+            const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions, dependencyCmakeOptionsLookup);
 
             expect(result.cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
             expect(result.headSha).toStrictEqual(sha);
@@ -102,7 +115,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -127,7 +140,7 @@ describe('getCacheKey', () => {
         };        
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -148,7 +161,7 @@ describe('getCacheKey', () => {
 
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -158,6 +171,37 @@ describe('getCacheKey', () => {
         const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, '');
 
         expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+    });
+
+    it('returns cache key if dependencyCmakeOptionsLookup is missing', async () => {
+        expect.assertions(1);
+
+        const testEnv = {
+            ...env,
+        };
+
+        const buildOptions = [];
+        buildOptions.push(...parseOptions(cmakeOptions || ''));
+        buildOptions.sort();
+
+        let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
+
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
+            const [ , dependencyRepo] = dependency.split('/');
+            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        }
+
+        const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => {
+            return {
+                request: resolveHeadSha,
+            };
+        });
+
+        const result = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, testEnv, cmakeOptions);
+
+        expect(result.cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
     });
 
     it('supports tags', async () => {
@@ -176,7 +220,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -211,7 +255,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             if (dependency === repository) continue;
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
@@ -295,7 +339,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=undefined`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -330,7 +374,7 @@ describe('getCacheKey', () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -350,7 +394,7 @@ describe('getCacheKey', () => {
 
         let newCacheKeyStr = `v=${version}${testCacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
 
-        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {})) {
+        for (const [dependency, dependencySha] of Object.entries(testEnv.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
             const [ , dependencyRepo] = dependency.split('/');
             newCacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
         }
@@ -376,7 +420,7 @@ describe('restoreCache', () => {
         for (const mockCacheHit of [false, true]) {
             (cache.restoreCache as jest.Mock).mockResolvedValueOnce(mockCacheHit);
 
-            const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env, cmakeOptions);
+            const cacheHit = await restoreCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
 
             expect(cacheHit).toBe(mockCacheHit);
             expect(cache.restoreCache).toHaveBeenCalledWith([installDir], cacheKey);
@@ -420,7 +464,7 @@ describe('saveCache', () => {
         for (const mockIsSaved of [false, true]) {
             (cache.saveCache as jest.Mock).mockResolvedValueOnce(mockIsSaved);
 
-            const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env, cmakeOptions);
+            const isSaved = await saveCache(repository, branch, githubToken, installDir, os, compiler, cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
 
             expect(isSaved).toBe(mockIsSaved);
             expect(cache.saveCache).toHaveBeenCalledWith([installDir], cacheKey);

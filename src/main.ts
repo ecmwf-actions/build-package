@@ -102,7 +102,7 @@ const main = async () => {
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
             if (!recreateCache) {
-                cacheHit = await restoreCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, cmakeOptions);
+                cacheHit = await restoreCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
             }
 
             if (recreateCache || !cacheHit) {
@@ -112,13 +112,13 @@ const main = async () => {
                 if (!isBuilt) return Promise.reject('Error building package');
 
                 // Save built package to the cache.
-                await saveCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, cmakeOptions);
+                await saveCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
 
                 // Upload build artifact.
-                await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env, githubToken, cacheSuffix, cmakeOptions);
+                await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env, githubToken, cacheSuffix, cmakeOptions, dependencyCmakeOptionsLookup);
 
                 // Upload coverage artifact.
-                if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env, githubToken, cacheSuffix, cmakeOptions);
+                if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env, githubToken, cacheSuffix, cmakeOptions, dependencyCmakeOptionsLookup);
             }
 
         }

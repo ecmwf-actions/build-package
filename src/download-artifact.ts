@@ -13,6 +13,7 @@ import { isError } from './helper-functions';
 
 import { EnvironmentVariables } from './types/env-functions';
 import { getCacheKey } from './cache-functions';
+import { CmakeOptionsLookup } from './types/main';
 
 /**
  * Downloads and extracts package artifact.
@@ -27,9 +28,10 @@ import { getCacheKey } from './cache-functions';
  * @param {EnvironmentVariables} env Local environment object.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
+ * @param {CmakeOptionsLookup} dependencyCmakeOptionsLookup List of CMake options for each dependency.
  * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, cacheSuffix: string, cmakeOptions: string | undefined): Promise<boolean> => {
+const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, cacheSuffix: string, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';
@@ -138,7 +140,7 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     if (repo === 'ecbuild') {
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
     } else {
-        const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, cmakeOptions);
+        const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
         artifactName = cacheKey;
     }
 
