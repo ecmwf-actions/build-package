@@ -30,7 +30,7 @@ A Github action to build ECMWF software.
 ```yaml
 steps:
 - name: Checkout Repository
-  uses: actions/checkout@v2
+  uses: actions/checkout@v3
 
 - name: Build & Test
   uses: ecmwf-actions/build-package@v2
@@ -47,7 +47,7 @@ steps:
 ```yaml
 steps:
 - name: Checkout Repository
-  uses: actions/checkout@v2
+  uses: actions/checkout@v3
 
 - name: Build & Test
   uses: ecmwf-actions/build-package@v2
@@ -65,7 +65,7 @@ steps:
 ```yaml
 steps:
 - name: Checkout Repository
-  uses: actions/checkout@v2
+  uses: actions/checkout@v3
 
 - name: Build
   uses: ecmwf-actions/build-package@v2
@@ -78,7 +78,7 @@ steps:
 ```yaml
 steps:
 - name: Checkout Repository
-  uses: actions/checkout@v2
+  uses: actions/checkout@v3
 
 - name: Install Dependencies
   id: install-dependencies
@@ -110,29 +110,29 @@ steps:
 
 ### `workspace`
 
-**Required** The location of currently checked out source repository.  
+**Required** The location of currently checked out source repository.
 **Default:** `${{ github.workspace }}`
 
 ### `repository`
 
-**Required** The currently checked out source repository name. Repository names should follow the standard Github `owner/name` format.  
+**Required** The currently checked out source repository name. Repository names should follow the standard Github `owner/name` format.
 **Default:** `${{ github.repository }}`
 
 ### `sha`
 
-**Required** The currently checked out source repository commit SHA.  
+**Required** The currently checked out source repository commit SHA.
 **Default:** `${{ github.sha }}`
 
 ### `cmake`
 
-**Required** Whether to use CMake for build configuration, instead of ecbuild.  
+**Required** Whether to use CMake for build configuration, instead of ecbuild.
 **Default:** `false`
 
 ### `cmake_options`
 
 The list of ecbuild/CMake options to be passed during the current repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple options. If left empty, the repository will be configured with default options only.
 
-> **NOTE:**  
+> **NOTE:**
 To make sure that the options are also applied when the repository is built as a dependency, you can instead of this input provide a file under magic path `.github/.cmake-options`. Use the same form for options and take care the file does not contain line breaks.
 
 ### `ctest_options`
@@ -141,108 +141,108 @@ The list of ctest options to be passed to the test command for the current repos
 
 ### `self_build`
 
-**Required** Whether to build from currently checked out repository or not.  
+**Required** Whether to build from currently checked out repository or not.
 **Default:** `true`
 
 ### `self_test`
 
-**Required** Whether to run tests from currently checked out repository or not.  
+**Required** Whether to run tests from currently checked out repository or not.
 **Default:** `true`
 
 ### `self_coverage`
 
-**Required** Whether to collect code coverage from currently checked out repository or not. Note that [test](#test) input must be set to true for this to work. Currently supported only on Ubuntu 20.04 platform and for GNU 10 compiler.  
+**Required** Whether to collect code coverage from currently checked out repository or not. Note that [test](#test) input must be set to true for this to work. Currently supported only on Ubuntu 20.04 platform and for GNU 10 compiler.
 **Default:** `false`
 
 ### `dependencies`
 
-The list of dependency repositories to build from, in correct order. Repository names should follow the standard Github `owner/name` format. To specify different branch name per repository, use `owner/name@branch_name` format. To specify specific tag name per repository, use `owner/name@refs/tags/tag_name` format.  
+The list of dependency repositories to build from, in correct order. Repository names should follow the standard Github `owner/name` format. To specify different branch name per repository, use `owner/name@branch_name` format. To specify specific tag name per repository, use `owner/name@refs/tags/tag_name` format.
 **Multiline Support:** yes
 
 ### `dependency_branch`
 
-**Required** The default branch (or tag) name for dependency repositories. Will be ignored if the branch (or tag) name is specified per repository, see [dependencies](#dependencies) input. To specify specific tag name, use `refs/tags/tag_name` format.  
+**Required** The default branch (or tag) name for dependency repositories. Will be ignored if the branch (or tag) name is specified per repository, see [dependencies](#dependencies) input. To specify specific tag name, use `refs/tags/tag_name` format.
 **Default:** `${{ github.ref }}`
 
 ### `dependency_cmake_options`
 
-The list of ecbuild/CMake options to be passed during the dependency build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.  
+The list of ecbuild/CMake options to be passed during the dependency build configuration phase. Use the form of `owner/name: "-DCMAKE_VAR=1"` to define options for the package or its dependencies. If the package is not listed, it will be configured with default options only.
 **Multiline Support:** yes
 
 ### `force_build`
 
-**Required** Whether to always build dependencies from latest repository states or not. Otherwise, the action will first try to download a build artifact if it exists.  
+**Required** Whether to always build dependencies from latest repository states or not. Otherwise, the action will first try to download a build artifact if it exists.
 **Default:** `false`
 
 ### `cache_suffix`
 
-A string which will be appended to the cache key. To invalidate the build cache, simply change its value.  
+A string which will be appended to the cache key. To invalidate the build cache, simply change its value.
 
 ### `recreate_cache`
 
-**Required** Whether to skip restoring builds from cache and recreate them instead.  
+**Required** Whether to skip restoring builds from cache and recreate them instead.
 **Default:** `false`
 
 ### `os`
 
-**Required** Current OS platform.  
+**Required** Current OS platform.
 **Default:** `${{ matrix.os }}`
 
 ### `compiler`
 
-Current compiler family.  
+Current compiler family.
 **Default:** `${{ matrix.compiler }}`
 
 ### `compiler_cc`
 
-Current C compiler alias.  
+Current C compiler alias.
 **Default:** `${{ matrix.compiler_cc }}`
 
 ### `compiler_cxx`
 
-Current C++ compiler alias.  
+Current C++ compiler alias.
 **Default:** `${{ matrix.compiler_cxx }}`
 
 ### `compiler_fc`
 
-Current Fortran compiler alias.  
+Current Fortran compiler alias.
 **Default:** `${{ matrix.compiler_fc }}`
 
 ### `github_token`
 
-**Required** Github access token, with `repo` and `actions:read` scopes.  
+**Required** Github access token, with `repo` and `actions:read` scopes.
 **Default:** `${{ github.token }}`
 
 ### `install_dir`
 
-**Required** Directory where the dependencies and current package will be installed. Each dependency will be installed in its own subdirectory.  
+**Required** Directory where the dependencies and current package will be installed. Each dependency will be installed in its own subdirectory.
 **Default:** `${{ runner.temp }}/install`
 
 ### `download_dir`
 
-**Required** Directory where the dependency repositories and artifacts will be downloaded.  
+**Required** Directory where the dependency repositories and artifacts will be downloaded.
 **Default:** `${{ runner.temp }}/download`
 
 ## Outputs
 
 ### `bin_paths`
-Binary paths of all installed packages, delimited by colons (:).  
+Binary paths of all installed packages, delimited by colons (:).
 **Example:** `${{ runner.temp }}/install/repo1/bin:${{ runner.temp }}/install/repo2/bin`
 
 ### `include_path`
-Include paths of all installed packages, delimited by colons (:)  
+Include paths of all installed packages, delimited by colons (:)
 **Example:** `${{ runner.temp }}/install/repo1/include:${{ runner.temp }}/install/repo2/include`
 
 ### `install_path`
-Install paths of all installed packages, delimited by colons (:)  
+Install paths of all installed packages, delimited by colons (:)
 **Example:** `${{ runner.temp }}/install/repo1:${{ runner.temp }}/install/repo2`
 
 ### `lib_path`
-Library paths of all installed packages, delimited by colons (:)  
+Library paths of all installed packages, delimited by colons (:)
 **Example:** `${{ runner.temp }}/install/repo1/lib:${{ runner.temp }}/install/repo2/lib`
 
 ### `coverage_file`
-Absolute path to code coverage file, if collected.  
+Absolute path to code coverage file, if collected.
 **Example:** `${{ github.workspace }}/repo/repo/build/coverage.info`
 
 ## Code Coverage Report

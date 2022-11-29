@@ -20,25 +20,26 @@ jobs:
   ecbuild:
     name: ecbuild
     strategy:
+      fail-fast: false
       matrix:
         name:
         - ubuntu-20.04
-        - ubuntu-18.04
-        - macos-10.15
+        - ubuntu-22.04
+        - macos-12
         include:
         - name: ubuntu-20.04
           os: ubuntu-20.04
-        - name: ubuntu-18.04
-          os: ubuntu-18.04
-        - name: macos-10.15
-          os: macos-10.15
+        - name: ubuntu-22.04
+          os: ubuntu-22.04
+        - name: macos-12
+          os: macos-12
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Checkout ecbuild Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: ecmwf/ecbuild
         ref: develop
