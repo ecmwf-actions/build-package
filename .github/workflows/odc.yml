@@ -40,7 +40,7 @@ jobs:
           compiler: clang-12
           compiler_cc: clang-12
           compiler_cxx: clang++-12
-          compiler_fc: gfortran-11
+          compiler_fc: gfortran-10
         - name: gnu-11@ubuntu-22.04
           os: ubuntu-22.04
           compiler: gnu-11
