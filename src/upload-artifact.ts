@@ -9,6 +9,7 @@ import { isError } from './helper-functions';
 import { getCacheKey } from './cache-functions';
 
 import { EnvironmentVariables } from './types/env-functions';
+import { CmakeOptionsLookup } from './types/main';
 
 /**
  * Archives and uploads package artifact.
@@ -23,9 +24,22 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
+ * @param {CmakeOptionsLookup} dependencyCmakeOptionsLookup List of CMake options for each dependency.
  * @returns {Promise<boolean>} Whether the archiving and upload was successful.
  */
-const uploadArtifact = async (repository: string, sha: string, targetDir: string, dependencies: DependenciesObject, os: string, compiler: string | null, env: EnvironmentVariables, githubToken: string, cacheSuffix: string, cmakeOptions: string | undefined): Promise<boolean> => {
+const uploadArtifact = async (
+    repository: string,
+    sha: string,
+    targetDir: string,
+    dependencies: DependenciesObject,
+    os: string,
+    compiler: string | null,
+    env: EnvironmentVariables,
+    githubToken: string,
+    cacheSuffix: string,
+    cmakeOptions: string | undefined,
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
     const [owner] = repository.split('/');
@@ -39,7 +53,7 @@ const uploadArtifact = async (repository: string, sha: string, targetDir: string
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
     }
     else {
-        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler || '', cacheSuffix, env, cmakeOptions);
+        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler || '', cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
         artifactName = cacheKey;
     }
     const tarName = `${artifactName}.tar`;
