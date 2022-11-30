@@ -118,5 +118,5 @@ outputs:
   coverage_file:
     description: Absolute path to code coverage file, if collected.
 runs:
-  using: node12
+  using: node16
   main: dist/index.js
