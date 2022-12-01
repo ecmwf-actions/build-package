@@ -1,10 +1,12 @@
 # This workflow rebuilds dist/index.js on opened pull request by Dependabot and adds it to the PR
 name: dependabot-build
 
-# trigger workflow only on opened PRs or on demand
+# Trigger workflow only on (opened or synchronised) PRs or on demand
+# We trigger when the PR is synchronised so this rebuild is automatically run again when we tell
+# dependabot to rebase a PR.
 on:
   pull_request_target:
-    types: [opened]
+    types: [opened, synchronize]
     paths:
       - 'package.json'
       - 'package-lock.json'
