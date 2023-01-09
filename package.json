@@ -28,7 +28,7 @@
     "@actions/cache": "^1.0.7",
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.0",
-    "@actions/http-client": "^1.0.11",
+    "@actions/http-client": "^2.0.1",
     "@actions/io": "^1.1.1",
     "@octokit/core": "^4.1.0",
     "adm-zip": "^0.5.9",
