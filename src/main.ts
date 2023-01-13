@@ -45,6 +45,7 @@ const main = async () => {
         const githubToken = core.getInput('github_token', { required: true });
         const installDir = core.getInput('install_dir', { required: true });
         const downloadDir = core.getInput('download_dir', { required: true });
+        const parallelismFactor = core.getInput('parallelism_factor', { required: false });
 
         const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
@@ -87,7 +88,7 @@ const main = async () => {
             if (!isRepositoryDownloaded) return Promise.reject('Error downloading repository');
 
             // Build the package locally. We don't run any tests or code coverage in this case.
-            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, null, false, false, os, compiler, env);
+            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, null, false, false, os, compiler, env, parallelismFactor);
 
             if (!isBuilt) return Promise.reject('Error building dependency');
 
@@ -107,7 +108,7 @@ const main = async () => {
 
             if (recreateCache || !cacheHit) {
                 // Build the currently checked out repository.
-                const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, ctestOptions, selfTest, selfCoverage, os, compiler, env);
+                const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, ctestOptions, selfTest, selfCoverage, os, compiler, env, parallelismFactor);
 
                 if (!isBuilt) return Promise.reject('Error building package');
 

@@ -112,9 +112,10 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
  * @param {string} os Current OS platform.
  * @param {string} compiler Current compiler family.
  * @param {EnvironmentVariables} env Local environment object.
+ * @param {string} parallelismFactor Number of threads build job will utilise on the runner.
  * @returns {Promise<boolean>} Whether the build and install process finished successfully.
  */
-const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: EnvironmentVariables): Promise<boolean> => {
+const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: EnvironmentVariables, parallelismFactor: string): Promise<boolean> => {
     core.startGroup(`Build ${repository}`);
 
     const [, repo] = repository.split('/');
@@ -207,9 +208,9 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
         const options = {
             cwd: buildDir,
             env: {
-                'CMAKE_BUILD_PARALLEL_LEVEL': '2',  // default for Github runners, equals `-j2`
+                'CMAKE_BUILD_PARALLEL_LEVEL': parallelismFactor,  // default for Github runners, equals `-j2`
                 ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
-                ...(test ? { 'CTEST_PARALLEL_LEVEL': '2' } : {}),  // default for Github runners, equals `-j2`
+                ...(test ? { 'CTEST_PARALLEL_LEVEL': parallelismFactor } : {}),  // default for Github runners, equals `-j2`
                 ...process.env,  // preserve existing environment
                 ...env,  // compiler env must win
             },

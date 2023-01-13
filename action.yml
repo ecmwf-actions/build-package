@@ -106,6 +106,10 @@ inputs:
     description: Directory where the dependency repositories and artifacts will be downloaded.
     required: true
     default: ${{ runner.temp }}/download
+  parallelism_factor:
+    description: Number of threads build job will utilise on the runner.
+    required: false
+    default: '2'
 outputs:
   bin_paths:
     description: Binary paths of all installed packages, delimited by colons (:).

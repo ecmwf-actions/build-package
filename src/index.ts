@@ -45,7 +45,7 @@ import main from './main';
  *   @param {string} install_dir Directory where the dependencies and current package will be installed. Each
  *     dependency will be installed in its own subdirectory.
  *   @param {string} download_dir Directory where the dependency repositories and artifacts will be downloaded.
- *
+ *   @param {string} parallelism_factor Number of threads build job will utilise on the runner.
  * Outputs:
  *   @param {String} bin_paths Binary paths of all installed packages, delimited by colons (:).
  *   @param {String} include_path Include paths of all installed packages, delimited by colons (:).

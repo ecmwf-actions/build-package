@@ -30,6 +30,7 @@ const macOs = 'macos-10.15';
 const compiler = 'gnu-10';
 const errorObject = new Error('spawn /bin/sh ENOENT');
 const emptyObject = {};
+const parallelismFactor = '2';
 
 // Base environment object, we will take care not to modify it.
 const env: EnvironmentVariables = {
@@ -49,7 +50,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
     });
@@ -63,7 +64,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(1);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -77,7 +78,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
@@ -93,7 +94,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
@@ -105,7 +106,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage('ecmwf/ecbuild', sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage('ecmwf/ecbuild', sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> configurePath: ${sourceDir}/bin/ecbuild`);
@@ -131,7 +132,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: cmake');
@@ -143,7 +144,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> configurePath: ecbuild');
@@ -168,7 +169,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+        let isBuilt = await buildPackage(repository, sourceDir, installDir, !cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> testOptions: ${testCtestOptions}`);
@@ -179,7 +180,7 @@ describe('buildPackage', () => {
             ...env,
         };
 
-        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2);
+        isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv2, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> testOptions: ${testCtestOptions}`);
@@ -194,7 +195,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> srcDir: ${sourceDir}`);
@@ -232,7 +233,7 @@ describe('buildPackage', () => {
             return '';
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
@@ -269,7 +270,7 @@ describe('buildPackage', () => {
             return '';
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
@@ -308,7 +309,7 @@ describe('buildPackage', () => {
             `-DEXPANDED_OPT4="A string with double ${testEnv1.VAR5} and ${testEnv1.VAR5}"`,
             `-DEXPANDED_OPT5=${testEnv1.MY_VAR}`,
             `-DEXPANDED_OPT6=${testEnv1.MY_VAR}`,
-        ]
+        ];
 
         const testCtestOptions = [
             '-R',
@@ -328,7 +329,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv1, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> configureOptions: --prefix=${installDir},${testCmakeOptions}`);
@@ -358,7 +359,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -372,7 +373,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> Code coverage collection enabled, installing lcov...');
@@ -388,7 +389,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, macOs, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, macOs, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`Skipping code coverage collection on unsupported platform: ${compiler}@${macOs}`);
@@ -403,7 +404,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
 
@@ -437,7 +438,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, "-DCMAKE_C_FLAGS='--coverage'", "-DCMAKE_CXX_FLAGS='--coverage'", "-DCMAKE_Fortran_FLAGS='--coverage'", sourceDir], options);
@@ -468,7 +469,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(mkdirP).toHaveBeenCalledWith(installDir);
@@ -494,7 +495,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, "-DCMAKE_C_FLAGS='--coverage'", "-DCMAKE_CXX_FLAGS='--coverage'", "-DCMAKE_Fortran_FLAGS='--coverage'", sourceDir], options);
@@ -527,7 +528,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, sourceDir], options);
@@ -558,7 +559,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith('env', ['ecbuild', `--prefix=${installDir}`, sourceDir], options);
@@ -591,7 +592,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -616,7 +617,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, !test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -639,7 +640,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -667,7 +668,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -697,7 +698,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -722,7 +723,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -748,7 +749,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -773,7 +774,7 @@ describe('buildPackage', () => {
             return Promise.resolve(0);
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
@@ -799,7 +800,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, !codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);
@@ -830,7 +831,7 @@ describe('buildPackage', () => {
 
         (exec.exec as jest.Mock).mockResolvedValue(0);
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);
@@ -851,7 +852,7 @@ describe('buildPackage', () => {
             throw error;
         });
 
-        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv);
+        const isBuilt = await buildPackage(repository, sourceDir, installDir, cmake, cmakeOptions, ctestOptions, test, codeCoverage, os, compiler, testEnv, parallelismFactor);
 
         expect(isBuilt).toBe(false);
     });
