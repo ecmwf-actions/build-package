@@ -43,6 +43,7 @@ const inputs: ActionInputs = {
     github_token: '***',
     install_dir: '/path/to/install',
     download_dir: '/path/to/download',
+    parallelism_factor: '2'
 };
 
 const outputs: ActionOutputs = {
@@ -179,7 +180,7 @@ describe('main', () => {
         (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.repository, inputs.workspace, `${inputs.install_dir}/repo`, inputs.cmake, testCmakeOptions, undefined, inputs.self_test, inputs.self_coverage, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.repository, inputs.workspace, `${inputs.install_dir}/repo`, inputs.cmake, testCmakeOptions, undefined, inputs.self_test, inputs.self_coverage, inputs.os, inputs.compiler, testEnv, inputs.parallelism_factor);
     });
 
     it('resolves the promise if dependency cmake options are passed', async () => {
@@ -213,9 +214,9 @@ describe('main', () => {
         (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, null, false, false, inputs.os, inputs.compiler, testEnv);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, null, false, false, inputs.os, inputs.compiler, testEnv);
-        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, null, false, false, inputs.os, inputs.compiler, testEnv);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[0], `${inputs.download_dir}/repo1`, `${inputs.install_dir}/repo1`, inputs.cmake, testDependencyCmakeOptions1, null, false, false, inputs.os, inputs.compiler, testEnv, inputs.parallelism_factor);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[1], `${inputs.download_dir}/repo2`, `${inputs.install_dir}/repo2`, inputs.cmake, testDependencyCmakeOptions2, null, false, false, inputs.os, inputs.compiler, testEnv, inputs.parallelism_factor);
+        expect(buildPackage).toHaveBeenCalledWith(inputs.dependencies[2], `${inputs.download_dir}/repo3`, `${inputs.install_dir}/repo3`, inputs.cmake, testDependencyCmakeOptions3, null, false, false, inputs.os, inputs.compiler, testEnv, inputs.parallelism_factor);
     });
 
     it('resolves the promise if build is skipped', async () => {
@@ -224,7 +225,7 @@ describe('main', () => {
         (core.getInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);
         (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => {
             if (inputName === 'self_build') return false;
-            return inputs[inputName]
+            return inputs[inputName];
         });
         (core.getMultilineInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);
 
@@ -255,7 +256,7 @@ describe('main', () => {
         (core.getInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);
         (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => {
             if (inputName === 'self_coverage') return false;
-            return inputs[inputName]
+            return inputs[inputName];
         });
         (core.getMultilineInput as jest.Mock).mockImplementation((inputName) => inputs[inputName]);
 
@@ -410,7 +411,7 @@ describe('main', () => {
         (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
         (buildPackage as jest.Mock).mockImplementation((repository) => {
             if (repository === 'owner/repo') return false;
-            return true
+            return true;
         });
 
         await expect(main()).rejects.toBe('Error building package');

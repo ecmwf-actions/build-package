@@ -19,6 +19,7 @@ type ActionInputs = {
     github_token: string,
     install_dir: string,
     download_dir: string,
+    parallelism_factor: string;
     [key: string]: string[] | boolean | string | null,
 };
 
