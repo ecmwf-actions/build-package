@@ -1,0 +1,21 @@
+pgen:
+  deps:
+    - mir
+
+mir:
+  deps:
+    - atlas
+    - metkit
+
+atlas:
+  deps:
+    - eckit
+
+metkit:
+  deps:
+    - eccodes
+    - eckit
+
+eckit: ~
+
+eccodes: ~
