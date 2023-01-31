@@ -18,7 +18,7 @@ jest.mock('adm-zip');
 jest.mock('tar');
 
 const getArtifactName = (repo: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string, headSha: string) => {
-    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, cmakeOptions, headSha);
+    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, {}, cmakeOptions, headSha);
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
 }
 
@@ -174,7 +174,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith('==> Workflow: ci.yml');
@@ -258,7 +258,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementation(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
@@ -296,7 +296,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${ecbuildArtifactName}`);
@@ -337,7 +337,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found for ecbuild');
@@ -378,7 +378,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith('No completed successful workflow runs found for ecbuild');
@@ -402,7 +402,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow runs for ${repo}: ${errorStatusCode}`);
@@ -429,7 +429,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No workflow runs found for ${repo}`);
@@ -455,7 +455,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
 
@@ -483,7 +483,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching workflow run artifacts for ${repo}: ${errorStatusCode}`);
@@ -511,7 +511,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
 
@@ -542,7 +542,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No workflow artifacts found for ${repo}`);
@@ -587,7 +587,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ${getArtifactName(repo, os, compiler, cacheSuffix, env, cmakeOptions, newSha)}`);
@@ -621,7 +621,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`);
@@ -649,7 +649,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`);
@@ -680,7 +680,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
 
@@ -712,7 +712,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Wrong response code while downloading workflow run artifact for ${repo}: ${errorStatusCode}`);
@@ -744,7 +744,7 @@ describe('downloadArtifact', () => {
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
 
@@ -787,7 +787,7 @@ describe('downloadArtifact', () => {
             throw error;
         });
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
 
@@ -854,7 +854,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementation(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
@@ -906,7 +906,7 @@ describe('downloadArtifact', () => {
         const unlinkSync = jest.spyOn(fs, 'unlinkSync');
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
 
         expect(isArtifactDownloaded).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);

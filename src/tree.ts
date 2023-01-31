@@ -31,6 +31,7 @@ export const loadTree = (): DependencyTree => {
         if (error instanceof Error) isError(true, `Error loading data from ${fileName}`);
         return {};
     }
+    core.info(`Dependency tree: ${JSON.stringify(treeData, null, 4)}`);
     return treeData;
 };
 

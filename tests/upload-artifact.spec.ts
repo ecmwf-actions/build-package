@@ -14,7 +14,7 @@ jest.mock('@actions/artifact');
 jest.mock('tar');
 
 const getArtifactName = (repo: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string, headSha: string) => {
-    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, cmakeOptions, headSha);
+    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, {}, cmakeOptions, headSha);
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
 }
 
@@ -85,7 +85,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Created artifact TAR: ${tarPath} (${filesize(size)})`);
@@ -120,7 +120,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(`coverage-${repo}`, sha, installDir, null, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(`coverage-${repo}`, sha, installDir, null, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`);
@@ -158,7 +158,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact('ecmwf/ecbuild', sha, installDir, {}, os, null, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact('ecmwf/ecbuild', sha, installDir, {}, os, null, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`);
@@ -179,7 +179,7 @@ describe('uploadArtifact', () => {
             throw error;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(false);
 
@@ -203,7 +203,7 @@ describe('uploadArtifact', () => {
             size: 0,
         }));
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error determining size of artifact TAR for ${repo}`);
@@ -239,7 +239,7 @@ describe('uploadArtifact', () => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(false);
 
@@ -276,7 +276,7 @@ describe('uploadArtifact', () => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${artifactName}`);
@@ -303,7 +303,7 @@ describe('uploadArtifact', () => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}`);
@@ -334,7 +334,7 @@ describe('uploadArtifact', () => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
 
         expect(isUploaded).toBe(false);
 
