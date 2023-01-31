@@ -6,7 +6,7 @@ import * as core from '@actions/core';
 import process from 'process';
 
 
-export const loadTree = async (): Promise<DependencyTree> => {
+export const loadTree = (): DependencyTree => {
     const fileName = "dependency-tree.yml";
 
     if (!process.env.RUNNER_WORKSPACE || !process.env.GITHUB_ACTION_REPOSITORY || !process.env.GITHUB_ACTION_REF) {
@@ -32,4 +32,20 @@ export const loadTree = async (): Promise<DependencyTree> => {
         return {};
     }
     return treeData;
+};
+
+export const getDependenciesFromTree = (repo: string, tree: DependencyTree, dependencies: string[] | null): string[] => {
+    if (!dependencies) {
+        dependencies = [];
+    }
+    if (tree[repo] == null) {
+        return dependencies;
+    }
+    for (const dep of tree[repo].deps) {
+        dependencies.push(dep);
+        if (dep in tree) {
+            getDependenciesFromTree(dep, tree, dependencies);
+        }
+    }
+    return [...new Set(dependencies)];
 };

@@ -1,1 +1,1 @@
-type DependencyTree = Record<string, { deps: [string]; }>;
+type DependencyTree = Record<string, { deps: string[]; }>;
