@@ -46,7 +46,7 @@ export const parseOptions = (options: string): string[] => {
         },
     });
 
-    return _;
+    return _ as string[];
 };
 
 /**
