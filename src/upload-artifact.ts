@@ -3,7 +3,7 @@ import path from 'path';
 import * as core from '@actions/core';
 import * as artifact from '@actions/artifact';
 import tar from 'tar';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 
 import { isError } from './helper-functions';
 import { getCacheKey } from './cache-functions';

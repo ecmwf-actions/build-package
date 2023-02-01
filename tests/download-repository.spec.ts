@@ -1,7 +1,7 @@
 import fs from 'fs';
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/core';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import tar from 'tar';
 
 import downloadFile from '../src/download-file';
