@@ -31,7 +31,7 @@ import { CmakeOptionsLookup } from './types/main';
  * @param {CmakeOptionsLookup} dependencyCmakeOptionsLookup List of CMake options for each dependency.
  * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, cacheSuffix: string, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
+const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cacheSuffix: string, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
     const workflow = 'ci.yml';
@@ -140,7 +140,7 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     if (repo === 'ecbuild') {
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
     } else {
-        const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
+        const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
         artifactName = cacheKey;
     }
 

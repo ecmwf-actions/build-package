@@ -35,6 +35,7 @@ const uploadArtifact = async (
     os: string,
     compiler: string | null,
     env: EnvironmentVariables,
+    dependencyTree: DependencyTree,
     githubToken: string,
     cacheSuffix: string,
     cmakeOptions: string | undefined,
@@ -53,7 +54,7 @@ const uploadArtifact = async (
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
     }
     else {
-        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler || '', cacheSuffix, env, cmakeOptions, dependencyCmakeOptionsLookup);
+        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler || '', cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
         artifactName = cacheKey;
     }
     const tarName = `${artifactName}.tar`;

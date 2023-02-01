@@ -34,6 +34,7 @@
     "adm-zip": "^0.5.10",
     "fast-folder-size": "^1.5.0",
     "filesize": "^8.0.0",
+    "js-yaml": "^4.1.0",
     "lodash.isequal": "^4.5.0",
     "tar": "^6.1.2",
     "yargs-parser": "^21.1.1"
@@ -43,6 +44,7 @@
     "@babel/preset-typescript": "^7.16.0",
     "@types/adm-zip": "^0.4.34",
     "@types/jest": "^27.0.3",
+    "@types/js-yaml": "^4.0.5",
     "@types/lodash.isequal": "^4.5.6",
     "@types/node": "^18.11.10",
     "@types/tar": "^6.1.1",
@@ -56,9 +58,9 @@
     "eslint-plugin-json-schema-validator": "^4.0.3",
     "eslint-plugin-jsonc": "^2.5.0",
     "eslint-plugin-yml": "^1.2.0",
-    "yaml-eslint-parser": "^1.1.0",
     "jest": "^27.4.3",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "yaml-eslint-parser": "^1.1.0"
   },
   "babel": {
     "presets": [
@@ -120,9 +122,15 @@
     },
     "overrides": [
       {
-        "files": ["tests/**"],
-        "plugins": ["jest"],
-        "extends":["plugin:jest/all"],
+        "files": [
+          "tests/**"
+        ],
+        "plugins": [
+          "jest"
+        ],
+        "extends": [
+          "plugin:jest/all"
+        ],
         "rules": {
           "jest/no-conditional-in-test": "off",
           "jest/max-expects": "off"
@@ -134,7 +142,9 @@
           "*.yml"
         ],
         "parser": "yaml-eslint-parser",
-        "plugins": ["yml"],
+        "plugins": [
+          "yml"
+        ],
         "parserOptions": {
           "defaultYAMLVersion": "1.2"
         }
