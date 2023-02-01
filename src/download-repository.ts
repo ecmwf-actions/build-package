@@ -3,7 +3,7 @@ import path from 'path';
 import * as core from '@actions/core';
 import { mkdirP } from '@actions/io';
 import { Octokit } from '@octokit/core';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import tar from 'tar';
 
 import downloadFile from './download-file';

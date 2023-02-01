@@ -5,7 +5,7 @@ import * as core from '@actions/core';
 import { mkdirP } from '@actions/io';
 import { Octokit } from '@octokit/core';
 import AdmZip from 'adm-zip';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import tar from 'tar';
 
 import { extendPaths, extendDependencies } from './env-functions';

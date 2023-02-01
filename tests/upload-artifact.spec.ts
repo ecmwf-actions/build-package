@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import * as core from '@actions/core';
 import * as artifact from '@actions/artifact';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import tar from 'tar';
 
 import uploadArtifact from '../src/upload-artifact';

@@ -4,7 +4,7 @@ import { Buffer } from 'buffer';
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/core';
 import AdmZip from 'adm-zip';
-import filesize from 'filesize';
+import { filesize } from 'filesize';
 import tar from 'tar';
 
 import downloadArtifact from '../src/download-artifact';
