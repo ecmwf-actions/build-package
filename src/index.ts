@@ -8,7 +8,7 @@ import main from './main';
  * Inputs:
  *   @param {string} workspace The location of currently checked out source repository.
  *   @param {string} repository The currently checked out source repository name. Repository names should follow the
- *     standard Github `owner/name` format.
+ *     standard Github `owner/name@ref` format. `@ref` is optional, takes precedence over `sha` input.
  *   @param {string} sha The currently checked out source repository commit SHA.
  *   @param {boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
  *   @param {string} cmake_options The list of ecbuild/CMake options to be passed during the current

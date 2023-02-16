@@ -81,8 +81,7 @@ jobs:
       uses: ./
       with:
         workspace: ${{ github.workspace }}/eckit
-        repository: ecmwf/eckit
-        sha: ${{ env.ECKIT_SHA }}
+        repository: ecmwf/eckit@${{ env.ECKIT_SHA }}
         self_coverage: true
         dependencies: ecmwf/ecbuild
         dependency_branch: develop

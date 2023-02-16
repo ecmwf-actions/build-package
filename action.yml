@@ -9,7 +9,7 @@ inputs:
     default: ${{ github.workspace }}
   repository:
     description: The currently checked out source repository name. Repository names should follow the standard Github
-      `owner/name` format.
+      `owner/name@ref` format. `@ref` is optional, takes precedence over `sha` input.
     required: true
     default: ${{ github.repository }}
   sha:

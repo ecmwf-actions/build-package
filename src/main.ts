@@ -24,8 +24,8 @@ import { loadTree } from './tree';
 const main = async () => {
     try {
         const workspace = core.getInput('workspace', { required: true });
-        const repository = core.getInput('repository', { required: true });
-        const sha = core.getInput('sha', { required: true });
+        const repositoryInput = core.getInput('repository', { required: true });
+        const shaInput = core.getInput('sha', { required: true });
         const cmake = core.getBooleanInput('cmake', { required: true });
         const cmakeOptions = core.getInput('cmake_options', { required: false });
         const ctestOptions = core.getInput('ctest_options', { required: false });
@@ -101,7 +101,11 @@ const main = async () => {
         }
 
         if (selfBuild) {
-            const [ , repo] = repository.split('/');
+            const [repository, repositoryBranchSpecific] = repositoryInput.split('@');
+            const [, repo] = repository.split('/');
+
+            const sha = repositoryBranchSpecific || shaInput;
+
             let cacheHit;
 
             // Check if we already cached the build of this package.
