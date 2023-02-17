@@ -18,4 +18,8 @@ metkit:
 
 eckit: ~
 
-eccodes: ~
+eccodes: 
+  deps:
+    - libaec
+
+libaec: ~
