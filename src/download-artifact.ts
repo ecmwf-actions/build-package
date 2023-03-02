@@ -34,10 +34,8 @@ import { CmakeOptionsLookup } from './types/main';
 const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cacheSuffix: string, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
-    const workflow = 'ci.yml';
     const [owner, repo] = repository.split('/');
 
-    core.info(`==> Workflow: ${workflow}`);
     core.info(`==> Repository: ${owner}/${repo}`);
 
     branch = branch.replace(/^refs\/heads\//, '');
@@ -48,88 +46,29 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
         auth: githubToken,
     });
 
-    let workflowRuns;
-
-    try {
-        // NB: Filtering for "status === completed,success" is not working as expected at the moment. Therefore, we
-        //   aim to fetch all available workflow runs and filter them locally later.
-        //   https://docs.github.com/en/rest/reference/actions#list-workflow-runs
-        const response = await octokit.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
-            owner,
-            repo,
-            branch,
-            workflow_id: workflow,
-        });
-
-        if (isError(response.status != 200, `Wrong response code while fetching workflow runs for ${repo}: ${response.status}`))
-            return false;
-
-        if (isError(!response.data.workflow_runs.length, `No workflow runs found for ${repo}`)) return false;
-
-        workflowRuns = response.data.workflow_runs;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error fetching workflow runs for ${repo}: ${error.message}`);
-        return false;
-    }
-
-    core.info(`==> workflowRuns: ${workflowRuns.length}`);
-
-    // Consider only workflow runs that:
-    // - have status "completed"
-    // - have conclusion "success"
-    workflowRuns = workflowRuns.filter((workflowRun) => workflowRun.status === 'completed' && workflowRun.conclusion === 'success');
-
-    if (isError(!workflowRuns.length, `No completed successful workflow runs found for ${repo}`)) return false;
-
-    const lastRun = workflowRuns.shift();
-    const runId = lastRun?.id;
-
-    core.info(`==> RunID: ${runId}`);
-
-    let artifacts;
-
-    try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts', {
-            owner,
-            repo,
-            run_id: runId as number,
-        });
-
-        if (isError(response.status != 200, `Wrong response code while fetching workflow run artifacts for ${repo}: ${response.status}`))
-            return false;
-
-        artifacts = response.data.artifacts;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error fetching workflow run artifacts for ${repo}: ${error.message}`);
-        return false;
-    }
-
-    core.info(`==> Artifacts: ${artifacts.length}`);
-
-    if (!artifacts.length) {
-        isError(true, `No workflow artifacts found for ${repo}`);
-        return false;
-    }
-
     let headSha;
 
-    try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-            owner,
-            repo,
-            ref: `heads/${branch}`,
-        });
+    if (/^[0-9a-f]{40}$/i.test(branch)) {
+        // We've been given a commit hash instead of a branch or tag.
+        core.info(`==> Hash: ${branch}`);
+        headSha = branch;
+    } else {
+        try {
+            const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
+                owner,
+                repo,
+                ref: `heads/${branch}`,
+            });
 
-        if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
+            if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
+                return false;
+
+            headSha = response.data.object.sha;
+        }
+        catch (error) {
+            if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
             return false;
-
-        headSha = response.data.object.sha;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
-        return false;
+        }
     }
 
     core.info(`==> headSha: ${headSha}`);
@@ -142,6 +81,32 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     } else {
         const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
         artifactName = cacheKey;
+    }
+
+    let artifacts;
+
+    try {
+        const response = await octokit.request('GET /repos/{owner}/{repo}/actions/artifacts', {
+            owner,
+            repo,
+            name: artifactName,
+        });
+
+        if (isError(response.status != 200, `Wrong response code while fetching artifacts for ${repo}: ${response.status}`))
+            return false;
+
+        artifacts = response.data.artifacts;
+    }
+    catch (error) {
+        if (error instanceof Error) isError(true, `Error fetching artifacts for ${repo}: ${error.message}`);
+        return false;
+    }
+
+    core.info(`==> Artifacts: ${artifacts.length}`);
+
+    if (!artifacts.length) {
+        isError(true, `No workflow artifacts found for ${repo}`);
+        return false;
     }
 
     // Consider only artifacts with expected name.
