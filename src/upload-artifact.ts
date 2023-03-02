@@ -67,6 +67,7 @@ const uploadArtifact = async (
             {
                 C: targetDir,
                 file: tarPath,
+                gzip: true,
             },
             [
                 '.',
