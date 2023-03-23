@@ -1,11 +1,12 @@
 pgen:
   deps:
     - mir
+    - metkit
 
 mir:
   deps:
     - atlas
-    - metkit
+    - eccodes
 
 atlas:
   deps:
