@@ -36,6 +36,7 @@ import main from './main';
  *   @param {string} cache_suffix A string which will be appended to the cache key. To invalidate the build cache,
  *     simply change its value.
  *   @param {boolean} recreate_cache Whether to skip restoring builds from cache and recreate them instead.
+ *   @param {boolean} save_cache Whether to save builds to cache and upload build artifacts.
  *   @param {string} os Current OS platform.
  *   @param {string} compiler Current compiler family.
  *   @param {string} compiler_cc Current C compiler alias.
