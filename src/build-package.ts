@@ -161,8 +161,8 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
             configureOptions.push(...parseOptions(deprecatedCmakeOptionsFileContent));
         }
 
-        // Currently, code coverage is supported only on Ubuntu 20.04 with GNU 10 compiler.
-        const hasCodeCoverage = test && codeCoverage && os === 'ubuntu-20.04' && compiler === 'gnu-10';
+        // Currently, code coverage is supported only on Ubuntu with GNU compiler.
+        const hasCodeCoverage = test && codeCoverage && os.startsWith('ubuntu') && compiler.startsWith('gnu');
 
         if (hasCodeCoverage) {
             core.info('==> Code coverage collection enabled, installing lcov...');

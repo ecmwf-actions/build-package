@@ -73,6 +73,10 @@ inputs:
     description: Whether to skip restoring builds from cache and recreate them instead.
     required: true
     default: 'false'
+  save_cache:
+    description: Whether to save builds to cache and upload build artifacts.
+    required: true
+    default: 'true'
   os:
     description: Current OS platform.
     required: true
