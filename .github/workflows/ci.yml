@@ -2,13 +2,12 @@ name: ci
 
 # Controls when the workflow will run
 on:
-
   # Trigger the workflow on all pushes to main, except on tag creation
   push:
     branches:
-    - main
+      - main
     tags-ignore:
-    - '**'
+      - "**"
 
   # Trigger the workflow on all pull requests
   pull_request: ~
@@ -17,7 +16,6 @@ on:
   workflow_dispatch: ~
 
 jobs:
-
   # Calls a reusable CI NodeJS workflow to qa & test the current repository.
   #   It will install dependencies and produce a code coverage report on success.
   ci:
@@ -25,3 +23,6 @@ jobs:
     uses: ecmwf-actions/reusable-workflows/.github/workflows/ci-node.yml@v2
     with:
       codecov_upload: true
+      notify_teams: true
+    secrets:
+      incoming_webhook: ${{ secrets.MS_TEAMS_INCOMING_WEBHOOK }}
