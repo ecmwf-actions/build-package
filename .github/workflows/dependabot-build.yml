@@ -42,5 +42,5 @@ jobs:
       - name: Commit & push index.js
         run: |
           git add dist/index.js
-          git commit -m "Rebuild with updated deps from dependabot"
+          git commit -m "Rebuild with updated deps from dependabot" -m "[dependabot skip]"
           git push origin ${{ github.head_ref || github.ref  }}
