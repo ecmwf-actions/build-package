@@ -39,7 +39,19 @@ jobs:
       - name: Build index.js
         run: npm run build
 
+      - name: Check Git status
+        id: git_status
+        run: |
+          GIT_STATUS_OUTPUT=$(git status --porcelain)
+          if [[ -n "$GIT_STATUS_OUTPUT" ]]; then
+            echo "GIT_STATUS_MODIFIED=true" >> $GITHUB_ENV
+          else
+            echo "GIT_STATUS_MODIFIED=false" >> $GITHUB_ENV
+          fi
+
       - name: Commit & push index.js
+        # Push only if the built index.js has changed.
+        if: env.GIT_STATUS_MODIFIED == 'true'
         run: |
           git add dist/index.js
           git commit -m "Rebuild with updated deps from dependabot" -m "[dependabot skip]"
