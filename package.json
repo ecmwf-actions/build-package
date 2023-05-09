@@ -60,7 +60,7 @@
     "eslint-plugin-yml": "^1.7.0",
     "jest": "^29.4.1",
     "typescript": "^5.0.4",
-    "yaml-eslint-parser": "^1.2.1"
+    "yaml-eslint-parser": "^1.2.2"
   },
   "babel": {
     "presets": [
