@@ -132,10 +132,10 @@ export const extendPaths = async (env: EnvironmentVariables | null, installDir: 
     }
 
     if (env.LIB_PATH) {
-        env.LIB_PATH = `${installDir}/lib:${env.LIB_PATH}`;
+        env.LIB_PATH = `${installDir}/lib:${installDir}/lib64:${env.LIB_PATH}`;
     }
     else {
-        env.LIB_PATH = `${installDir}/lib`;
+        env.LIB_PATH = `${installDir}/lib:${installDir}/lib64`;
     }
 
     // Define common package path variables:

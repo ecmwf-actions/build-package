@@ -614,7 +614,7 @@ describe('downloadArtifact', () => {
             BIN_PATH: `${installDir}/bin`,
             INCLUDE_PATH: `${installDir}/include`,
             INSTALL_PATH: installDir,
-            LIB_PATH: `${installDir}/lib`,
+            LIB_PATH: `${installDir}/lib:${installDir}/lib64`,
             [`${repo}_DIR`]: installDir,
             [`${repo.toUpperCase()}_DIR`]: installDir,
             [`${repo.toUpperCase()}_PATH`]: installDir,
