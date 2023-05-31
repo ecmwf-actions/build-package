@@ -8,7 +8,7 @@ import yargsParser from "yargs-parser";
 import isEqual from "lodash.isequal";
 
 import { extendPaths } from "./env-functions";
-import { isError } from "./helper-functions";
+import { getProjectVersion, isError } from "./helper-functions";
 
 import { BuildOptions } from "./types/build-package";
 import { EnvironmentVariables } from "./types/env-functions";
@@ -133,7 +133,9 @@ const buildPackage = async (
     os: string,
     compiler: string,
     env: EnvironmentVariables,
-    parallelismFactor: string
+    parallelismFactor: string,
+    cpackGenerator?: string,
+    cpackOptions?: string
 ): Promise<boolean> => {
     core.startGroup(`Build ${repository}`);
 
@@ -386,6 +388,43 @@ const buildPackage = async (
         if (isError(exitCode, "Error installing package")) return false;
 
         await extendPaths(env, installDir, repo);
+
+        if (cpackGenerator) {
+            const cpackOptionsParsed = [];
+            if (cpackOptions) {
+                cpackOptionsParsed.push(...parseOptions(cpackOptions));
+                core.info(`==> cpackOptionsParsed: ${cpackOptionsParsed}`);
+            }
+
+            exitCode = await exec.exec(
+                "env",
+                [
+                    "cpack",
+                    "-G",
+                    cpackGenerator.toUpperCase(),
+                    ...cpackOptionsParsed,
+                ],
+                options
+            );
+            if (isError(exitCode, "Error while generating package"))
+                return false;
+
+            const packageVersion = getProjectVersion(sourceDir);
+            if (isError(!packageVersion, "Error reading version number")) {
+                return false;
+            }
+
+            const packageFileName = `${repo}-${packageVersion}-Linux-x86_64.${cpackGenerator.toLowerCase()}`;
+            env.PACKAGE_PATH = path.join(buildDir, packageFileName);
+            if (
+                isError(
+                    !fs.existsSync(env.PACKAGE_PATH),
+                    "Generated binary not found"
+                )
+            ) {
+                return false;
+            }
+        }
     } catch (error) {
         if (error instanceof Error) isError(true, error.message);
         return false;

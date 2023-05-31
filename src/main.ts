@@ -79,6 +79,16 @@ const main = async () => {
             required: false,
         });
 
+        const supportedGenerators = ["DEB"];
+        if (
+            cpackGenerator &&
+            !supportedGenerators.includes(cpackGenerator.toUpperCase())
+        ) {
+            return Promise.reject(
+                `Invalid or unsupported cpack generator: ${cpackGenerator}`
+            );
+        }
+
         const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
             const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
@@ -210,8 +220,9 @@ const main = async () => {
             let cacheHit;
 
             // Check if we already cached the build of this package.
-            //   Skip this part if we were told to always recreate cache.
-            if (!recreateCache) {
+            // Skip this part if we were told to always recreate cache.
+            // Skip if creating a package was requested
+            if (!recreateCache && !cpackGenerator) {
                 cacheHit = await restoreCache(
                     repository,
                     sha,
@@ -241,7 +252,9 @@ const main = async () => {
                     os,
                     compiler,
                     env,
-                    parallelismFactor
+                    parallelismFactor,
+                    cpackGenerator,
+                    cpackOptions
                 );
 
                 if (!isBuilt) return Promise.reject("Error building package");
@@ -307,6 +320,9 @@ const main = async () => {
 
         if (selfCoverage && env.COVERAGE_FILE) {
             outputs.coverage_file = env.COVERAGE_FILE as string;
+        }
+        if (cpackGenerator && env.PACKAGE_PATH) {
+            outputs.package_path = env.PACKAGE_PATH as string;
         }
 
         return Promise.resolve(outputs);
