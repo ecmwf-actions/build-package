@@ -114,6 +114,13 @@ inputs:
     description: Number of threads build job will utilise on the runner.
     required: false
     default: '2'
+  cpack_generator:
+    description: > 
+      Select which package type to create, options: `deb`. If selected, the currently checked out repository will be packaged.
+    required: false
+  cpack_options:
+    description: List of options for cpack, use the same form as for `cmake_options`.
+    required: false
 outputs:
   bin_paths:
     description: Binary paths of all installed packages, delimited by colons (:).
@@ -125,6 +132,8 @@ outputs:
     description: Library paths of all installed packages, delimited by colons (:).
   coverage_file:
     description: Absolute path to code coverage file, if collected.
+  package_path:
+    description: Absolute path to generated package.
 runs:
   using: node16
   main: dist/index.js

@@ -29,4 +29,5 @@ type ActionOutputs = {
     install_path: string,
     lib_path: string,
     coverage_file?: string,
+    package_path?: string,
 };

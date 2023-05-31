@@ -48,6 +48,8 @@ const main = async () => {
         const installDir = core.getInput('install_dir', { required: true });
         const downloadDir = core.getInput('download_dir', { required: true });
         const parallelismFactor = core.getInput('parallelism_factor', { required: false });
+        const cpackGenerator = core.getInput('cpack_generator', {required: false})
+        const cpackOptions = core.getInput('cpack_options', {required: false})
 
         const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
