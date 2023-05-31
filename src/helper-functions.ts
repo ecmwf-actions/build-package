@@ -1,4 +1,4 @@
-import * as core from '@actions/core';
+import * as core from "@actions/core";
 
 /**
  * Checks an error condition, and displays error message if true.
@@ -7,7 +7,10 @@ import * as core from '@actions/core';
  * @param {string} errorMessage Error message to display in the log (as a warning).
  * @returns {boolean} Whether the error condition was true or not.
  */
-export const isError = (condition: number | boolean, errorMessage: string): boolean => {
+export const isError = (
+    condition: number | boolean,
+    errorMessage: string
+): boolean => {
     if (condition) {
         core.warning(errorMessage);
         core.endGroup();

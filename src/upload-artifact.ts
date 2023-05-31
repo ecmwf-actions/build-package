@@ -1,15 +1,15 @@
-import fs from 'fs';
-import path from 'path';
-import * as core from '@actions/core';
-import * as artifact from '@actions/artifact';
-import tar from 'tar';
-import { filesize } from 'filesize';
+import fs from "fs";
+import path from "path";
+import * as core from "@actions/core";
+import * as artifact from "@actions/artifact";
+import tar from "tar";
+import { filesize } from "filesize";
 
-import { isError } from './helper-functions';
-import { getCacheKey } from './cache-functions';
+import { isError } from "./helper-functions";
+import { getCacheKey } from "./cache-functions";
 
-import { EnvironmentVariables } from './types/env-functions';
-import { CmakeOptionsLookup } from './types/main';
+import { EnvironmentVariables } from "./types/env-functions";
+import { CmakeOptionsLookup } from "./types/main";
 
 /**
  * Archives and uploads package artifact.
@@ -43,18 +43,28 @@ const uploadArtifact = async (
 ): Promise<boolean> => {
     core.startGroup(`Upload ${repository} Artifact`);
 
-    const [owner] = repository.split('/');
-    let [, repo] = repository.split('/');
+    const [owner] = repository.split("/");
+    let [, repo] = repository.split("/");
     if (!repo) repo = owner;
 
     let artifactName;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === 'ecbuild') {
+    if (repo === "ecbuild") {
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
-    }
-    else {
-        const { cacheKey } = await getCacheKey(repository, sha, githubToken, os, compiler || '', cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
+    } else {
+        const { cacheKey } = await getCacheKey(
+            repository,
+            sha,
+            githubToken,
+            os,
+            compiler || "",
+            cacheSuffix,
+            env,
+            dependencyTree,
+            cmakeOptions,
+            dependencyCmakeOptionsLookup
+        );
         artifactName = cacheKey;
     }
     const tarName = `${artifactName}.tar`;
@@ -69,19 +79,26 @@ const uploadArtifact = async (
                 file: tarPath,
                 gzip: true,
             },
-            [
-                '.',
-            ]
+            ["."]
         );
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error creating artifact TAR for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error creating artifact TAR for ${repo}: ${error.message}`
+            );
         return false;
     }
 
     const stats = fs.statSync(tarPath);
 
-    if (isError(!stats.size, `Error determining size of artifact TAR for ${repo}`)) return false;
+    if (
+        isError(
+            !stats.size,
+            `Error determining size of artifact TAR for ${repo}`
+        )
+    )
+        return false;
 
     const size = filesize(stats.size);
 
@@ -97,9 +114,12 @@ const uploadArtifact = async (
 
         try {
             fs.writeFileSync(dependenciesPath, dependenciesJson);
-        }
-        catch (error) {
-            if (error instanceof Error) isError(true, `Error writing dependencies file for ${repo}: ${error.message}`);
+        } catch (error) {
+            if (error instanceof Error)
+                isError(
+                    true,
+                    `Error writing dependencies file for ${repo}: ${error.message}`
+                );
             return false;
         }
 
@@ -114,29 +134,42 @@ const uploadArtifact = async (
 
     // Then, we try to upload the artifact. The artifact client will compress it further (i.e. as a ZIP).
     try {
-        uploadResult = await artifactClient.uploadArtifact(artifactName, uploadPaths, rootDirectory, {
-            continueOnError: true,
-        });
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error uploading artifact for ${repo}: ${error.message}`);
+        uploadResult = await artifactClient.uploadArtifact(
+            artifactName,
+            uploadPaths,
+            rootDirectory,
+            {
+                continueOnError: true,
+            }
+        );
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error uploading artifact for ${repo}: ${error.message}`
+            );
         return false;
     }
 
-    if (isError(!uploadResult, `Error uploading artifact for ${repo}`)) return false;
+    if (isError(!uploadResult, `Error uploading artifact for ${repo}`))
+        return false;
 
     if (
         isError(
-            uploadResult
-            && uploadResult.failedItems
-            && uploadResult.failedItems.length,
+            uploadResult &&
+                uploadResult.failedItems &&
+                uploadResult.failedItems.length,
             `Error uploading artifact for ${repo}: ${uploadResult.failedItems}`
         )
     ) {
         return false;
     }
 
-    core.info(`==> Uploaded artifact: ${uploadResult.artifactName} (${filesize(uploadResult.size)})`);
+    core.info(
+        `==> Uploaded artifact: ${uploadResult.artifactName} (${filesize(
+            uploadResult.size
+        )})`
+    );
 
     fs.unlinkSync(tarPath);
 

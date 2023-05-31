@@ -2,13 +2,12 @@ name: pyodc
 
 # Controls when the workflow will run
 on:
-
   # Trigger the workflow on all pushes, except on tag creation
   push:
     branches:
-    - main
+      - main
     tags-ignore:
-    - '**'
+      - "**"
 
   # Trigger the workflow on all pull requests
   pull_request: ~
@@ -23,91 +22,91 @@ jobs:
       fail-fast: false
       matrix:
         name:
-        - gnu-10@ubuntu-20.04
-        - clang-12@ubuntu-20.04
-        - gnu-11@ubuntu-22.04
-        - clang-14@ubuntu-22.04
-        - clang-14@macos-12
+          - gnu-10@ubuntu-20.04
+          - clang-12@ubuntu-20.04
+          - gnu-11@ubuntu-22.04
+          - clang-14@ubuntu-22.04
+          - clang-14@macos-12
         include:
-        - name: gnu-10@ubuntu-20.04
-          os: ubuntu-20.04
-          compiler: gnu-10
-          compiler_cc: gcc-10
-          compiler_cxx: g++-10
-          compiler_fc: gfortran-10
-        - name: clang-12@ubuntu-20.04
-          os: ubuntu-20.04
-          compiler: clang-12
-          compiler_cc: clang-12
-          compiler_cxx: clang++-12
-          compiler_fc: gfortran-10
-        - name: gnu-11@ubuntu-22.04
-          os: ubuntu-22.04
-          compiler: gnu-11
-          compiler_cc: gcc-11
-          compiler_cxx: g++-11
-          compiler_fc: gfortran-11
-        - name: clang-14@ubuntu-22.04
-          os: ubuntu-22.04
-          compiler: clang-14
-          compiler_cc: clang-14
-          compiler_cxx: clang++-14
-          compiler_fc: gfortran-11
-        # Xcode compiler requires empty environment variables, so we pass empty strings here
-        - name: clang-14@macos-12
-          os: macos-12
-          compiler: clang-14
-          compiler_cc: ''
-          compiler_cxx: ''
-          compiler_fc: gfortran-11
+          - name: gnu-10@ubuntu-20.04
+            os: ubuntu-20.04
+            compiler: gnu-10
+            compiler_cc: gcc-10
+            compiler_cxx: g++-10
+            compiler_fc: gfortran-10
+          - name: clang-12@ubuntu-20.04
+            os: ubuntu-20.04
+            compiler: clang-12
+            compiler_cc: clang-12
+            compiler_cxx: clang++-12
+            compiler_fc: gfortran-10
+          - name: gnu-11@ubuntu-22.04
+            os: ubuntu-22.04
+            compiler: gnu-11
+            compiler_cc: gcc-11
+            compiler_cxx: g++-11
+            compiler_fc: gfortran-11
+          - name: clang-14@ubuntu-22.04
+            os: ubuntu-22.04
+            compiler: clang-14
+            compiler_cc: clang-14
+            compiler_cxx: clang++-14
+            compiler_fc: gfortran-11
+          # Xcode compiler requires empty environment variables, so we pass empty strings here
+          - name: clang-14@macos-12
+            os: macos-12
+            compiler: clang-14
+            compiler_cc: ""
+            compiler_cxx: ""
+            compiler_fc: gfortran-11
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Checkout pyodc Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ecmwf/pyodc
-        ref: develop
-        path: pyodc
+      - name: Checkout pyodc Repository
+        uses: actions/checkout@v3
+        with:
+          repository: ecmwf/pyodc
+          ref: develop
+          path: pyodc
 
-    - name: Retrieve pyodc SHA
-      working-directory: ${{ github.workspace }}/pyodc
-      shell: bash -eux {0}
-      run: echo "PYODC_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+      - name: Retrieve pyodc SHA
+        working-directory: ${{ github.workspace }}/pyodc
+        shell: bash -eux {0}
+        run: echo "PYODC_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
 
-    - name: Install Dependencies
-      id: install-dependencies
-      uses: ./
-      with:
-        workspace: ${{ github.workspace }}/pyodc
-        repository: ecmwf/pyodc
-        sha: ${{ env.PYODC_SHA }}
-        self_build: false
-        dependencies: |
-          ecmwf/ecbuild
-          ecmwf/eckit
-          ecmwf/odc
-        dependency_branch: develop
+      - name: Install Dependencies
+        id: install-dependencies
+        uses: ./
+        with:
+          workspace: ${{ github.workspace }}/pyodc
+          repository: ecmwf/pyodc
+          sha: ${{ env.PYODC_SHA }}
+          self_build: false
+          dependencies: |
+            ecmwf/ecbuild
+            ecmwf/eckit
+            ecmwf/odc
+          dependency_branch: develop
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
 
-    - name: Install Python Dependencies
-      working-directory: pyodc
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install pytest pytest-cov
-        test -f requirements.txt && python -m pip install -r requirements.txt
+      - name: Install Python Dependencies
+        working-directory: pyodc
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest pytest-cov
+          test -f requirements.txt && python -m pip install -r requirements.txt
 
-    - name: Run Tests
-      env:
-        LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
-      shell: bash -eux {0}
-      working-directory: pyodc
-      run: |
-        DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest --cov=./ --cov-report=xml
-        python -m coverage report
+      - name: Run Tests
+        env:
+          LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
+        shell: bash -eux {0}
+        working-directory: pyodc
+        run: |
+          DYLD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }} python -m pytest --cov=./ --cov-report=xml
+          python -m coverage report

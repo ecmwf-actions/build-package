@@ -1,15 +1,15 @@
-import * as path from 'path';
-import * as core from '@actions/core';
+import * as path from "path";
+import * as core from "@actions/core";
 
-import { setupEnv } from './env-functions';
-import { restoreCache, saveCache } from './cache-functions';
-import downloadArtifact from './download-artifact';
-import uploadArtifact from './upload-artifact';
-import downloadRepository from './download-repository';
-import buildPackage from './build-package';
+import { setupEnv } from "./env-functions";
+import { restoreCache, saveCache } from "./cache-functions";
+import downloadArtifact from "./download-artifact";
+import uploadArtifact from "./upload-artifact";
+import downloadRepository from "./download-repository";
+import buildPackage from "./build-package";
 
-import { CmakeOptionsLookup } from './types/main';
-import { loadTree } from './tree';
+import { CmakeOptionsLookup } from "./types/main";
+import { loadTree } from "./tree";
 
 /**
  * First, the main function checks if a dependency build artifact can be found for current OS and compiler combination.
@@ -23,60 +23,113 @@ import { loadTree } from './tree';
  */
 const main = async () => {
     try {
-        const workspace = core.getInput('workspace', { required: true });
-        const repositoryInput = core.getInput('repository', { required: true });
-        const shaInput = core.getInput('sha', { required: true });
-        const cmake = core.getBooleanInput('cmake', { required: true });
-        const cmakeOptions = core.getInput('cmake_options', { required: false });
-        const ctestOptions = core.getInput('ctest_options', { required: false });
-        const selfBuild = core.getBooleanInput('self_build', { required: true });
-        const selfTest = core.getBooleanInput('self_test', { required: true });
-        const selfCoverage = core.getBooleanInput('self_coverage', { required: true });
-        const dependencies = core.getMultilineInput('dependencies', { required: false });
-        const dependencyBranchDefault = core.getInput('dependency_branch', { required: true });
-        const dependencyCmakeOptionLines = core.getMultilineInput('dependency_cmake_options', { required: false }) || [];
-        const forceBuild = core.getBooleanInput('force_build', { required: true });
-        const cacheSuffix = core.getInput('cache_suffix', { required: false }) || '';
-        const recreateCache = core.getBooleanInput('recreate_cache', { required: true });
-        const saveCacheInput = core.getBooleanInput('save_cache', { required: true });
-        const os = core.getInput('os', { required: true });
-        const compiler = core.getInput('compiler', { required: false });
-        const compilerCc = core.getInput('compiler_cc', { required: false });
-        const compilerCxx = core.getInput('compiler_cxx', { required: false });
-        const compilerFc = core.getInput('compiler_fc', { required: false });
-        const githubToken = core.getInput('github_token', { required: true });
-        const installDir = core.getInput('install_dir', { required: true });
-        const downloadDir = core.getInput('download_dir', { required: true });
-        const parallelismFactor = core.getInput('parallelism_factor', { required: false });
-        const cpackGenerator = core.getInput('cpack_generator', {required: false})
-        const cpackOptions = core.getInput('cpack_options', {required: false})
+        const workspace = core.getInput("workspace", { required: true });
+        const repositoryInput = core.getInput("repository", { required: true });
+        const shaInput = core.getInput("sha", { required: true });
+        const cmake = core.getBooleanInput("cmake", { required: true });
+        const cmakeOptions = core.getInput("cmake_options", {
+            required: false,
+        });
+        const ctestOptions = core.getInput("ctest_options", {
+            required: false,
+        });
+        const selfBuild = core.getBooleanInput("self_build", {
+            required: true,
+        });
+        const selfTest = core.getBooleanInput("self_test", { required: true });
+        const selfCoverage = core.getBooleanInput("self_coverage", {
+            required: true,
+        });
+        const dependencies = core.getMultilineInput("dependencies", {
+            required: false,
+        });
+        const dependencyBranchDefault = core.getInput("dependency_branch", {
+            required: true,
+        });
+        const dependencyCmakeOptionLines =
+            core.getMultilineInput("dependency_cmake_options", {
+                required: false,
+            }) || [];
+        const forceBuild = core.getBooleanInput("force_build", {
+            required: true,
+        });
+        const cacheSuffix =
+            core.getInput("cache_suffix", { required: false }) || "";
+        const recreateCache = core.getBooleanInput("recreate_cache", {
+            required: true,
+        });
+        const saveCacheInput = core.getBooleanInput("save_cache", {
+            required: true,
+        });
+        const os = core.getInput("os", { required: true });
+        const compiler = core.getInput("compiler", { required: false });
+        const compilerCc = core.getInput("compiler_cc", { required: false });
+        const compilerCxx = core.getInput("compiler_cxx", { required: false });
+        const compilerFc = core.getInput("compiler_fc", { required: false });
+        const githubToken = core.getInput("github_token", { required: true });
+        const installDir = core.getInput("install_dir", { required: true });
+        const downloadDir = core.getInput("download_dir", { required: true });
+        const parallelismFactor = core.getInput("parallelism_factor", {
+            required: false,
+        });
+        const cpackGenerator = core.getInput("cpack_generator", {
+            required: false,
+        });
+        const cpackOptions = core.getInput("cpack_options", {
+            required: false,
+        });
 
         const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
             const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
-            if (!repo || !options) return Promise.reject(`Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`);
-            dependencyCmakeOptionsLookup[repo] = options.replace(/^['"]|['"]$/g, '');
+            if (!repo || !options)
+                return Promise.reject(
+                    `Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`
+                );
+            dependencyCmakeOptionsLookup[repo] = options.replace(
+                /^['"]|['"]$/g,
+                ""
+            );
         }
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
-        if (!env) return Promise.reject('Error setting up build environment');
+        if (!env) return Promise.reject("Error setting up build environment");
 
         const dependencyTree = loadTree();
-        if (!dependencyTree) return Promise.reject('Error Loading dependency tree');
+        if (!dependencyTree)
+            return Promise.reject("Error Loading dependency tree");
 
         for (const dependency of dependencies) {
-            const [dependencyRepository, dependencyBranchSpecific] = dependency.split('@');
-            const [owner, repo] = dependencyRepository.split('/');
-            const dependencyCmakeOptions = dependencyCmakeOptionsLookup[dependencyRepository];
+            const [dependencyRepository, dependencyBranchSpecific] =
+                dependency.split("@");
+            const [owner, repo] = dependencyRepository.split("/");
+            const dependencyCmakeOptions =
+                dependencyCmakeOptionsLookup[dependencyRepository];
 
-            if (!owner || !repo) return Promise.reject(`Unexpected dependency name, must be in 'owner/repo[@branch]' format: ${dependency}`);
+            if (!owner || !repo)
+                return Promise.reject(
+                    `Unexpected dependency name, must be in 'owner/repo[@branch]' format: ${dependency}`
+                );
 
-            const dependencyBranch = dependencyBranchSpecific || dependencyBranchDefault;
+            const dependencyBranch =
+                dependencyBranchSpecific || dependencyBranchDefault;
 
             // If the build is not forced, first try to download an artifact.
             if (!forceBuild) {
-                const isArtifactDownloaded = await downloadArtifact(dependencyRepository, dependencyBranch, githubToken, downloadDir, path.join(installDir, repo), os, compiler, env, dependencyTree, cacheSuffix, dependencyCmakeOptions);
+                const isArtifactDownloaded = await downloadArtifact(
+                    dependencyRepository,
+                    dependencyBranch,
+                    githubToken,
+                    downloadDir,
+                    path.join(installDir, repo),
+                    os,
+                    compiler,
+                    env,
+                    dependencyTree,
+                    cacheSuffix,
+                    dependencyCmakeOptions
+                );
 
                 if (isArtifactDownloaded) continue;
             }
@@ -84,30 +137,73 @@ const main = async () => {
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
             if (!recreateCache) {
-                const cacheHit = await restoreCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, dependencyTree, dependencyCmakeOptions);
+                const cacheHit = await restoreCache(
+                    dependencyRepository,
+                    dependencyBranch,
+                    githubToken,
+                    path.join(installDir, repo),
+                    os,
+                    compiler,
+                    cacheSuffix,
+                    env,
+                    dependencyTree,
+                    dependencyCmakeOptions
+                );
 
                 if (cacheHit) continue;
             }
 
             // Download the latest repository state.
-            const isRepositoryDownloaded = await downloadRepository(dependencyRepository, dependencyBranch, githubToken, downloadDir, env);
+            const isRepositoryDownloaded = await downloadRepository(
+                dependencyRepository,
+                dependencyBranch,
+                githubToken,
+                downloadDir,
+                env
+            );
 
-            if (!isRepositoryDownloaded) return Promise.reject('Error downloading repository');
+            if (!isRepositoryDownloaded)
+                return Promise.reject("Error downloading repository");
 
             // Build the package locally. We don't run any tests or code coverage in this case.
-            const isBuilt = await buildPackage(dependencyRepository, path.join(downloadDir, repo), path.join(installDir, repo), cmake, dependencyCmakeOptions, null, false, false, os, compiler, env, parallelismFactor);
+            const isBuilt = await buildPackage(
+                dependencyRepository,
+                path.join(downloadDir, repo),
+                path.join(installDir, repo),
+                cmake,
+                dependencyCmakeOptions,
+                null,
+                false,
+                false,
+                os,
+                compiler,
+                env,
+                parallelismFactor
+            );
 
-            if (!isBuilt) return Promise.reject('Error building dependency');
+            if (!isBuilt) return Promise.reject("Error building dependency");
 
             if (saveCacheInput) {
                 // Save built package to the cache.
-                await saveCache(dependencyRepository, dependencyBranch, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, dependencyTree, dependencyCmakeOptions);
+                await saveCache(
+                    dependencyRepository,
+                    dependencyBranch,
+                    githubToken,
+                    path.join(installDir, repo),
+                    os,
+                    compiler,
+                    cacheSuffix,
+                    env,
+                    dependencyTree,
+                    dependencyCmakeOptions
+                );
             }
         }
 
         if (selfBuild) {
-            const [repository, repositoryBranchSpecific] = repositoryInput.split('@');
-            const [, repo] = repository.split('/');
+            const [repository, repositoryBranchSpecific] =
+                repositoryInput.split("@");
+            const [, repo] = repository.split("/");
 
             const sha = repositoryBranchSpecific || shaInput;
 
@@ -116,27 +212,90 @@ const main = async () => {
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
             if (!recreateCache) {
-                cacheHit = await restoreCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
+                cacheHit = await restoreCache(
+                    repository,
+                    sha,
+                    githubToken,
+                    path.join(installDir, repo),
+                    os,
+                    compiler,
+                    cacheSuffix,
+                    env,
+                    dependencyTree,
+                    cmakeOptions,
+                    dependencyCmakeOptionsLookup
+                );
             }
 
             if (recreateCache || !cacheHit) {
                 // Build the currently checked out repository.
-                const isBuilt = await buildPackage(repository, workspace, path.join(installDir, repo), cmake, cmakeOptions, ctestOptions, selfTest, selfCoverage, os, compiler, env, parallelismFactor);
+                const isBuilt = await buildPackage(
+                    repository,
+                    workspace,
+                    path.join(installDir, repo),
+                    cmake,
+                    cmakeOptions,
+                    ctestOptions,
+                    selfTest,
+                    selfCoverage,
+                    os,
+                    compiler,
+                    env,
+                    parallelismFactor
+                );
 
-                if (!isBuilt) return Promise.reject('Error building package');
+                if (!isBuilt) return Promise.reject("Error building package");
 
                 if (saveCacheInput) {
                     // Save built package to the cache.
-                    await saveCache(repository, sha, githubToken, path.join(installDir, repo), os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
+                    await saveCache(
+                        repository,
+                        sha,
+                        githubToken,
+                        path.join(installDir, repo),
+                        os,
+                        compiler,
+                        cacheSuffix,
+                        env,
+                        dependencyTree,
+                        cmakeOptions,
+                        dependencyCmakeOptionsLookup
+                    );
 
                     // Upload build artifact.
-                    await uploadArtifact(repository, sha, path.join(installDir, repo), env.DEPENDENCIES as DependenciesObject, os, compiler, env, dependencyTree, githubToken, cacheSuffix, cmakeOptions, dependencyCmakeOptionsLookup);
+                    await uploadArtifact(
+                        repository,
+                        sha,
+                        path.join(installDir, repo),
+                        env.DEPENDENCIES as DependenciesObject,
+                        os,
+                        compiler,
+                        env,
+                        dependencyTree,
+                        githubToken,
+                        cacheSuffix,
+                        cmakeOptions,
+                        dependencyCmakeOptionsLookup
+                    );
                 }
 
                 // Upload coverage artifact.
-                if (selfCoverage && env.COVERAGE_DIR) await uploadArtifact(`coverage-${repo}`, sha, env.COVERAGE_DIR as string, null, os, compiler, env, dependencyTree, githubToken, cacheSuffix, cmakeOptions, dependencyCmakeOptionsLookup);
+                if (selfCoverage && env.COVERAGE_DIR)
+                    await uploadArtifact(
+                        `coverage-${repo}`,
+                        sha,
+                        env.COVERAGE_DIR as string,
+                        null,
+                        os,
+                        compiler,
+                        env,
+                        dependencyTree,
+                        githubToken,
+                        cacheSuffix,
+                        cmakeOptions,
+                        dependencyCmakeOptionsLookup
+                    );
             }
-
         }
 
         const outputs: ActionOutputs = {
@@ -151,8 +310,7 @@ const main = async () => {
         }
 
         return Promise.resolve(outputs);
-    }
-    catch (error) {
+    } catch (error) {
         if (error instanceof Error) return Promise.reject(error.message);
         return Promise.reject();
     }

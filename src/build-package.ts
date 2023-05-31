@@ -1,17 +1,17 @@
-import process from 'process';
-import fs from 'fs';
-import path from 'path';
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
-import { mkdirP } from '@actions/io';
-import yargsParser from 'yargs-parser';
-import isEqual from 'lodash.isequal';
+import process from "process";
+import fs from "fs";
+import path from "path";
+import * as core from "@actions/core";
+import * as exec from "@actions/exec";
+import { mkdirP } from "@actions/io";
+import yargsParser from "yargs-parser";
+import isEqual from "lodash.isequal";
 
-import { extendPaths } from './env-functions';
-import { isError } from './helper-functions';
+import { extendPaths } from "./env-functions";
+import { isError } from "./helper-functions";
 
-import { BuildOptions } from './types/build-package';
-import { EnvironmentVariables } from './types/env-functions';
+import { BuildOptions } from "./types/build-package";
+import { EnvironmentVariables } from "./types/env-functions";
 
 /**
  * Parses a string of options and returns an array of items for each. Will handle quoting and prefixing of separate
@@ -34,15 +34,15 @@ import { EnvironmentVariables } from './types/env-functions';
 export const parseOptions = (options: string): string[] => {
     const { _ } = yargsParser(options, {
         configuration: {
-            'short-option-groups': false,
-            'camel-case-expansion': false,
-            'dot-notation': false,
-            'parse-numbers': false,
-            'parse-positional-numbers': false,
-            'boolean-negation': false,
-            'duplicate-arguments-array': false,
-            'greedy-arrays': false,
-            'unknown-options-as-args': true,
+            "short-option-groups": false,
+            "camel-case-expansion": false,
+            "dot-notation": false,
+            "parse-numbers": false,
+            "parse-positional-numbers": false,
+            "boolean-negation": false,
+            "duplicate-arguments-array": false,
+            "greedy-arrays": false,
+            "unknown-options-as-args": true,
         },
     });
 
@@ -72,18 +72,24 @@ export const parseOptions = (options: string): string[] => {
  *     '-DEXPANDED_OPT2=val2',
  *   ]
  */
-const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVariables): string[] => {
+const expandShellVariables = (
+    optionsObject: BuildOptions,
+    env: EnvironmentVariables
+): string[] => {
     const optionsName = Object.keys(optionsObject)[0];
     const options = [...optionsObject[optionsName]];
     const result: string[] = [];
 
     options.forEach((option) => {
-        const variableRegex = new RegExp('\\$\\{?(\\w+)\\}?', 'g');
+        const variableRegex = new RegExp("\\$\\{?(\\w+)\\}?", "g");
         const matches = [...option.matchAll(variableRegex)];
 
         matches.forEach((match) => {
             const variableName = match[1];
-            option = option.replace(new RegExp(`\\$\\{?${variableName}\\}?`), env[variableName] as string);
+            option = option.replace(
+                new RegExp(`\\$\\{?${variableName}\\}?`),
+                env[variableName] as string
+            );
         });
 
         result.push(option);
@@ -115,25 +121,40 @@ const expandShellVariables = (optionsObject: BuildOptions, env: EnvironmentVaria
  * @param {string} parallelismFactor Number of threads build job will utilise on the runner.
  * @returns {Promise<boolean>} Whether the build and install process finished successfully.
  */
-const buildPackage = async (repository: string, sourceDir: string, installDir: string, cmake: boolean, cmakeOptions: string | null, ctestOptions: string | null, test: boolean, codeCoverage: boolean, os: string, compiler: string, env: EnvironmentVariables, parallelismFactor: string): Promise<boolean> => {
+const buildPackage = async (
+    repository: string,
+    sourceDir: string,
+    installDir: string,
+    cmake: boolean,
+    cmakeOptions: string | null,
+    ctestOptions: string | null,
+    test: boolean,
+    codeCoverage: boolean,
+    os: string,
+    compiler: string,
+    env: EnvironmentVariables,
+    parallelismFactor: string
+): Promise<boolean> => {
     core.startGroup(`Build ${repository}`);
 
-    const [, repo] = repository.split('/');
+    const [, repo] = repository.split("/");
 
     try {
         let configurePath;
         let configureOptions = [];
 
         if (cmake) {
-            configurePath = 'cmake';
+            configurePath = "cmake";
             configureOptions.push(`-DCMAKE_INSTALL_PREFIX=${installDir}`);
-        }
-        else if (repo === 'ecbuild') {
-            configurePath = path.join(path.resolve(sourceDir), 'bin', 'ecbuild');
+        } else if (repo === "ecbuild") {
+            configurePath = path.join(
+                path.resolve(sourceDir),
+                "bin",
+                "ecbuild"
+            );
             configureOptions.push(`--prefix=${installDir}`);
-        }
-        else {
-            configurePath = 'ecbuild';
+        } else {
+            configurePath = "ecbuild";
             configureOptions.push(`--prefix=${installDir}`);
         }
 
@@ -142,47 +163,85 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
         const srcDir = path.resolve(sourceDir);
         core.info(`==> srcDir: ${srcDir}`);
 
-        const cmakeOptionsFile = path.join(srcDir, '.github', '.cmake-options');
-        const deprecatedCmakeOptionsFile = path.join(srcDir, '.github', '.compiler-flags');
+        const cmakeOptionsFile = path.join(srcDir, ".github", ".cmake-options");
+        const deprecatedCmakeOptionsFile = path.join(
+            srcDir,
+            ".github",
+            ".compiler-flags"
+        );
 
         if (fs.existsSync(cmakeOptionsFile)) {
-            const cmakeOptionsFileContent = fs.readFileSync(cmakeOptionsFile).toString();
+            const cmakeOptionsFileContent = fs
+                .readFileSync(cmakeOptionsFile)
+                .toString();
 
-            core.info(`==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`);
+            core.info(
+                `==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`
+            );
 
             configureOptions.push(...parseOptions(cmakeOptionsFileContent));
-        }
-        else if (fs.existsSync(deprecatedCmakeOptionsFile)) {
-            const deprecatedCmakeOptionsFileContent = fs.readFileSync(deprecatedCmakeOptionsFile).toString();
+        } else if (fs.existsSync(deprecatedCmakeOptionsFile)) {
+            const deprecatedCmakeOptionsFileContent = fs
+                .readFileSync(deprecatedCmakeOptionsFile)
+                .toString();
 
-            core.info(`==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`);
-            core.warning('Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`');
+            core.info(
+                `==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`
+            );
+            core.warning(
+                "Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`"
+            );
 
-            configureOptions.push(...parseOptions(deprecatedCmakeOptionsFileContent));
+            configureOptions.push(
+                ...parseOptions(deprecatedCmakeOptionsFileContent)
+            );
         }
 
         // Currently, code coverage is supported only on Ubuntu with GNU compiler.
-        const hasCodeCoverage = test && codeCoverage && os.startsWith('ubuntu') && compiler.startsWith('gnu');
+        const hasCodeCoverage =
+            test &&
+            codeCoverage &&
+            os.startsWith("ubuntu") &&
+            compiler.startsWith("gnu");
 
         if (hasCodeCoverage) {
-            core.info('==> Code coverage collection enabled, installing lcov...');
+            core.info(
+                "==> Code coverage collection enabled, installing lcov..."
+            );
 
-            let exitCode = await exec.exec('sudo', ['apt-get', '-y', '-q', 'update']);
+            let exitCode = await exec.exec("sudo", [
+                "apt-get",
+                "-y",
+                "-q",
+                "update",
+            ]);
 
-            if (isError(exitCode, 'Error updating apt repositories')) return false;
+            if (isError(exitCode, "Error updating apt repositories"))
+                return false;
 
-            exitCode = await exec.exec('sudo', ['apt-get', '-y', '-q', 'install', 'lcov']);
+            exitCode = await exec.exec("sudo", [
+                "apt-get",
+                "-y",
+                "-q",
+                "install",
+                "lcov",
+            ]);
 
-            if (isError(exitCode, 'Error installing lcov')) return false;
+            if (isError(exitCode, "Error installing lcov")) return false;
 
-            const instrumentationOptions = '--coverage';
+            const instrumentationOptions = "--coverage";
 
-            configureOptions.push(`-DCMAKE_C_FLAGS='${instrumentationOptions}'`);
-            configureOptions.push(`-DCMAKE_CXX_FLAGS='${instrumentationOptions}'`);
+            configureOptions.push(
+                `-DCMAKE_C_FLAGS='${instrumentationOptions}'`
+            );
+            configureOptions.push(
+                `-DCMAKE_CXX_FLAGS='${instrumentationOptions}'`
+            );
             configureOptions.push(`-DCMAKE_Fortran_FLAGS='--coverage'`);
-        }
-        else if (test && codeCoverage) {
-            core.info(`Skipping code coverage collection on unsupported platform: ${compiler}@${os}`);
+        } else if (test && codeCoverage) {
+            core.info(
+                `Skipping code coverage collection on unsupported platform: ${compiler}@${os}`
+            );
         }
 
         // Include additional CMake options at the end, therefore giving them chance to override those before.
@@ -200,7 +259,7 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
             core.info(`==> testOptions: ${testOptions}`);
         }
 
-        const buildDir = path.join(srcDir, 'build');
+        const buildDir = path.join(srcDir, "build");
         core.info(`==> buildDir: ${buildDir}`);
 
         await mkdirP(buildDir);
@@ -208,11 +267,11 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
         const options = {
             cwd: buildDir,
             env: {
-                'CMAKE_BUILD_PARALLEL_LEVEL': parallelismFactor,  // default for Github runners, equals `-j2`
-                ...(test ? { 'CTEST_OUTPUT_ON_FAILURE': '1' } : {}),  // show output of failing tests only
-                ...(test ? { 'CTEST_PARALLEL_LEVEL': parallelismFactor } : {}),  // default for Github runners, equals `-j2`
-                ...process.env,  // preserve existing environment
-                ...env,  // compiler env must win
+                CMAKE_BUILD_PARALLEL_LEVEL: parallelismFactor, // default for Github runners, equals `-j2`
+                ...(test ? { CTEST_OUTPUT_ON_FAILURE: "1" } : {}), // show output of failing tests only
+                ...(test ? { CTEST_PARALLEL_LEVEL: parallelismFactor } : {}), // default for Github runners, equals `-j2`
+                ...process.env, // preserve existing environment
+                ...env, // compiler env must win
             },
         };
 
@@ -220,56 +279,114 @@ const buildPackage = async (repository: string, sourceDir: string, installDir: s
 
         // Expand shell variables for all option arguments.
         //   We must do this manually, because @actions/exec ignores them (`shell: false` option is passed to `spawn`).
-        configureOptions = expandShellVariables({configureOptions}, options.env);
-        testOptions = expandShellVariables({testOptions}, options.env);
+        configureOptions = expandShellVariables(
+            { configureOptions },
+            options.env
+        );
+        testOptions = expandShellVariables({ testOptions }, options.env);
 
         await mkdirP(installDir);
 
-        let exitCode = await exec.exec('env', [configurePath, ...configureOptions, srcDir], options);
+        let exitCode = await exec.exec(
+            "env",
+            [configurePath, ...configureOptions, srcDir],
+            options
+        );
 
-        if (isError(exitCode, 'Error configuring package')) return false;
+        if (isError(exitCode, "Error configuring package")) return false;
 
-        exitCode = await exec.exec('env', ['cmake', '--build', '.'], options);
+        exitCode = await exec.exec("env", ["cmake", "--build", "."], options);
 
-        if (isError(exitCode, 'Error building package')) return false;
+        if (isError(exitCode, "Error building package")) return false;
 
         if (test) {
-            exitCode = await exec.exec('env', ['ctest', ...testOptions], options);
+            exitCode = await exec.exec(
+                "env",
+                ["ctest", ...testOptions],
+                options
+            );
 
-            if (isError(exitCode, 'Error testing package')) return false;
+            if (isError(exitCode, "Error testing package")) return false;
 
             if (hasCodeCoverage) {
                 const coverageFile = `${buildDir}/coverage.info`;
                 const coverageDir = `${buildDir}/coverage`;
 
-                exitCode = await exec.exec('env', ['lcov', '--capture', '--directory', buildDir, '--output-file', coverageFile], options);
+                exitCode = await exec.exec(
+                    "env",
+                    [
+                        "lcov",
+                        "--capture",
+                        "--directory",
+                        buildDir,
+                        "--output-file",
+                        coverageFile,
+                    ],
+                    options
+                );
 
-                if (isError(exitCode, 'Error collecting code coverage')) return false;
+                if (isError(exitCode, "Error collecting code coverage"))
+                    return false;
 
-                exitCode = await exec.exec('env', ['lcov', '--remove', coverageFile, '--output-file', coverageFile, '/usr/*', `${path.dirname(installDir)}/*`, `${buildDir}/*`], options);
+                exitCode = await exec.exec(
+                    "env",
+                    [
+                        "lcov",
+                        "--remove",
+                        coverageFile,
+                        "--output-file",
+                        coverageFile,
+                        "/usr/*",
+                        `${path.dirname(installDir)}/*`,
+                        `${buildDir}/*`,
+                    ],
+                    options
+                );
 
-                if (isError(exitCode, 'Error cleaning up code coverage')) return false;
+                if (isError(exitCode, "Error cleaning up code coverage"))
+                    return false;
 
-                exitCode = await exec.exec('env', ['lcov', '--list', coverageFile], options);
+                exitCode = await exec.exec(
+                    "env",
+                    ["lcov", "--list", coverageFile],
+                    options
+                );
 
-                if (isError(exitCode, 'Error listing code coverage text report')) return false;
+                if (
+                    isError(exitCode, "Error listing code coverage text report")
+                )
+                    return false;
 
-                exitCode = await exec.exec('env', ['genhtml', coverageFile, '--output-directory', coverageDir], options);
+                exitCode = await exec.exec(
+                    "env",
+                    [
+                        "genhtml",
+                        coverageFile,
+                        "--output-directory",
+                        coverageDir,
+                    ],
+                    options
+                );
 
-                if (isError(exitCode, 'Error generating code coverage HTML report')) return false;
+                if (
+                    isError(
+                        exitCode,
+                        "Error generating code coverage HTML report"
+                    )
+                )
+                    return false;
 
                 env.COVERAGE_FILE = coverageFile;
                 env.COVERAGE_DIR = coverageDir;
             }
         }
 
-        exitCode = await exec.exec('env', ['cmake', '--install', '.'], options);
+        exitCode = await exec.exec("env", ["cmake", "--install", "."], options);
 
-        if (isError(exitCode, 'Error installing package')) return false;
+        if (isError(exitCode, "Error installing package")) return false;
 
         await extendPaths(env, installDir, repo);
-    }
-    catch (error) {
+    } catch (error) {
         if (error instanceof Error) isError(true, error.message);
         return false;
     }

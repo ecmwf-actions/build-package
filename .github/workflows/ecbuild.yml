@@ -2,13 +2,12 @@ name: ecbuild
 
 # Controls when the workflow will run
 on:
-
   # Trigger the workflow on all pushes, except on tag creation
   push:
     branches:
-    - main
+      - main
     tags-ignore:
-    - '**'
+      - "**"
 
   # Trigger the workflow on all pull requests
   pull_request: ~
@@ -23,37 +22,37 @@ jobs:
       fail-fast: false
       matrix:
         name:
-        - ubuntu-20.04
-        - ubuntu-22.04
-        - macos-12
+          - ubuntu-20.04
+          - ubuntu-22.04
+          - macos-12
         include:
-        - name: ubuntu-20.04
-          os: ubuntu-20.04
-        - name: ubuntu-22.04
-          os: ubuntu-22.04
-        - name: macos-12
-          os: macos-12
+          - name: ubuntu-20.04
+            os: ubuntu-20.04
+          - name: ubuntu-22.04
+            os: ubuntu-22.04
+          - name: macos-12
+            os: macos-12
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Checkout ecbuild Repository
-      uses: actions/checkout@v3
-      with:
-        repository: ecmwf/ecbuild
-        ref: develop
-        path: ${{ github.workspace }}/ecbuild
+      - name: Checkout ecbuild Repository
+        uses: actions/checkout@v3
+        with:
+          repository: ecmwf/ecbuild
+          ref: develop
+          path: ${{ github.workspace }}/ecbuild
 
-    - name: Retrieve ecbuild SHA
-      working-directory: ${{ github.workspace }}/ecbuild
-      shell: bash -eux {0}
-      run: echo "ECBUILD_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
+      - name: Retrieve ecbuild SHA
+        working-directory: ${{ github.workspace }}/ecbuild
+        shell: bash -eux {0}
+        run: echo "ECBUILD_SHA=$(git log -1 --format='%H')" >> $GITHUB_ENV
 
-    - name: Build & Test
-      id: build-test
-      uses: ./
-      with:
-        workspace: ${{ github.workspace }}/ecbuild
-        repository: ecmwf/ecbuild
-        sha: ${{ env.ECBUILD_SHA }}
+      - name: Build & Test
+        id: build-test
+        uses: ./
+        with:
+          workspace: ${{ github.workspace }}/ecbuild
+          repository: ecmwf/ecbuild
+          sha: ${{ env.ECBUILD_SHA }}

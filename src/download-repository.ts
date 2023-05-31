@@ -1,16 +1,16 @@
-import fs from 'fs';
-import path from 'path';
-import * as core from '@actions/core';
-import { mkdirP } from '@actions/io';
-import { Octokit } from '@octokit/core';
-import { filesize } from 'filesize';
-import tar from 'tar';
+import fs from "fs";
+import path from "path";
+import * as core from "@actions/core";
+import { mkdirP } from "@actions/io";
+import { Octokit } from "@octokit/core";
+import { filesize } from "filesize";
+import tar from "tar";
 
-import downloadFile from './download-file';
-import { extendDependencies } from './env-functions';
-import { isError } from './helper-functions';
+import downloadFile from "./download-file";
+import { extendDependencies } from "./env-functions";
+import { isError } from "./helper-functions";
 
-import { EnvironmentVariables } from './types/env-functions';
+import { EnvironmentVariables } from "./types/env-functions";
 
 /**
  * Downloads a Github repository state and extracts it to a directory with supplied name.
@@ -22,10 +22,16 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {EnvironmentVariables} env Local environment object.
  * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadRepository = async (repository: string, branch: string, githubToken: string, downloadDir: string, env: EnvironmentVariables): Promise<boolean> => {
+const downloadRepository = async (
+    repository: string,
+    branch: string,
+    githubToken: string,
+    downloadDir: string,
+    env: EnvironmentVariables
+): Promise<boolean> => {
     core.startGroup(`Download ${repository} Repository`);
 
-    const [owner, repo] = repository.split('/');
+    const [owner, repo] = repository.split("/");
 
     core.info(`==> Repository: ${owner}/${repo}`);
 
@@ -41,14 +47,12 @@ const downloadRepository = async (repository: string, branch: string, githubToke
         core.info(`==> Hash: ${branch}`);
         headSha = branch;
         ref = headSha;
-    }
-    else {
+    } else {
         if (/^refs\/tags\//.test(branch)) {
-            branch = branch.replace(/^refs\/tags\//, '');
+            branch = branch.replace(/^refs\/tags\//, "");
             ref = `tags/${branch}`;
-        }
-        else {
-            branch = branch.replace(/^refs\/heads\//, '');
+        } else {
+            branch = branch.replace(/^refs\/heads\//, "");
             ref = `heads/${branch}`;
         }
 
@@ -56,19 +60,30 @@ const downloadRepository = async (repository: string, branch: string, githubToke
         core.info(`==> Ref: ${ref}`);
 
         try {
-            const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-                owner,
-                repo,
-                ref,
-            });
+            const response = await octokit.request(
+                "GET /repos/{owner}/{repo}/git/ref/{ref}",
+                {
+                    owner,
+                    repo,
+                    ref,
+                }
+            );
 
-            if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
+            if (
+                isError(
+                    response.status != 200,
+                    `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`
+                )
+            )
                 return false;
 
             headSha = response.data.object.sha;
-        }
-        catch (error) {
-            if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+        } catch (error) {
+            if (error instanceof Error)
+                isError(
+                    true,
+                    `Error getting repository HEAD for ${repo}: ${error.message}`
+                );
             return false;
         }
     }
@@ -76,19 +91,30 @@ const downloadRepository = async (repository: string, branch: string, githubToke
     let url;
 
     try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/tarball/{ref}', {
-            owner,
-            repo,
-            ref,
-        });
+        const response = await octokit.request(
+            "GET /repos/{owner}/{repo}/tarball/{ref}",
+            {
+                owner,
+                repo,
+                ref,
+            }
+        );
 
-        if (isError(response.status === 302 || response.status !== 200, `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`))
+        if (
+            isError(
+                response.status === 302 || response.status !== 200,
+                `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`
+            )
+        )
             return false;
 
         url = response.url;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error getting repository download URL for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error getting repository download URL for ${repo}: ${error.message}`
+            );
         return false;
     }
 
@@ -98,15 +124,24 @@ const downloadRepository = async (repository: string, branch: string, githubToke
 
     try {
         await downloadFile(url, tarName);
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error downloading repository archive for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error downloading repository archive for ${repo}: ${error.message}`
+            );
         return false;
     }
 
     const stats = fs.statSync(tarName);
 
-    if (isError(!stats.size, `Error determining size of repository archive for ${repo}`)) return false;
+    if (
+        isError(
+            !stats.size,
+            `Error determining size of repository archive for ${repo}`
+        )
+    )
+        return false;
 
     const size = filesize(stats.size);
 
@@ -122,9 +157,12 @@ const downloadRepository = async (repository: string, branch: string, githubToke
             file: tarName,
             strip: 1,
         });
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error extracting repository archive for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error extracting repository archive for ${repo}: ${error.message}`
+            );
         return false;
     }
 

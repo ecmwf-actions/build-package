@@ -1,23 +1,25 @@
-import * as core from '@actions/core';
-import { restoreCache as aRestoreCache, saveCache as aSaveCache } from '@actions/cache';
-import { Octokit } from '@octokit/core';
-import crypto from 'crypto';
-import { promisify } from 'util';
-import fastFolderSize from 'fast-folder-size';
+import * as core from "@actions/core";
+import {
+    restoreCache as aRestoreCache,
+    saveCache as aSaveCache,
+} from "@actions/cache";
+import { Octokit } from "@octokit/core";
+import crypto from "crypto";
+import { promisify } from "util";
+import fastFolderSize from "fast-folder-size";
 
-import { version } from '../package.json';
-import { extendPaths, extendDependencies } from './env-functions';
-import { isError } from './helper-functions';
-import { parseOptions } from './build-package';
+import { version } from "../package.json";
+import { extendPaths, extendDependencies } from "./env-functions";
+import { isError } from "./helper-functions";
+import { parseOptions } from "./build-package";
 
-import { EnvironmentVariables } from './types/env-functions';
-import { CmakeOptionsLookup } from './types/main';
-import { getDependenciesFromTree } from './tree';
-
+import { EnvironmentVariables } from "./types/env-functions";
+import { CmakeOptionsLookup } from "./types/main";
+import { getDependenciesFromTree } from "./tree";
 
 /**
  * Returns cache key hash
- * 
+ *
  * @param {string} repo Github repository name
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {EnvironmentVariables} env Local environment object.
@@ -26,20 +28,35 @@ import { getDependenciesFromTree } from './tree';
  * @param {CmakeOptionsLookup} dependencyCmakeOptionsLookup List of CMake options for each dependency.
  * @returns {string} Cache key hash
  */
-export const getCacheKeyHash = (repo: string, cacheSuffix: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cmakeOptions: string | undefined, sha: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): string => {
-    const buildOptions = [];    
-    if(cmakeOptions){    
+export const getCacheKeyHash = (
+    repo: string,
+    cacheSuffix: string,
+    env: EnvironmentVariables,
+    dependencyTree: DependencyTree,
+    cmakeOptions: string | undefined,
+    sha: string | undefined,
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+): string => {
+    const buildOptions = [];
+    if (cmakeOptions) {
         buildOptions.push(...parseOptions(cmakeOptions));
         buildOptions.sort();
     }
 
-    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${env.CMAKE_VERSION}::options=${buildOptions.join()}::${repo}=${sha}`;
+    let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${
+        env.CMAKE_VERSION
+    }::options=${buildOptions.join()}::${repo}=${sha}`;
 
     const treeDeps = getDependenciesFromTree(repo, dependencyTree, null);
 
-    for (const [dependency, dependencySha] of Object.entries(env.DEPENDENCIES || {}).sort((a, b) => a[0] > b[0] ? 1 : -1)) {
-        const [ , dependencyRepo] = dependency.split('/');
-        if (!treeDeps.includes(dependencyRepo) && dependencyRepo in dependencyTree) {
+    for (const [dependency, dependencySha] of Object.entries(
+        env.DEPENDENCIES || {}
+    ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
+        const [, dependencyRepo] = dependency.split("/");
+        if (
+            !treeDeps.includes(dependencyRepo) &&
+            dependencyRepo in dependencyTree
+        ) {
             continue;
         }
         if (dependencyRepo === repo) continue;
@@ -48,7 +65,9 @@ export const getCacheKeyHash = (repo: string, cacheSuffix: string, env: Environm
         // sort and append dependency cmake options to respective deps
         if (dependencyCmakeOptionsLookup[dependencyRepo]) {
             const dependencyCmakeOptions = [];
-            dependencyCmakeOptions.push(...parseOptions(dependencyCmakeOptionsLookup[dependencyRepo]));
+            dependencyCmakeOptions.push(
+                ...parseOptions(dependencyCmakeOptionsLookup[dependencyRepo])
+            );
             dependencyCmakeOptions.sort();
             cacheKeyStr += `::${dependencyRepo}-options=${dependencyCmakeOptions.join()}`;
         }
@@ -56,11 +75,13 @@ export const getCacheKeyHash = (repo: string, cacheSuffix: string, env: Environm
 
     core.info(`==> cacheKeyStr: ${cacheKeyStr}`);
 
-    const cacheKeySha = crypto.createHash('sha1').update(cacheKeyStr).digest('hex');
+    const cacheKeySha = crypto
+        .createHash("sha1")
+        .update(cacheKeyStr)
+        .digest("hex");
 
     return cacheKeySha;
-}
-
+};
 
 /**
  * Returns cache key for a package.
@@ -76,15 +97,26 @@ export const getCacheKeyHash = (repo: string, cacheSuffix: string, env: Environm
  * @param {CmakeOptionsLookup} [dependencyCmakeOptionsLookup] List of CMake options for each dependency.
  * @returns {Promise<CacheObject>} An object with package cache key and head SHA used to calculate it.
  */
-export const getCacheKey = async (repository: string, branch: string, githubToken: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<CacheObject> => {
+export const getCacheKey = async (
+    repository: string,
+    branch: string,
+    githubToken: string,
+    os: string,
+    compiler: string,
+    cacheSuffix: string,
+    env: EnvironmentVariables,
+    dependencyTree: DependencyTree,
+    cmakeOptions: string | undefined,
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+): Promise<CacheObject> => {
     core.startGroup(`Cache Key for ${repository}`);
 
-    const [owner, repo] = repository.split('/');
+    const [owner, repo] = repository.split("/");
 
     core.info(`==> Repository: ${owner}/${repo}`);
 
     let ref;
-    const result: { cacheKey?: string, headSha?: string } = {};
+    const result: { cacheKey?: string; headSha?: string } = {};
 
     const octokit = new Octokit({
         auth: githubToken,
@@ -94,14 +126,12 @@ export const getCacheKey = async (repository: string, branch: string, githubToke
         // We've been given a commit hash instead of a branch or tag.
         core.info(`==> Hash: ${branch}`);
         result.headSha = branch;
-    }
-    else {
+    } else {
         if (/^refs\/tags\//.test(branch)) {
-            branch = branch.replace(/^refs\/tags\//, '');
+            branch = branch.replace(/^refs\/tags\//, "");
             ref = `tags/${branch}`;
-        }
-        else {
-            branch = branch.replace(/^refs\/heads\//, '');
+        } else {
+            branch = branch.replace(/^refs\/heads\//, "");
             ref = `heads/${branch}`;
         }
 
@@ -109,24 +139,41 @@ export const getCacheKey = async (repository: string, branch: string, githubToke
         core.info(`==> Ref: ${ref}`);
 
         try {
-            const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-                owner,
-                repo,
-                ref,
-            });
+            const response = await octokit.request(
+                "GET /repos/{owner}/{repo}/git/ref/{ref}",
+                {
+                    owner,
+                    repo,
+                    ref,
+                }
+            );
 
-            isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`);
+            isError(
+                response.status != 200,
+                `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`
+            );
 
             result.headSha = response.data.object.sha;
-        }
-        catch (error) {
-            if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+        } catch (error) {
+            if (error instanceof Error)
+                isError(
+                    true,
+                    `Error getting repository HEAD for ${repo}: ${error.message}`
+                );
         }
     }
 
     core.info(`==> result.headSha: ${result.headSha}`);
 
-    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, dependencyTree, cmakeOptions, result.headSha, dependencyCmakeOptionsLookup);    
+    const cacheKeySha = getCacheKeyHash(
+        repo,
+        cacheSuffix,
+        env,
+        dependencyTree,
+        cmakeOptions,
+        result.headSha,
+        dependencyCmakeOptionsLookup
+    );
 
     core.info(`==> cacheKeySha: ${cacheKeySha}`);
 
@@ -155,8 +202,31 @@ export const getCacheKey = async (repository: string, branch: string, githubToke
  * @param {CmakeOptionsLookup} [dependencyCmakeOptionsLookup] List of CMake options for each dependency.
  * @returns {Promise<boolean>} Whether the package cache was found.
  */
-export const restoreCache = async (repository: string, branch: string, githubToken: string, installDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
-    const { cacheKey, headSha } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
+export const restoreCache = async (
+    repository: string,
+    branch: string,
+    githubToken: string,
+    installDir: string,
+    os: string,
+    compiler: string,
+    cacheSuffix: string,
+    env: EnvironmentVariables,
+    dependencyTree: DependencyTree,
+    cmakeOptions: string | undefined,
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+): Promise<boolean> => {
+    const { cacheKey, headSha } = await getCacheKey(
+        repository,
+        branch,
+        githubToken,
+        os,
+        compiler,
+        cacheSuffix,
+        env,
+        dependencyTree,
+        cmakeOptions,
+        dependencyCmakeOptionsLookup
+    );
 
     core.startGroup(`Restore ${repository} Cache`);
 
@@ -164,9 +234,12 @@ export const restoreCache = async (repository: string, branch: string, githubTok
 
     try {
         cacheHit = Boolean(await aRestoreCache([installDir], cacheKey));
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error restoring cache for ${repository}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error restoring cache for ${repository}: ${error.message}`
+            );
         return false;
     }
 
@@ -174,7 +247,7 @@ export const restoreCache = async (repository: string, branch: string, githubTok
 
     // If we have cache, extend the environment.
     if (cacheHit) {
-        const [, repo] = repository.split('/');
+        const [, repo] = repository.split("/");
         await extendPaths(env, installDir, repo);
         await extendDependencies(env, repository, headSha);
     }
@@ -199,8 +272,31 @@ export const restoreCache = async (repository: string, branch: string, githubTok
  * @param {CmakeOptionsLookup} [dependencyCmakeOptionsLookup] List of CMake options for each dependency.
  * @returns {Promise<boolean>} Whether the package was cached successfully.
  */
-export const saveCache = async (repository: string, branch: string, githubToken: string, targetDir: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
-    const { cacheKey } = await getCacheKey(repository, branch, githubToken, os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
+export const saveCache = async (
+    repository: string,
+    branch: string,
+    githubToken: string,
+    targetDir: string,
+    os: string,
+    compiler: string,
+    cacheSuffix: string,
+    env: EnvironmentVariables,
+    dependencyTree: DependencyTree,
+    cmakeOptions: string | undefined,
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+): Promise<boolean> => {
+    const { cacheKey } = await getCacheKey(
+        repository,
+        branch,
+        githubToken,
+        os,
+        compiler,
+        cacheSuffix,
+        env,
+        dependencyTree,
+        cmakeOptions,
+        dependencyCmakeOptionsLookup
+    );
 
     core.startGroup(`Save ${repository} Cache`);
 
@@ -209,7 +305,10 @@ export const saveCache = async (repository: string, branch: string, githubToken:
     const bytes = await fastFolderSizeAsync(targetDir);
 
     if (!bytes) {
-        isError(true, `Empty target dir, skipping saving cache for ${repository}`);
+        isError(
+            true,
+            `Empty target dir, skipping saving cache for ${repository}`
+        );
         return false;
     }
 
@@ -217,9 +316,12 @@ export const saveCache = async (repository: string, branch: string, githubToken:
 
     try {
         isSaved = Boolean(await aSaveCache([targetDir], cacheKey));
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error saving cache for ${repository}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error saving cache for ${repository}: ${error.message}`
+            );
         return false;
     }
 

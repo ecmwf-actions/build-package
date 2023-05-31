@@ -8,8 +8,8 @@ on:
   pull_request_target:
     types: [opened, synchronize]
     paths:
-      - 'package.json'
-      - 'package-lock.json'
+      - "package.json"
+      - "package-lock.json"
 
   workflow_dispatch: ~
 

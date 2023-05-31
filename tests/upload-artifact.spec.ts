@@ -1,65 +1,90 @@
-import fs from 'fs';
-import path from 'path';
-import * as core from '@actions/core';
-import * as artifact from '@actions/artifact';
-import { filesize } from 'filesize';
-import tar from 'tar';
+import fs from "fs";
+import path from "path";
+import * as core from "@actions/core";
+import * as artifact from "@actions/artifact";
+import { filesize } from "filesize";
+import tar from "tar";
 
-import uploadArtifact from '../src/upload-artifact';
-import { getCacheKeyHash } from '../src/cache-functions';
-import { EnvironmentVariables } from '../src/types/env-functions';
+import uploadArtifact from "../src/upload-artifact";
+import { getCacheKeyHash } from "../src/cache-functions";
+import { EnvironmentVariables } from "../src/types/env-functions";
 
-jest.mock('@actions/core');
-jest.mock('@actions/artifact');
-jest.mock('tar');
+jest.mock("@actions/core");
+jest.mock("@actions/artifact");
+jest.mock("tar");
 
-const getArtifactName = (repo: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string, headSha: string) => {
-    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, {}, cmakeOptions, headSha);
+const getArtifactName = (
+    repo: string,
+    os: string,
+    compiler: string,
+    cacheSuffix: string,
+    env: EnvironmentVariables,
+    cmakeOptions: string,
+    headSha: string
+) => {
+    const cacheKeySha = getCacheKeyHash(
+        repo,
+        cacheSuffix,
+        env,
+        {},
+        cmakeOptions,
+        headSha
+    );
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
-}
+};
 
 const dependencies = {
-    'owner/repo1': 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3',
-    'owner/repo2': '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12',
+    "owner/repo1": "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
+    "owner/repo2": "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
 };
 
 // Base environment object, we will take care not to modify it.
 const env = {
-    CC: 'gcc-10',
-    CXX: 'g++-10',
-    FC: 'gfortran-10',
-    CMAKE_VERSION: '3.21.1',
+    CC: "gcc-10",
+    CXX: "g++-10",
+    FC: "gfortran-10",
+    CMAKE_VERSION: "3.21.1",
     DEPENDENCIES: dependencies,
 };
 
 // Test parameters.
-const repository = 'owner/repo';
-const repo = 'repo';
-const githubToken = '12345';
-const installDir = '/path/to/install/repo';
-const os = 'ubuntu-20.04';
-const compiler = 'gnu-10';
+const repository = "owner/repo";
+const repo = "repo";
+const githubToken = "12345";
+const installDir = "/path/to/install/repo";
+const os = "ubuntu-20.04";
+const compiler = "gnu-10";
 const size = 68168435;
-const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
-const cmakeOptions = '-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF'
-const cacheSuffix = ''
-const artifactName = getArtifactName(repo, os, compiler, cacheSuffix, env, cmakeOptions, sha);
+const sha = "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2";
+const cmakeOptions =
+    "-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF";
+const cacheSuffix = "";
+const artifactName = getArtifactName(
+    repo,
+    os,
+    compiler,
+    cacheSuffix,
+    env,
+    cmakeOptions,
+    sha
+);
 const tarName = `${artifactName}.tar`;
 const rootDirectory = path.dirname(installDir);
 const tarPath = path.join(rootDirectory, tarName);
 const dependenciesName = `${artifactName}-dependencies.json`;
 const dependenciesPath = path.join(rootDirectory, dependenciesName);
-const errorObject = new Error('Oops!');
+const errorObject = new Error("Oops!");
 const emptyObject = {};
 
-const uploadResult = () => Promise.resolve({
-    artifactName,
-    size,
-    failedItems: [],
-});
+const uploadResult = () =>
+    Promise.resolve({
+        artifactName,
+        size,
+        failedItems: [],
+    });
 
-describe('uploadArtifact', () => {
-    it('returns true on success', async () => {
+describe("uploadArtifact", () => {
+    it("returns true on success", async () => {
         expect.assertions(4);
 
         const testEnv = {
@@ -70,30 +95,48 @@ describe('uploadArtifact', () => {
             uploadArtifact: uploadResult,
         }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
+        const statSync = jest.spyOn(fs, "statSync");
         (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        const writeFileSync = jest.spyOn(fs, "writeFileSync");
         writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(
+            repository,
+            sha,
+            installDir,
+            dependencies,
+            os,
+            compiler,
+            testEnv,
+            {},
+            githubToken,
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isUploaded).toBe(true);
-        expect(core.info).toHaveBeenCalledWith(`==> Created artifact TAR: ${tarPath} (${filesize(size)})`);
-        expect(core.info).toHaveBeenCalledWith(`==> Created dependencies file: ${dependenciesPath}`);
-        expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${artifactName} (${filesize(size)})`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Created artifact TAR: ${tarPath} (${filesize(size)})`
+        );
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Created dependencies file: ${dependenciesPath}`
+        );
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Uploaded artifact: ${artifactName} (${filesize(size)})`
+        );
     });
 
-    it('supports invalid repository name', async () => {
+    it("supports invalid repository name", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -103,30 +146,45 @@ describe('uploadArtifact', () => {
         const coverageArtifactName = `coverage-${repo}-${os}-${compiler}`;
 
         (artifact.create as jest.Mock).mockImplementationOnce(() => ({
-            uploadArtifact: () => Promise.resolve({
-                artifactName: coverageArtifactName,
-                size,
-                failedItems: [],
-            }),
+            uploadArtifact: () =>
+                Promise.resolve({
+                    artifactName: coverageArtifactName,
+                    size,
+                    failedItems: [],
+                }),
         }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
+        const statSync = jest.spyOn(fs, "statSync");
         (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact(`coverage-${repo}`, sha, installDir, null, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(
+            `coverage-${repo}`,
+            sha,
+            installDir,
+            null,
+            os,
+            compiler,
+            testEnv,
+            {},
+            githubToken,
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isUploaded).toBe(true);
-        expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`
+        );
     });
 
-    it('constructs a different artifact name in case of ecbuild', async () => {
+    it("constructs a different artifact name in case of ecbuild", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -136,58 +194,90 @@ describe('uploadArtifact', () => {
         const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${sha}`;
 
         (artifact.create as jest.Mock).mockImplementationOnce(() => ({
-            uploadArtifact: () => Promise.resolve({
-                artifactName: ecbuildArtifactName,
-                size,
-                failedItems: [],
-            }),
+            uploadArtifact: () =>
+                Promise.resolve({
+                    artifactName: ecbuildArtifactName,
+                    size,
+                    failedItems: [],
+                }),
         }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
+        const statSync = jest.spyOn(fs, "statSync");
         (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        const writeFileSync = jest.spyOn(fs, "writeFileSync");
         writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => {
             return true;
         });
 
-        const isUploaded = await uploadArtifact('ecmwf/ecbuild', sha, installDir, {}, os, null, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(
+            "ecmwf/ecbuild",
+            sha,
+            installDir,
+            {},
+            os,
+            null,
+            testEnv,
+            {},
+            githubToken,
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isUploaded).toBe(true);
-        expect(core.info).toHaveBeenCalledWith(`==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`
+        );
     });
 
     it.each`
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if creating artifact TAR fails ($error)', async ({ error }) => {
-        expect.hasAssertions();
+    `(
+        "returns false if creating artifact TAR fails ($error)",
+        async ({ error }) => {
+            expect.hasAssertions();
 
-        const testEnv = {
-            ...env,
-        };
+            const testEnv = {
+                ...env,
+            };
 
-        (tar.c as jest.Mock).mockImplementationOnce(() => {
-            throw error;
-        });
+            (tar.c as jest.Mock).mockImplementationOnce(() => {
+                throw error;
+            });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+            const isUploaded = await uploadArtifact(
+                repository,
+                sha,
+                installDir,
+                dependencies,
+                os,
+                compiler,
+                testEnv,
+                {},
+                githubToken,
+                cacheSuffix,
+                cmakeOptions
+            );
 
-        expect(isUploaded).toBe(false);
+            expect(isUploaded).toBe(false);
 
-        if (!(error instanceof Error)) return;
-        expect(core.warning).toHaveBeenCalledWith(`Error creating artifact TAR for ${repo}: ${error.message}`);
-    });
+            if (!(error instanceof Error)) return;
+            expect(core.warning).toHaveBeenCalledWith(
+                `Error creating artifact TAR for ${repo}: ${error.message}`
+            );
+        }
+    );
 
-    it('returns false if determining archive size errors out', async () => {
+    it("returns false if determining archive size errors out", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -198,58 +288,89 @@ describe('uploadArtifact', () => {
             uploadArtifact: uploadResult,
         }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
+        const statSync = jest.spyOn(fs, "statSync");
         (statSync as jest.Mock).mockImplementationOnce(() => ({
             size: 0,
         }));
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(
+            repository,
+            sha,
+            installDir,
+            dependencies,
+            os,
+            compiler,
+            testEnv,
+            {},
+            githubToken,
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error determining size of artifact TAR for ${repo}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `Error determining size of artifact TAR for ${repo}`
+        );
     });
 
     it.each`
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if writing dependencies file errors out ($error)', async ({ error }) => {
-        expect.hasAssertions();
+    `(
+        "returns false if writing dependencies file errors out ($error)",
+        async ({ error }) => {
+            expect.hasAssertions();
 
-        const testEnv = {
-            ...env,
-        };
+            const testEnv = {
+                ...env,
+            };
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
-            uploadArtifact: uploadResult,
-        }));
+            (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+                uploadArtifact: uploadResult,
+            }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
-            size,
-        }));
+            const statSync = jest.spyOn(fs, "statSync");
+            (statSync as jest.Mock).mockImplementationOnce(() => ({
+                size,
+            }));
 
-        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementationOnce((path) => {
-            if (path === dependenciesPath) throw error;
-        });
+            const writeFileSync = jest.spyOn(fs, "writeFileSync");
+            writeFileSync.mockImplementationOnce((path) => {
+                if (path === dependenciesPath) throw error;
+            });
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementationOnce(() => {
-            return true;
-        });
+            const unlinkSync = jest.spyOn(fs, "unlinkSync");
+            unlinkSync.mockImplementationOnce(() => {
+                return true;
+            });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+            const isUploaded = await uploadArtifact(
+                repository,
+                sha,
+                installDir,
+                dependencies,
+                os,
+                compiler,
+                testEnv,
+                {},
+                githubToken,
+                cacheSuffix,
+                cmakeOptions
+            );
 
-        expect(isUploaded).toBe(false);
+            expect(isUploaded).toBe(false);
 
-        (artifact.create as jest.Mock).mockReset();
+            (artifact.create as jest.Mock).mockReset();
 
-        if (!(error instanceof Error)) return;
-        expect(core.warning).toHaveBeenCalledWith(`Error writing dependencies file for ${repo}: ${error.message}`);
-    });
+            if (!(error instanceof Error)) return;
+            expect(core.warning).toHaveBeenCalledWith(
+                `Error writing dependencies file for ${repo}: ${error.message}`
+            );
+        }
+    );
 
-    it('returns false if artifact item upload has some failures', async () => {
+    it("returns false if artifact item upload has some failures", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -257,32 +378,45 @@ describe('uploadArtifact', () => {
         };
 
         (artifact.create as jest.Mock).mockImplementationOnce(() => ({
-            uploadArtifact: () => Promise.resolve({
-                artifactName,
-                size,
-                failedItems: [
+            uploadArtifact: () =>
+                Promise.resolve({
                     artifactName,
-                ],
-            }),
+                    size,
+                    failedItems: [artifactName],
+                }),
         }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
+        const statSync = jest.spyOn(fs, "statSync");
         (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        const writeFileSync = jest.spyOn(fs, "writeFileSync");
         writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(
+            repository,
+            sha,
+            installDir,
+            dependencies,
+            os,
+            compiler,
+            testEnv,
+            {},
+            githubToken,
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${artifactName}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `Error uploading artifact for ${repo}: ${artifactName}`
+        );
     });
 
-    it('returns false if artifact item upload returns empty result', async () => {
+    it("returns false if artifact item upload returns empty result", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -293,52 +427,83 @@ describe('uploadArtifact', () => {
             uploadArtifact: () => Promise.resolve(),
         }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
+        const statSync = jest.spyOn(fs, "statSync");
         (statSync as jest.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
+        const writeFileSync = jest.spyOn(fs, "writeFileSync");
         writeFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
         });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+        const isUploaded = await uploadArtifact(
+            repository,
+            sha,
+            installDir,
+            dependencies,
+            os,
+            compiler,
+            testEnv,
+            {},
+            githubToken,
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `Error uploading artifact for ${repo}`
+        );
     });
 
     it.each`
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if artifact item upload fails ($error)', async ({ error }) => {
-        expect.hasAssertions();
+    `(
+        "returns false if artifact item upload fails ($error)",
+        async ({ error }) => {
+            expect.hasAssertions();
 
-        const testEnv = {
-            ...env,
-        };
+            const testEnv = {
+                ...env,
+            };
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
-            uploadArtifact: () => Promise.reject(error),
-        }));
+            (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+                uploadArtifact: () => Promise.reject(error),
+            }));
 
-        const statSync = jest.spyOn(fs, 'statSync');
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
-            size,
-        }));
+            const statSync = jest.spyOn(fs, "statSync");
+            (statSync as jest.Mock).mockImplementationOnce(() => ({
+                size,
+            }));
 
-        const writeFileSync = jest.spyOn(fs, 'writeFileSync');
-        writeFileSync.mockImplementationOnce((path) => {
-            if (path === dependenciesPath) return true;
-        });
+            const writeFileSync = jest.spyOn(fs, "writeFileSync");
+            writeFileSync.mockImplementationOnce((path) => {
+                if (path === dependenciesPath) return true;
+            });
 
-        const isUploaded = await uploadArtifact(repository, sha, installDir, dependencies, os, compiler, testEnv, {}, githubToken, cacheSuffix, cmakeOptions);
+            const isUploaded = await uploadArtifact(
+                repository,
+                sha,
+                installDir,
+                dependencies,
+                os,
+                compiler,
+                testEnv,
+                {},
+                githubToken,
+                cacheSuffix,
+                cmakeOptions
+            );
 
-        expect(isUploaded).toBe(false);
+            expect(isUploaded).toBe(false);
 
-        if (!(error instanceof Error)) return;
-        expect(core.warning).toHaveBeenCalledWith(`Error uploading artifact for ${repo}: ${error.message}`);
-    });
+            if (!(error instanceof Error)) return;
+            expect(core.warning).toHaveBeenCalledWith(
+                `Error uploading artifact for ${repo}: ${error.message}`
+            );
+        }
+    );
 });

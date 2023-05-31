@@ -1,5 +1,5 @@
-import * as core from '@actions/core';
-import main from './main';
+import * as core from "@actions/core";
+import main from "./main";
 
 /**
  * A Github action that builds an ecbuild/CMake-based project, optionally pulling in its dependencies, running tests and
@@ -60,9 +60,9 @@ import main from './main';
 // eslint-disable-next-line jest/require-hook
 main()
     .then((outputs: ActionOutputs) => {
-        core.startGroup('Set Outputs');
+        core.startGroup("Set Outputs");
 
-        core.info(`==> bin_path: ${outputs.bin_path}`)
+        core.info(`==> bin_path: ${outputs.bin_path}`);
         core.info(`==> include_path: ${outputs.include_path}`);
         core.info(`==> install_path: ${outputs.install_path}`);
         core.info(`==> lib_path: ${outputs.lib_path}`);
@@ -71,22 +71,23 @@ main()
             core.info(`==> coverage_file: ${outputs.coverage_file}`);
         }
 
-        if (outputs.package_path){
-            core.info(`==> package_path: ${outputs.package_path}`)
+        if (outputs.package_path) {
+            core.info(`==> package_path: ${outputs.package_path}`);
         }
 
-        core.setOutput('bin_path', outputs.bin_path);
-        core.setOutput('include_path', outputs.include_path);
-        core.setOutput('install_path', outputs.install_path);
-        core.setOutput('lib_path', outputs.lib_path);
+        core.setOutput("bin_path", outputs.bin_path);
+        core.setOutput("include_path", outputs.include_path);
+        core.setOutput("install_path", outputs.install_path);
+        core.setOutput("lib_path", outputs.lib_path);
 
         if (outputs.coverage_file) {
-            core.setOutput('coverage_file', outputs.coverage_file);
+            core.setOutput("coverage_file", outputs.coverage_file);
         }
-        if (outputs.package_path){
-            core.setOutput('package_path', outputs.package_path)
+        if (outputs.package_path) {
+            core.setOutput("package_path", outputs.package_path);
         }
         core.endGroup();
-    }).catch((failureMessage: string) => {
+    })
+    .catch((failureMessage: string) => {
         core.setFailed(failureMessage);
     });
