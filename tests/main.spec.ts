@@ -219,7 +219,9 @@ describe("main", () => {
             inputs.os,
             inputs.compiler,
             testEnv,
-            inputs.parallelism_factor
+            inputs.parallelism_factor,
+            undefined,
+            undefined
         );
     });
 
