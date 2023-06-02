@@ -19,7 +19,7 @@ metkit:
 
 eckit: ~
 
-eccodes: 
+eccodes:
   deps:
     - libaec
 

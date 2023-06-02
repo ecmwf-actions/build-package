@@ -1,48 +1,56 @@
-import process from 'process';
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
-import { setupEnv, extendPaths, extendDependencies } from '../src/env-functions';
+import process from "process";
+import * as core from "@actions/core";
+import * as exec from "@actions/exec";
+import {
+    setupEnv,
+    extendPaths,
+    extendDependencies,
+} from "../src/env-functions";
 
-jest.mock('@actions/core');
-jest.mock('@actions/exec');
+jest.mock("@actions/core");
+jest.mock("@actions/exec");
 
-const os = 'ubuntu-20.04';
-const compilerCc = 'gcc-10';
-const compilerCxx = 'g++-10';
-const compilerFc = 'gfortran-10';
-const cmakeVersion1 = '3.21.1';
-const cmakeVersion2 = '3.21.5';
+const os = "ubuntu-20.04";
+const compilerCc = "gcc-10";
+const compilerCxx = "g++-10";
+const compilerFc = "gfortran-10";
+const cmakeVersion1 = "3.21.1";
+const cmakeVersion2 = "3.21.5";
 
-const macOs = 'macos-10.15';
+const macOs = "macos-10.15";
 const macOsCompilerCc = null;
 const macOsCompilerCxx = null;
-const macOsOpenSslPath = '/usr/local/opt/openssl@1.1\n';  // NB: newline char
+const macOsOpenSslPath = "/usr/local/opt/openssl@1.1\n"; // NB: newline char
 
-const installDir1 = '/path/to/install/package1';
-const installDir2 = '/path/to/install/package2';
-const installDir3 = '/path/to/install/package3';
+const installDir1 = "/path/to/install/package1";
+const installDir2 = "/path/to/install/package2";
+const installDir3 = "/path/to/install/package3";
 
-const repo1 = 'package1';
-const repo2 = 'package2';
-const repo3 = 'PACKAGE3';
+const repo1 = "package1";
+const repo2 = "package2";
+const repo3 = "PACKAGE3";
 
 const env = {};
 
-const errorObject = new Error('Oops!');
+const errorObject = new Error("Oops!");
 const emptyObject = {};
 
-describe('setupEnv', () => {
-    it('returns compiler and cmake version environment variables', async () => {
+describe("setupEnv", () => {
+    it("returns compiler and cmake version environment variables", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
-            return new Promise((resolve) => {
-                if (args[0] === 'cmake') {
-                    options.listeners.stdout(`{"version":{"string":"${cmakeVersion1}"}}`);
-                }
-                resolve(0);
-            });
-        });
+        (exec.exec as jest.Mock).mockImplementation(
+            (command, args, options) => {
+                return new Promise((resolve) => {
+                    if (args[0] === "cmake") {
+                        options.listeners.stdout(
+                            `{"version":{"string":"${cmakeVersion1}"}}`
+                        );
+                    }
+                    resolve(0);
+                });
+            }
+        );
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
@@ -54,8 +62,7 @@ describe('setupEnv', () => {
         });
     });
 
-
-    it('works around failed cmake command', async () => {
+    it("works around failed cmake command", async () => {
         expect.assertions(1);
 
         (exec.exec as jest.Mock).mockResolvedValueOnce(1);
@@ -73,12 +80,37 @@ describe('setupEnv', () => {
         error
         ${errorObject}
         ${emptyObject}
-    `('works around JSON parsing errors in cmake command ($error)', async ({ error }) => {
+    `(
+        "works around JSON parsing errors in cmake command ($error)",
+        async ({ error }) => {
+            expect.assertions(1);
+
+            jest.spyOn(JSON, "parse").mockImplementationOnce(() => {
+                throw error;
+            });
+
+            const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
+
+            expect(env).toStrictEqual({
+                CC: compilerCc,
+                CXX: compilerCxx,
+                FC: compilerFc,
+            });
+        }
+    );
+
+    it("works around empty version key in cmake command", async () => {
         expect.assertions(1);
 
-        jest.spyOn(JSON, 'parse').mockImplementationOnce(() => {
-            throw error;
-        });
+        (exec.exec as jest.Mock).mockImplementation(
+            (command, args, options) => {
+                if (args[0] === "cmake") {
+                    options.listeners.stdout('{"version":{"string":""}}');
+                }
+
+                return Promise.resolve(0);
+            }
+        );
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
@@ -89,46 +121,35 @@ describe('setupEnv', () => {
         });
     });
 
-    it('works around empty version key in cmake command', async () => {
+    it("returns OpenSSL environment variables on macOS", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
-            if (args[0] === 'cmake') {
-                options.listeners.stdout('{"version":{"string":""}}');
+        (exec.exec as jest.Mock).mockImplementation(
+            (command, args, options) => {
+                switch (args[0]) {
+                    case "cmake":
+                        options.listeners.stdout(
+                            `{"version":{"string":"${cmakeVersion2}"}}`
+                        );
+                        break;
+                    case "brew":
+                        options.listeners.stdout(macOsOpenSslPath);
+                        break;
+                    default:
+                }
+
+                return Promise.resolve(0);
             }
+        );
 
-            return Promise.resolve(0);
-        });
+        const env = await setupEnv(
+            macOs,
+            macOsCompilerCc,
+            macOsCompilerCxx,
+            compilerFc
+        );
 
-        const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
-
-        expect(env).toStrictEqual({
-            CC: compilerCc,
-            CXX: compilerCxx,
-            FC: compilerFc,
-        });
-    });
-
-    it('returns OpenSSL environment variables on macOS', async () => {
-        expect.assertions(1);
-
-        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
-            switch (args[0]) {
-            case 'cmake':
-                options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
-                break;
-            case 'brew':
-                options.listeners.stdout(macOsOpenSslPath);
-                break;
-            default:
-            }
-
-            return Promise.resolve(0);
-        });
-
-        const env = await setupEnv(macOs, macOsCompilerCc, macOsCompilerCxx, compilerFc);
-
-        const macOsOpenSslPathSanitized = macOsOpenSslPath.replace(/\n$/, '');
+        const macOsOpenSslPathSanitized = macOsOpenSslPath.replace(/\n$/, "");
 
         expect(env).toStrictEqual({
             CC: macOsCompilerCc,
@@ -140,23 +161,32 @@ describe('setupEnv', () => {
         });
     });
 
-    it('works around failed brew command on macOS', async () => {
+    it("works around failed brew command on macOS", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
-            switch (args[0]) {
-            case 'cmake':
-                options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
-                break;
-            case 'brew':
-                return Promise.resolve(1);
-            default:
+        (exec.exec as jest.Mock).mockImplementation(
+            (command, args, options) => {
+                switch (args[0]) {
+                    case "cmake":
+                        options.listeners.stdout(
+                            `{"version":{"string":"${cmakeVersion2}"}}`
+                        );
+                        break;
+                    case "brew":
+                        return Promise.resolve(1);
+                    default:
+                }
+
+                return Promise.resolve(0);
             }
+        );
 
-            return Promise.resolve(0);
-        });
-
-        const env = await setupEnv(macOs, macOsCompilerCc, macOsCompilerCxx, compilerFc);
+        const env = await setupEnv(
+            macOs,
+            macOsCompilerCc,
+            macOsCompilerCxx,
+            compilerFc
+        );
 
         expect(env).toStrictEqual({
             CC: macOsCompilerCc,
@@ -166,24 +196,33 @@ describe('setupEnv', () => {
         });
     });
 
-    it('works around empty output of brew command on macOS', async () => {
+    it("works around empty output of brew command on macOS", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation((command, args, options) => {
-            switch (args[0]) {
-            case 'cmake':
-                options.listeners.stdout(`{"version":{"string":"${cmakeVersion2}"}}`);
-                break;
-            case 'brew':
-                options.listeners.stdout('');
-                break;
-            default:
+        (exec.exec as jest.Mock).mockImplementation(
+            (command, args, options) => {
+                switch (args[0]) {
+                    case "cmake":
+                        options.listeners.stdout(
+                            `{"version":{"string":"${cmakeVersion2}"}}`
+                        );
+                        break;
+                    case "brew":
+                        options.listeners.stdout("");
+                        break;
+                    default:
+                }
+
+                return Promise.resolve(0);
             }
+        );
 
-            return Promise.resolve(0);
-        });
-
-        const env = await setupEnv(macOs, macOsCompilerCc, macOsCompilerCxx, compilerFc);
+        const env = await setupEnv(
+            macOs,
+            macOsCompilerCc,
+            macOsCompilerCxx,
+            compilerFc
+        );
 
         expect(env).toStrictEqual({
             CC: macOsCompilerCc,
@@ -194,8 +233,8 @@ describe('setupEnv', () => {
     });
 });
 
-describe('extendPaths', () => {
-    it('populates empty environment object w/ PATH', async () => {
+describe("extendPaths", () => {
+    it("populates empty environment object w/ PATH", async () => {
         expect.assertions(2);
 
         extendPaths(env, installDir1, repo1);
@@ -211,10 +250,12 @@ describe('extendPaths', () => {
             [`${repo1.toUpperCase()}_PATH`]: installDir1,
         });
 
-        expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir1}/bin`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extended local PATH variable to include ${installDir1}/bin`
+        );
     });
 
-    it('extends existing environment object', async () => {
+    it("extends existing environment object", async () => {
         expect.assertions(2);
 
         extendPaths(env, installDir2, repo2);
@@ -233,15 +274,17 @@ describe('extendPaths', () => {
             [`${repo2.toUpperCase()}_PATH`]: installDir2,
         });
 
-        expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir2}/bin`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extended local PATH variable to include ${installDir2}/bin`
+        );
     });
 
-    it('extends empty environment object w/o PATH', async () => {
+    it("extends empty environment object w/o PATH", async () => {
         expect.assertions(2);
 
         const newEnv = {};
 
-        process.env.PATH = '';
+        process.env.PATH = "";
 
         extendPaths(newEnv, installDir3, repo3);
 
@@ -256,10 +299,12 @@ describe('extendPaths', () => {
             [`${repo3.toUpperCase()}_PATH`]: installDir3,
         });
 
-        expect(core.info).toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir3}/bin`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extended local PATH variable to include ${installDir3}/bin`
+        );
     });
 
-    it('ignores missing environment object', async () => {
+    it("ignores missing environment object", async () => {
         expect.assertions(2);
 
         const testEnv = null;
@@ -267,18 +312,20 @@ describe('extendPaths', () => {
         extendPaths(testEnv, installDir1, repo1);
 
         expect(testEnv).toBeNull();
-        expect(core.info).not.toHaveBeenCalledWith(`==> Extended local PATH variable to include ${installDir1}/bin`);
+        expect(core.info).not.toHaveBeenCalledWith(
+            `==> Extended local PATH variable to include ${installDir1}/bin`
+        );
     });
 });
 
-describe('extendDependencies', () => {
-    it('populates empty environment object', async () => {
+describe("extendDependencies", () => {
+    it("populates empty environment object", async () => {
         expect.assertions(2);
 
         const testEnv = {};
 
-        const repository = 'owner/repo1';
-        const sha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
+        const repository = "owner/repo1";
+        const sha = "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2";
 
         const expectedEnv = {
             DEPENDENCIES: {
@@ -289,20 +336,22 @@ describe('extendDependencies', () => {
         extendDependencies(testEnv, repository, sha);
 
         expect(testEnv).toStrictEqual(expectedEnv);
-        expect(core.info).toHaveBeenCalledWith(`==> Extended list of dependencies to include ${repository}: ${sha}`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extended list of dependencies to include ${repository}: ${sha}`
+        );
     });
 
-    it('populates existing environment object', async () => {
+    it("populates existing environment object", async () => {
         expect.assertions(2);
 
         const testEnv = {
             DEPENDENCIES: {
-                'owner/repo1': 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2',
+                "owner/repo1": "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2",
             },
         };
 
-        const repository = 'owner/repo2';
-        const sha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
+        const repository = "owner/repo2";
+        const sha = "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12";
 
         const expectedEnv = {
             DEPENDENCIES: {
@@ -314,20 +363,24 @@ describe('extendDependencies', () => {
         extendDependencies(testEnv, repository, sha);
 
         expect(testEnv).toStrictEqual(expectedEnv);
-        expect(core.info).toHaveBeenCalledWith(`==> Extended list of dependencies to include ${repository}: ${sha}`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extended list of dependencies to include ${repository}: ${sha}`
+        );
     });
 
-    it('ignores missing environment object', async () => {
+    it("ignores missing environment object", async () => {
         expect.assertions(2);
 
         const testEnv = null;
 
-        const repository = 'owner/repo2';
-        const sha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
+        const repository = "owner/repo2";
+        const sha = "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12";
 
         extendDependencies(testEnv, repository, sha);
 
         expect(testEnv).toBeNull();
-        expect(core.info).not.toHaveBeenCalledWith(`==> Extended list of dependencies to include ${repository}: ${sha}`);
+        expect(core.info).not.toHaveBeenCalledWith(
+            `==> Extended list of dependencies to include ${repository}: ${sha}`
+        );
     });
 });

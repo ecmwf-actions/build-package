@@ -1,10 +1,10 @@
-import * as process from 'process';
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
+import * as process from "process";
+import * as core from "@actions/core";
+import * as exec from "@actions/exec";
 
-import { isError } from './helper-functions';
+import { isError } from "./helper-functions";
 
-import { EnvironmentVariables } from './types/env-functions';
+import { EnvironmentVariables } from "./types/env-functions";
 
 /**
  * Returns local environment variables:
@@ -22,8 +22,13 @@ import { EnvironmentVariables } from './types/env-functions';
  * @param {string} compilerFc Fortran compiler alias.
  * @returns {Promise<EnvironmentVariables>} Environment object with keys as variable names.
  */
-export const setupEnv = async (os: string, compilerCc: string | null, compilerCxx: string | null, compilerFc: string): Promise<EnvironmentVariables> => {
-    core.startGroup('Setup Environment');
+export const setupEnv = async (
+    os: string,
+    compilerCc: string | null,
+    compilerCxx: string | null,
+    compilerFc: string
+): Promise<EnvironmentVariables> => {
+    core.startGroup("Setup Environment");
 
     const env: EnvironmentVariables = {
         CC: compilerCc,
@@ -33,7 +38,7 @@ export const setupEnv = async (os: string, compilerCc: string | null, compilerCx
 
     core.info(`==> Compiler env: ${JSON.stringify(env)}`);
 
-    let output = '{}';
+    let output = "{}";
 
     const options: exec.ExecOptions = {
         listeners: {
@@ -44,22 +49,29 @@ export const setupEnv = async (os: string, compilerCc: string | null, compilerCx
     };
 
     // Get CMake command capabilities output in JSON format.
-    let exitCode = await exec.exec('env', ['cmake', '-E', 'capabilities'], options);
+    let exitCode = await exec.exec(
+        "env",
+        ["cmake", "-E", "capabilities"],
+        options
+    );
 
-    if (isError(exitCode, 'CMake capabilities command failed')) return env;
+    if (isError(exitCode, "CMake capabilities command failed")) return env;
 
     let cMakeVersion;
 
     try {
         const json = JSON.parse(output);
         cMakeVersion = json.version.string;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `CMake capabilities JSON parsing failed: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `CMake capabilities JSON parsing failed: ${error.message}`
+            );
         return env;
     }
 
-    if (isError(!cMakeVersion, 'CMake version string not found')) return env;
+    if (isError(!cMakeVersion, "CMake version string not found")) return env;
 
     env.CMAKE_VERSION = cMakeVersion;
 
@@ -68,14 +80,19 @@ export const setupEnv = async (os: string, compilerCc: string | null, compilerCx
     // On macOS, linking against system OpenSSL library is not permitted.
     //   Instead, we link against Homebrew version. Here we prepare necessary environment variables.
     if (/^macos-/.test(os)) {
-        output = '';
-        exitCode = await exec.exec('env', ['brew', '--prefix', 'openssl@1.1'], options);
+        output = "";
+        exitCode = await exec.exec(
+            "env",
+            ["brew", "--prefix", "openssl@1.1"],
+            options
+        );
 
-        if (isError(exitCode, 'Homebrew command failed')) return env;
+        if (isError(exitCode, "Homebrew command failed")) return env;
 
-        if (isError(!output, 'Homebrew OpenSSL 1.1 prefix not found')) return env;
+        if (isError(!output, "Homebrew OpenSSL 1.1 prefix not found"))
+            return env;
 
-        const openSslDir = output.replace(/\n$/, '');
+        const openSslDir = output.replace(/\n$/, "");
 
         env.OPENSSL_ROOT_DIR = openSslDir;
         env.OPENSSL_INCLUDE_DIR = `${openSslDir}/include`;
@@ -95,16 +112,18 @@ export const setupEnv = async (os: string, compilerCc: string | null, compilerCx
  * @param {string} installDir Path to installation directory.
  * @param {string} packageName Package name.
  */
-export const extendPaths = async (env: EnvironmentVariables | null, installDir: string, packageName: string) => {
+export const extendPaths = async (
+    env: EnvironmentVariables | null,
+    installDir: string,
+    packageName: string
+) => {
     if (!env) return;
 
     if (env.PATH) {
         env.PATH = `${installDir}/bin:${env.PATH}`;
-    }
-    else if (process.env.PATH) {
+    } else if (process.env.PATH) {
         env.PATH = `${installDir}/bin:${process.env.PATH}`;
-    }
-    else {
+    } else {
         env.PATH = `${installDir}/bin`;
     }
 
@@ -112,29 +131,25 @@ export const extendPaths = async (env: EnvironmentVariables | null, installDir: 
 
     if (env.BIN_PATH) {
         env.BIN_PATH = `${installDir}/bin:${env.BIN_PATH}`;
-    }
-    else {
+    } else {
         env.BIN_PATH = `${installDir}/bin`;
     }
 
     if (env.INCLUDE_PATH) {
         env.INCLUDE_PATH = `${installDir}/include:${env.INCLUDE_PATH}`;
-    }
-    else {
+    } else {
         env.INCLUDE_PATH = `${installDir}/include`;
     }
 
     if (env.INSTALL_PATH) {
         env.INSTALL_PATH = `${installDir}:${env.INSTALL_PATH}`;
-    }
-    else {
+    } else {
         env.INSTALL_PATH = installDir;
     }
 
     if (env.LIB_PATH) {
         env.LIB_PATH = `${installDir}/lib:${installDir}/lib64:${env.LIB_PATH}`;
-    }
-    else {
+    } else {
         env.LIB_PATH = `${installDir}/lib:${installDir}/lib64`;
     }
 
@@ -154,7 +169,11 @@ export const extendPaths = async (env: EnvironmentVariables | null, installDir: 
  * @param {string} repository Github repository owner and name.
  * @param {string} sha Github repository commit SHA.
  */
-export const extendDependencies = async (env: EnvironmentVariables | null, repository: string, sha: string) => {
+export const extendDependencies = async (
+    env: EnvironmentVariables | null,
+    repository: string,
+    sha: string
+) => {
     if (!env) return;
 
     if (env.DEPENDENCIES instanceof Object) {
@@ -162,12 +181,13 @@ export const extendDependencies = async (env: EnvironmentVariables | null, repos
             ...env.DEPENDENCIES,
             [repository]: sha,
         });
-    }
-    else {
+    } else {
         env.DEPENDENCIES = {
             [repository]: sha,
         };
     }
 
-    core.info(`==> Extended list of dependencies to include ${repository}: ${sha}`);
+    core.info(
+        `==> Extended list of dependencies to include ${repository}: ${sha}`
+    );
 };

@@ -1,5 +1,5 @@
-import * as core from '@actions/core';
-import main from './main';
+import * as core from "@actions/core";
+import main from "./main";
 
 /**
  * A Github action that builds an ecbuild/CMake-based project, optionally pulling in its dependencies, running tests and
@@ -47,19 +47,22 @@ import main from './main';
  *     dependency will be installed in its own subdirectory.
  *   @param {string} download_dir Directory where the dependency repositories and artifacts will be downloaded.
  *   @param {string} parallelism_factor Number of threads build job will utilise on the runner.
+ *   @param {string} cpack_generator Type of generator to use when packaging.
+ *   @param {string} cpack_options List of options for cpack.
  * Outputs:
  *   @param {String} bin_paths Binary paths of all installed packages, delimited by colons (:).
  *   @param {String} include_path Include paths of all installed packages, delimited by colons (:).
  *   @param {String} install_path Install paths of all installed packages, delimited by colons (:).
  *   @param {String} lib_path Library paths of all installed packages, delimited by colons (:).
  *   @param {String} coverage_file Absolute path to code coverage file, if collected.
+ *   @param {String} package_path Absolute path to generated package.
  */
 // eslint-disable-next-line jest/require-hook
 main()
     .then((outputs: ActionOutputs) => {
-        core.startGroup('Set Outputs');
+        core.startGroup("Set Outputs");
 
-        core.info(`==> bin_path: ${outputs.bin_path}`)
+        core.info(`==> bin_path: ${outputs.bin_path}`);
         core.info(`==> include_path: ${outputs.include_path}`);
         core.info(`==> install_path: ${outputs.install_path}`);
         core.info(`==> lib_path: ${outputs.lib_path}`);
@@ -68,16 +71,23 @@ main()
             core.info(`==> coverage_file: ${outputs.coverage_file}`);
         }
 
-        core.setOutput('bin_path', outputs.bin_path);
-        core.setOutput('include_path', outputs.include_path);
-        core.setOutput('install_path', outputs.install_path);
-        core.setOutput('lib_path', outputs.lib_path);
-
-        if (outputs.coverage_file) {
-            core.setOutput('coverage_file', outputs.coverage_file);
+        if (outputs.package_path) {
+            core.info(`==> package_path: ${outputs.package_path}`);
         }
 
+        core.setOutput("bin_path", outputs.bin_path);
+        core.setOutput("include_path", outputs.include_path);
+        core.setOutput("install_path", outputs.install_path);
+        core.setOutput("lib_path", outputs.lib_path);
+
+        if (outputs.coverage_file) {
+            core.setOutput("coverage_file", outputs.coverage_file);
+        }
+        if (outputs.package_path) {
+            core.setOutput("package_path", outputs.package_path);
+        }
         core.endGroup();
-    }).catch((failureMessage: string) => {
+    })
+    .catch((failureMessage: string) => {
         core.setFailed(failureMessage);
     });

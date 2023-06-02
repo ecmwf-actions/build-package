@@ -1,193 +1,250 @@
-import process from 'process';
-import fs from 'fs';
-import { Buffer } from 'buffer';
-import * as core from '@actions/core';
-import { Octokit } from '@octokit/core';
-import AdmZip from 'adm-zip';
-import { filesize } from 'filesize';
-import tar from 'tar';
+import process from "process";
+import fs from "fs";
+import { Buffer } from "buffer";
+import * as core from "@actions/core";
+import { Octokit } from "@octokit/core";
+import AdmZip from "adm-zip";
+import { filesize } from "filesize";
+import tar from "tar";
 
-import downloadArtifact from '../src/download-artifact';
-import { EnvironmentVariables } from '../src/types/env-functions';
-import { getCacheKeyHash } from '../src/cache-functions';
+import downloadArtifact from "../src/download-artifact";
+import { EnvironmentVariables } from "../src/types/env-functions";
+import { getCacheKeyHash } from "../src/cache-functions";
 
-jest.mock('@actions/core');
-jest.mock('@actions/io');
-jest.mock('@octokit/core');
-jest.mock('adm-zip');
-jest.mock('tar');
+jest.mock("@actions/core");
+jest.mock("@actions/io");
+jest.mock("@octokit/core");
+jest.mock("adm-zip");
+jest.mock("tar");
 
-const getArtifactName = (repo: string, os: string, compiler: string, cacheSuffix: string, env: EnvironmentVariables, cmakeOptions: string, headSha: string) => {
-    const cacheKeySha = getCacheKeyHash(repo, cacheSuffix, env, {}, cmakeOptions, headSha);
+const getArtifactName = (
+    repo: string,
+    os: string,
+    compiler: string,
+    cacheSuffix: string,
+    env: EnvironmentVariables,
+    cmakeOptions: string,
+    headSha: string
+) => {
+    const cacheKeySha = getCacheKeyHash(
+        repo,
+        cacheSuffix,
+        env,
+        {},
+        cmakeOptions,
+        headSha
+    );
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
-}
+};
 
 // Base environment object, we will take care not to modify it.
 const env = {
-    CC: 'gcc-10',
-    CXX: 'g++-10',
-    FC: 'gfortran-10',
-    CMAKE_VERSION: '3.21.1',
+    CC: "gcc-10",
+    CXX: "g++-10",
+    FC: "gfortran-10",
+    CMAKE_VERSION: "3.21.1",
 };
 
 // Test parameters.
-const repository = 'owner/repo';
-const repo = 'repo';
-const branch = 'develop';
-const githubToken = '12345';
-const downloadDir = '/path/to/download/repo';
-const installDir = '/path/to/install/repo';
-const os = 'ubuntu-20.04';
-const compiler = 'gnu-10';
-const headSha = 'f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2';
-const cmakeOptions = '-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF'
-const cacheSuffix = ''
-const artifactName = getArtifactName(repo, os, compiler, cacheSuffix, env, cmakeOptions, headSha);
+const repository = "owner/repo";
+const repo = "repo";
+const branch = "develop";
+const githubToken = "12345";
+const downloadDir = "/path/to/download/repo";
+const installDir = "/path/to/install/repo";
+const os = "ubuntu-20.04";
+const compiler = "gnu-10";
+const headSha = "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2";
+const cmakeOptions =
+    "-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF";
+const cacheSuffix = "";
+const artifactName = getArtifactName(
+    repo,
+    os,
+    compiler,
+    cacheSuffix,
+    env,
+    cmakeOptions,
+    headSha
+);
 const artifactId = 987654321;
 const artifactSize = 68168435;
 const artifactPath = `${downloadDir}/${artifactName}`;
 const tarPath = `${artifactPath}/${artifactName}.tar`;
 const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 const errorStatusCode = 500;
-const errorObject = new Error('Oops!');
+const errorObject = new Error("Oops!");
 const emptyObject = {};
 
-
-const resolveWorkflowRunArtifacts = (targetArtifactName: string): Promise<Record<string, unknown>> => Promise.resolve({
-    status: 200,
-    data: {
-        artifacts: [
-            {
-                name: `${repo}-macos-10.15-clang-12`,
-                id: 987654320,
-                size_in_bytes: 41651984,
-            },
-            {
-                name: targetArtifactName,
-                id: artifactId,
-                size_in_bytes: artifactSize,
-            },
-            {
-                name: `${repo}-ubuntu-18.04-gnu-9`,
-                id: 987654322,
-                size_in_bytes: 716551654,
-            },
-        ],
-    },
-});
-
-const resolveHeadSha = () => Promise.resolve({
-    status: 200,
-    data: {
-        object: {
-            sha: headSha,
+const resolveWorkflowRunArtifacts = (
+    targetArtifactName: string
+): Promise<Record<string, unknown>> =>
+    Promise.resolve({
+        status: 200,
+        data: {
+            artifacts: [
+                {
+                    name: `${repo}-macos-10.15-clang-12`,
+                    id: 987654320,
+                    size_in_bytes: 41651984,
+                },
+                {
+                    name: targetArtifactName,
+                    id: artifactId,
+                    size_in_bytes: artifactSize,
+                },
+                {
+                    name: `${repo}-ubuntu-18.04-gnu-9`,
+                    id: 987654322,
+                    size_in_bytes: 716551654,
+                },
+            ],
         },
-    },
-});
+    });
 
-const resolveArtifactDownload = () => Promise.resolve({
-    status: 200,
-    data: Buffer.allocUnsafe(4096),
-});
+const resolveHeadSha = () =>
+    Promise.resolve({
+        status: 200,
+        data: {
+            object: {
+                sha: headSha,
+            },
+        },
+    });
 
-const getEntries = () => ([
+const resolveArtifactDownload = () =>
+    Promise.resolve({
+        status: 200,
+        data: Buffer.allocUnsafe(4096),
+    });
+
+const getEntries = () => [
     {
         isDirectory: true,
-        entryName: 'dir',
+        entryName: "dir",
     },
     {
         isDirectory: false,
-        entryName: 'dir/file1',
+        entryName: "dir/file1",
     },
     {
         isDirectory: false,
-        entryName: 'dir/file2',
+        entryName: "dir/file2",
     },
     {
         isDirectory: true,
-        entryName: 'dir/subdir',
+        entryName: "dir/subdir",
     },
     {
         isDirectory: false,
-        entryName: 'dir/subdir/file3',
+        entryName: "dir/subdir/file3",
     },
     {
         isDirectory: false,
-        entryName: 'file4',
+        entryName: "file4",
     },
-]);
+];
 
 const extractAllTo = jest.fn();
 
-describe('downloadArtifact', () => {
-    it('returns true on success', async () => {
+describe("downloadArtifact", () => {
+    it("returns true on success", async () => {
         expect.assertions(18);
 
         const testEnv = {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation((options) => {
-            if (!options.auth) throw Error(`Octokit authentication missing, did you pass the auth key?`);
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+            (options) => {
+                if (!options.auth)
+                    throw Error(
+                        `Octokit authentication missing, did you pass the auth key?`
+                    );
 
-            return {
-                request: (route: string) => {
-                    switch (route) {
-                    case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                        return resolveWorkflowRunArtifacts(artifactName);
-                    case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                        return resolveHeadSha();
-                    case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                        return resolveArtifactDownload();
-                    }
-                },
-            };
-        });
+                return {
+                    request: (route: string) => {
+                        switch (route) {
+                            case "GET /repos/{owner}/{repo}/actions/artifacts":
+                                return resolveWorkflowRunArtifacts(
+                                    artifactName
+                                );
+                            case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                                return resolveHeadSha();
+                            case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                                return resolveArtifactDownload();
+                        }
+                    },
+                };
+            }
+        );
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
 
-        const existsSync = jest.spyOn(fs, 'existsSync');
+        const existsSync = jest.spyOn(fs, "existsSync");
         existsSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return false;
             return true;
         });
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Repository: ${repository}`);
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${branch}`);
-        expect(core.info).toHaveBeenCalledWith('==> Artifacts: 3');
+        expect(core.info).toHaveBeenCalledWith("==> Artifacts: 3");
         expect(core.info).toHaveBeenCalledWith(`==> headSha: ${headSha}`);
-        expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${artifactName}`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> artifactName: ${artifactName}`
+        );
         expect(core.info).toHaveBeenCalledWith(`==> artifactId: ${artifactId}`);
-        expect(core.info).toHaveBeenCalledWith(`==> Downloaded: ${artifactName}.zip (${filesize(artifactSize)})`);
-        expect(core.info).toHaveBeenCalledWith(`==> Extracted artifact ZIP archive to ${artifactPath}`);
-        expect(core.info).toHaveBeenCalledWith(`==> Extracted artifact TAR to ${installDir}`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Downloaded: ${artifactName}.zip (${filesize(artifactSize)})`
+        );
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extracted artifact ZIP archive to ${artifactPath}`
+        );
+        expect(core.info).toHaveBeenCalledWith(
+            `==> Extracted artifact TAR to ${installDir}`
+        );
         expect(extractAllTo).toHaveBeenCalledWith(artifactPath, true);
         expect(unlinkSync).toHaveBeenCalledWith(tarPath);
 
         getEntries().forEach((entry) => {
-            const action = entry.isDirectory ? 'creating' : 'inflating';
+            const action = entry.isDirectory ? "creating" : "inflating";
             const filepath = `${artifactPath}/${entry.entryName}`;
 
             expect(core.info).toHaveBeenCalledWith(`  ${action}: ${filepath}`);
         });
     });
 
-    it('returns true if dependencies match', async () => {
+    it("returns true if dependencies match", async () => {
         expect.assertions(2);
 
-        const dependency1 = 'owner/repo1';
-        const dependency1Sha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
-        const dependency2 = 'owner/repo2';
-        const dependency2Sha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
+        const dependency1 = "owner/repo1";
+        const dependency1Sha = "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3";
+        const dependency2 = "owner/repo2";
+        const dependency2Sha = "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12";
 
         const testEnv = {
             ...env,
@@ -197,53 +254,76 @@ describe('downloadArtifact', () => {
             },
         };
 
-        const artifactName = getArtifactName(repo, os, compiler, cacheSuffix, testEnv, cmakeOptions, headSha);        
+        const artifactName = getArtifactName(
+            repo,
+            os,
+            compiler,
+            cacheSuffix,
+            testEnv,
+            cmakeOptions,
+            headSha
+        );
         const artifactPath = `${downloadDir}/${artifactName}`;
         const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                        return resolveArtifactDownload();
                 }
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
 
-        const existsSync = jest.spyOn(fs, 'existsSync');
+        const existsSync = jest.spyOn(fs, "existsSync");
         existsSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
             return false;
         });
 
-        const readFileSync = jest.spyOn(fs, 'readFileSync');
+        const readFileSync = jest.spyOn(fs, "readFileSync");
         readFileSync.mockImplementationOnce((path) => {
-            if (path === dependenciesPath) return JSON.stringify({
-                [dependency1]: dependency1Sha,
-                [dependency2]: dependency2Sha,
-            });
-            return '';
+            if (path === dependenciesPath)
+                return JSON.stringify({
+                    [dependency1]: dependency1Sha,
+                    [dependency2]: dependency2Sha,
+                });
+            return "";
         });
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementation(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
     });
 
-    it('looks for differently named artifact in case of ecbuild', async () => {
+    it("looks for differently named artifact in case of ecbuild", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -255,31 +335,47 @@ describe('downloadArtifact', () => {
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(ecbuildArtifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(ecbuildArtifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                        return resolveArtifactDownload();
                 }
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            "ecmwf/ecbuild",
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(true);
-        expect(core.info).toHaveBeenCalledWith(`==> artifactName: ${ecbuildArtifactName}`);
+        expect(core.info).toHaveBeenCalledWith(
+            `==> artifactName: ${ecbuildArtifactName}`
+        );
     });
 
-    it('returns false if request for workflow artifacts errors out', async () => {
+    it("returns false if request for workflow artifacts errors out", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -289,53 +385,86 @@ describe('downloadArtifact', () => {
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return Promise.resolve({
-                        status: errorStatusCode,
-                    });
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return Promise.resolve({
+                            status: errorStatusCode,
+                        });
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
                 }
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching artifacts for ${repo}: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `Wrong response code while fetching artifacts for ${repo}: ${errorStatusCode}`
+        );
     });
 
     it.each`
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for workflow artifacts fails ($error)', async ({ error }) => {
-        expect.hasAssertions();
+    `(
+        "returns false if request for workflow artifacts fails ($error)",
+        async ({ error }) => {
+            expect.hasAssertions();
 
-        const testEnv = {
-            ...env,
-        };
+            const testEnv = {
+                ...env,
+            };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
-            request: (route: string) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    throw error;
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                }
-            },
-        }));
+            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+                () => ({
+                    request: (route: string) => {
+                        switch (route) {
+                            case "GET /repos/{owner}/{repo}/actions/artifacts":
+                                throw error;
+                            case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                                return resolveHeadSha();
+                        }
+                    },
+                })
+            );
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+            const isArtifactDownloaded = await downloadArtifact(
+                repository,
+                branch,
+                githubToken,
+                downloadDir,
+                installDir,
+                os,
+                compiler,
+                testEnv,
+                {},
+                cacheSuffix,
+                cmakeOptions
+            );
 
-        expect(isArtifactDownloaded).toBe(false);
+            expect(isArtifactDownloaded).toBe(false);
 
-        if (!(error instanceof Error)) return;
-        expect(core.warning).toHaveBeenCalledWith(`Error fetching artifacts for ${repo}: ${error.message}`);
-    });
+            if (!(error instanceof Error)) return;
+            expect(core.warning).toHaveBeenCalledWith(
+                `Error fetching artifacts for ${repo}: ${error.message}`
+            );
+        }
+    );
 
-    it('returns false if no workflow artifacts are found', async () => {
+    it("returns false if no workflow artifacts are found", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -345,69 +474,107 @@ describe('downloadArtifact', () => {
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return Promise.resolve({
-                        status: 200,
-                        data: {
-                            artifacts: [],
-                        },
-                    });
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                }
-            },
-        }));
-
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
-
-        expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No workflow artifacts found for ${repo}`);
-    });
-
-    it('returns false if repository HEAD state does not match', async () => {
-        expect.assertions(2);
-
-        const newSha = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
-
-        const testEnv = {
-            ...env,
-        };
-
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
-            request: (route: string) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return Promise.resolve({
-                        status: 200,
-                        data: {
-                            object: {
-                                sha: newSha,
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return Promise.resolve({
+                            status: 200,
+                            data: {
+                                artifacts: [],
                             },
-                        },
-                    });
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
+                        });
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
                 }
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
-
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
-        unlinkSync.mockImplementationOnce(() => true);
-
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ${getArtifactName(repo, os, compiler, cacheSuffix, env, cmakeOptions, newSha)}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `No workflow artifacts found for ${repo}`
+        );
     });
 
-    it('returns false if no artifacts with expected name were found', async () => {
+    it("returns false if repository HEAD state does not match", async () => {
+        expect.assertions(2);
+
+        const newSha = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+
+        const testEnv = {
+            ...env,
+        };
+
+        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+            request: (route: string) => {
+                switch (route) {
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return Promise.resolve({
+                            status: 200,
+                            data: {
+                                object: {
+                                    sha: newSha,
+                                },
+                            },
+                        });
+                    case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                        return resolveArtifactDownload();
+                }
+            },
+        }));
+
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
+
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        unlinkSync.mockImplementationOnce(() => true);
+
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
+
+        expect(isArtifactDownloaded).toBe(false);
+        expect(core.warning).toHaveBeenCalledWith(
+            `No suitable artifact found: ${getArtifactName(
+                repo,
+                os,
+                compiler,
+                cacheSuffix,
+                env,
+                cmakeOptions,
+                newSha
+            )}`
+        );
+    });
+
+    it("returns false if no artifacts with expected name were found", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -417,29 +584,45 @@ describe('downloadArtifact', () => {
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
                 }
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact('ecmwf/ecbuild', branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            "ecmwf/ecbuild",
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`
+        );
     });
 
-    it('returns false if request for repository HEAD runs errors out', async () => {
+    it("returns false if request for repository HEAD runs errors out", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -449,102 +632,160 @@ describe('downloadArtifact', () => {
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return Promise.resolve({
-                        status: errorStatusCode,
-                    });
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return Promise.resolve({
+                            status: errorStatusCode,
+                        });
                 }
             },
         }));
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(`Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`
+        );
     });
 
     it.each`
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if request for repository HEAD fails ($error)', async ({ error }) => {
-        expect.hasAssertions();
+    `(
+        "returns false if request for repository HEAD fails ($error)",
+        async ({ error }) => {
+            expect.hasAssertions();
 
-        const testEnv = {
-            ...env,
-        };
+            const testEnv = {
+                ...env,
+            };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
-            request: (route: string) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    // eslint-disable-next-line jest/no-if
-                    throw error;
-                }
-            },
-        }));
+            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+                () => ({
+                    request: (route: string) => {
+                        switch (route) {
+                            case "GET /repos/{owner}/{repo}/actions/artifacts":
+                                return resolveWorkflowRunArtifacts(
+                                    artifactName
+                                );
+                            case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                                // eslint-disable-next-line jest/no-if
+                                throw error;
+                        }
+                    },
+                })
+            );
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+            const isArtifactDownloaded = await downloadArtifact(
+                repository,
+                branch,
+                githubToken,
+                downloadDir,
+                installDir,
+                os,
+                compiler,
+                testEnv,
+                {},
+                cacheSuffix,
+                cmakeOptions
+            );
 
-        expect(isArtifactDownloaded).toBe(false);
+            expect(isArtifactDownloaded).toBe(false);
 
-        if (!(error instanceof Error)) return;
-        expect(core.warning).toHaveBeenCalledWith(`Error getting repository HEAD for ${repo}: ${error.message}`);
-    });
+            if (!(error instanceof Error)) return;
+            expect(core.warning).toHaveBeenCalledWith(
+                `Error getting repository HEAD for ${repo}: ${error.message}`
+            );
+        }
+    );
 
     it.each`
         error
         ${errorObject}
         ${emptyObject}
-    `('returns false if extracting artifact TAR fails ($error)', async ({ error }) => {
-        expect.hasAssertions();
+    `(
+        "returns false if extracting artifact TAR fails ($error)",
+        async ({ error }) => {
+            expect.hasAssertions();
 
-        const testEnv = {
-            ...env,
-        };
+            const testEnv = {
+                ...env,
+            };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
-            request: (route: string) => {
-                switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
-                }
-            },
-        }));
+            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+                () => ({
+                    request: (route: string) => {
+                        switch (route) {
+                            case "GET /repos/{owner}/{repo}/actions/artifacts":
+                                return resolveWorkflowRunArtifacts(
+                                    artifactName
+                                );
+                            case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                                return resolveHeadSha();
+                            case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                                return resolveArtifactDownload();
+                        }
+                    },
+                })
+            );
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+            (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+                () => ({
+                    getEntries,
+                    extractAllTo,
+                })
+            );
 
-        (tar.x as jest.Mock).mockImplementationOnce(() => {
-            throw error;
-        });
+            (tar.x as jest.Mock).mockImplementationOnce(() => {
+                throw error;
+            });
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+            const isArtifactDownloaded = await downloadArtifact(
+                repository,
+                branch,
+                githubToken,
+                downloadDir,
+                installDir,
+                os,
+                compiler,
+                testEnv,
+                {},
+                cacheSuffix,
+                cmakeOptions
+            );
 
-        expect(isArtifactDownloaded).toBe(false);
+            expect(isArtifactDownloaded).toBe(false);
 
-        if (!(error instanceof Error)) return;
-        expect(core.warning).toHaveBeenCalledWith(`Error extracting artifact TAR for ${repo}: ${error.message}`);
-    });
+            if (!(error instanceof Error)) return;
+            expect(core.warning).toHaveBeenCalledWith(
+                `Error extracting artifact TAR for ${repo}: ${error.message}`
+            );
+        }
+    );
 
-    it('returns false if dependencies do not match', async () => {
+    it("returns false if dependencies do not match", async () => {
         expect.assertions(3);
 
-        const dependency1 = 'owner/repo1';
-        const dependency1Sha = 'de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3';
-        const dependency2 = 'owner/repo2';
-        const dependency2OldSha = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12';
-        const dependency2NewSha = 'da39a3ee5e6b4b0d3255bfef95601890afd80709';
+        const dependency1 = "owner/repo1";
+        const dependency1Sha = "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3";
+        const dependency2 = "owner/repo2";
+        const dependency2OldSha = "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12";
+        const dependency2NewSha = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
         const testEnv = {
             ...env,
@@ -554,54 +795,79 @@ describe('downloadArtifact', () => {
             },
         };
 
-        const artifactName = getArtifactName(repo, os, compiler, cacheSuffix, testEnv, cmakeOptions, headSha);        
+        const artifactName = getArtifactName(
+            repo,
+            os,
+            compiler,
+            cacheSuffix,
+            testEnv,
+            cmakeOptions,
+            headSha
+        );
         const artifactPath = `${downloadDir}/${artifactName}`;
         const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                        return resolveArtifactDownload();
                 }
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
 
-        const existsSync = jest.spyOn(fs, 'existsSync');
+        const existsSync = jest.spyOn(fs, "existsSync");
         existsSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
             return false;
         });
 
-        const readFileSync = jest.spyOn(fs, 'readFileSync');
+        const readFileSync = jest.spyOn(fs, "readFileSync");
         readFileSync.mockImplementationOnce((path) => {
-            if (path === dependenciesPath) return JSON.stringify({
-                [dependency1]: dependency1Sha,
-                [dependency2]: dependency2OldSha,
-            });
-            return '';
+            if (path === dependenciesPath)
+                return JSON.stringify({
+                    [dependency1]: dependency1Sha,
+                    [dependency2]: dependency2OldSha,
+                });
+            return "";
         });
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementation(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
-        expect(core.warning).toHaveBeenCalledWith(`Error matching dependency ${dependency2} for ${repo}: ${dependency2NewSha} !== ${dependency2OldSha}`);
+        expect(core.warning).toHaveBeenCalledWith(
+            `Error matching dependency ${dependency2} for ${repo}: ${dependency2NewSha} !== ${dependency2OldSha}`
+        );
     });
 
-    it('extends environment object with install paths and dependency', async () => {
+    it("extends environment object with install paths and dependency", async () => {
         expect.assertions(2);
 
         const testEnv = {
@@ -626,25 +892,39 @@ describe('downloadArtifact', () => {
         (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
-                case 'GET /repos/{owner}/{repo}/actions/artifacts':
-                    return resolveWorkflowRunArtifacts(artifactName);
-                case 'GET /repos/{owner}/{repo}/git/ref/{ref}':
-                    return resolveHeadSha();
-                case 'GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}':
-                    return resolveArtifactDownload();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts":
+                        return resolveWorkflowRunArtifacts(artifactName);
+                    case "GET /repos/{owner}/{repo}/git/ref/{ref}":
+                        return resolveHeadSha();
+                    case "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}":
+                        return resolveArtifactDownload();
                 }
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(() => ({
-            getEntries,
-            extractAllTo,
-        }));
+        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            () => ({
+                getEntries,
+                extractAllTo,
+            })
+        );
 
-        const unlinkSync = jest.spyOn(fs, 'unlinkSync');
+        const unlinkSync = jest.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
-        const isArtifactDownloaded = await downloadArtifact(repository, branch, githubToken, downloadDir, installDir, os, compiler, testEnv, {}, cacheSuffix, cmakeOptions);
+        const isArtifactDownloaded = await downloadArtifact(
+            repository,
+            branch,
+            githubToken,
+            downloadDir,
+            installDir,
+            os,
+            compiler,
+            testEnv,
+            {},
+            cacheSuffix,
+            cmakeOptions
+        );
 
         expect(isArtifactDownloaded).toBe(true);
         expect(testEnv).toStrictEqual(expectedEnv);

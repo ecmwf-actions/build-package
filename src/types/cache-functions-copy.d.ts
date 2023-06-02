@@ -1,1 +1,1 @@
-type CacheObject = { cacheKey: string, headSha: string };
+type CacheObject = { cacheKey: string; headSha: string };

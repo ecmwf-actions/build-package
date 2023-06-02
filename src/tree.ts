@@ -1,15 +1,18 @@
-import fs from 'fs';
-import * as yaml from 'js-yaml';
-import { isError } from './helper-functions';
-import path from 'path';
-import * as core from '@actions/core';
-import process from 'process';
-
+import fs from "fs";
+import * as yaml from "js-yaml";
+import { isError } from "./helper-functions";
+import path from "path";
+import * as core from "@actions/core";
+import process from "process";
 
 export const loadTree = (): DependencyTree => {
     const fileName = "dependency-tree.yml";
 
-    if (!process.env.RUNNER_WORKSPACE || !process.env.GITHUB_ACTION_REPOSITORY || !process.env.GITHUB_ACTION_REF) {
+    if (
+        !process.env.RUNNER_WORKSPACE ||
+        !process.env.GITHUB_ACTION_REPOSITORY ||
+        !process.env.GITHUB_ACTION_REF
+    ) {
         return {};
     }
 
@@ -26,16 +29,23 @@ export const loadTree = (): DependencyTree => {
 
     let treeData: DependencyTree;
     try {
-        treeData = yaml.load(fs.readFileSync(filePath, 'utf8')) as DependencyTree;
+        treeData = yaml.load(
+            fs.readFileSync(filePath, "utf8")
+        ) as DependencyTree;
     } catch (error) {
-        if (error instanceof Error) isError(true, `Error loading data from ${fileName}`);
+        if (error instanceof Error)
+            isError(true, `Error loading data from ${fileName}`);
         return {};
     }
     core.info(`Dependency tree: ${JSON.stringify(treeData, null, 4)}`);
     return treeData;
 };
 
-export const getDependenciesFromTree = (repo: string, tree: DependencyTree, dependencies: string[] | null): string[] => {
+export const getDependenciesFromTree = (
+    repo: string,
+    tree: DependencyTree,
+    dependencies: string[] | null
+): string[] => {
     if (!dependencies) {
         dependencies = [];
     }

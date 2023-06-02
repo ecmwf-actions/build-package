@@ -1,19 +1,19 @@
-import fs from 'fs';
-import path from 'path';
-import { Buffer } from 'buffer';
-import * as core from '@actions/core';
-import { mkdirP } from '@actions/io';
-import { Octokit } from '@octokit/core';
-import AdmZip from 'adm-zip';
-import { filesize } from 'filesize';
-import tar from 'tar';
+import fs from "fs";
+import path from "path";
+import { Buffer } from "buffer";
+import * as core from "@actions/core";
+import { mkdirP } from "@actions/io";
+import { Octokit } from "@octokit/core";
+import AdmZip from "adm-zip";
+import { filesize } from "filesize";
+import tar from "tar";
 
-import { extendPaths, extendDependencies } from './env-functions';
-import { isError } from './helper-functions';
+import { extendPaths, extendDependencies } from "./env-functions";
+import { isError } from "./helper-functions";
 
-import { EnvironmentVariables } from './types/env-functions';
-import { getCacheKey } from './cache-functions';
-import { CmakeOptionsLookup } from './types/main';
+import { EnvironmentVariables } from "./types/env-functions";
+import { getCacheKey } from "./cache-functions";
+import { CmakeOptionsLookup } from "./types/main";
 
 /**
  * Downloads and extracts package artifact.
@@ -31,14 +31,27 @@ import { CmakeOptionsLookup } from './types/main';
  * @param {CmakeOptionsLookup} dependencyCmakeOptionsLookup List of CMake options for each dependency.
  * @returns {Promise<boolean>} Whether the download and extraction was successful.
  */
-const downloadArtifact = async (repository: string, branch: string, githubToken: string, downloadDir: string, installDir: string, os: string, compiler: string, env: EnvironmentVariables, dependencyTree: DependencyTree, cacheSuffix: string, cmakeOptions: string | undefined, dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}): Promise<boolean> => {
+const downloadArtifact = async (
+    repository: string,
+    branch: string,
+    githubToken: string,
+    downloadDir: string,
+    installDir: string,
+    os: string,
+    compiler: string,
+    env: EnvironmentVariables,
+    dependencyTree: DependencyTree,
+    cacheSuffix: string,
+    cmakeOptions: string | undefined,
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+): Promise<boolean> => {
     core.startGroup(`Download ${repository} Artifact`);
 
-    const [owner, repo] = repository.split('/');
+    const [owner, repo] = repository.split("/");
 
     core.info(`==> Repository: ${owner}/${repo}`);
 
-    branch = branch.replace(/^refs\/heads\//, '');
+    branch = branch.replace(/^refs\/heads\//, "");
 
     core.info(`==> Branch: ${branch}`);
 
@@ -54,19 +67,30 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
         headSha = branch;
     } else {
         try {
-            const response = await octokit.request('GET /repos/{owner}/{repo}/git/ref/{ref}', {
-                owner,
-                repo,
-                ref: `heads/${branch}`,
-            });
+            const response = await octokit.request(
+                "GET /repos/{owner}/{repo}/git/ref/{ref}",
+                {
+                    owner,
+                    repo,
+                    ref: `heads/${branch}`,
+                }
+            );
 
-            if (isError(response.status != 200, `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`))
+            if (
+                isError(
+                    response.status != 200,
+                    `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`
+                )
+            )
                 return false;
 
             headSha = response.data.object.sha;
-        }
-        catch (error) {
-            if (error instanceof Error) isError(true, `Error getting repository HEAD for ${repo}: ${error.message}`);
+        } catch (error) {
+            if (error instanceof Error)
+                isError(
+                    true,
+                    `Error getting repository HEAD for ${repo}: ${error.message}`
+                );
             return false;
         }
     }
@@ -76,29 +100,51 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     let artifactName: string;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === 'ecbuild') {
+    if (repo === "ecbuild") {
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
     } else {
-        const { cacheKey } = await getCacheKey(repository, headSha, githubToken, os, compiler, cacheSuffix, env, dependencyTree, cmakeOptions, dependencyCmakeOptionsLookup);
+        const { cacheKey } = await getCacheKey(
+            repository,
+            headSha,
+            githubToken,
+            os,
+            compiler,
+            cacheSuffix,
+            env,
+            dependencyTree,
+            cmakeOptions,
+            dependencyCmakeOptionsLookup
+        );
         artifactName = cacheKey;
     }
 
     let artifacts;
 
     try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/actions/artifacts', {
-            owner,
-            repo,
-            name: artifactName,
-        });
+        const response = await octokit.request(
+            "GET /repos/{owner}/{repo}/actions/artifacts",
+            {
+                owner,
+                repo,
+                name: artifactName,
+            }
+        );
 
-        if (isError(response.status != 200, `Wrong response code while fetching artifacts for ${repo}: ${response.status}`))
+        if (
+            isError(
+                response.status != 200,
+                `Wrong response code while fetching artifacts for ${repo}: ${response.status}`
+            )
+        )
             return false;
 
         artifacts = response.data.artifacts;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error fetching artifacts for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error fetching artifacts for ${repo}: ${error.message}`
+            );
         return false;
     }
 
@@ -112,7 +158,13 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     // Consider only artifacts with expected name.
     artifacts = artifacts.filter((artifact) => artifact.name === artifactName);
 
-    if (isError(!artifacts.length, `No suitable artifact found: ${artifactName}`)) return false;
+    if (
+        isError(
+            !artifacts.length,
+            `No suitable artifact found: ${artifactName}`
+        )
+    )
+        return false;
 
     const artifact = artifacts.shift();
 
@@ -122,20 +174,31 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
     let zip: string;
 
     try {
-        const response = await octokit.request('GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}', {
-            owner,
-            repo,
-            artifact_id: artifact?.id as number,
-            archive_format: 'zip',
-        });
+        const response = await octokit.request(
+            "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/{archive_format}",
+            {
+                owner,
+                repo,
+                artifact_id: artifact?.id as number,
+                archive_format: "zip",
+            }
+        );
 
-        if (isError(response.status === 302 || response.status !== 200, `Wrong response code while downloading workflow run artifact for ${repo}: ${response.status}`))
+        if (
+            isError(
+                response.status === 302 || response.status !== 200,
+                `Wrong response code while downloading workflow run artifact for ${repo}: ${response.status}`
+            )
+        )
             return false;
 
         zip = response.data as string;
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error downloading workflow run artifact for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error downloading workflow run artifact for ${repo}: ${error.message}`
+            );
         return false;
     }
 
@@ -143,44 +206,59 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
 
     core.info(`==> Downloaded: ${artifact?.name}.zip (${size})`);
 
-    const artifactPath = path.resolve(path.join(downloadDir, artifact?.name as string));
+    const artifactPath = path.resolve(
+        path.join(downloadDir, artifact?.name as string)
+    );
 
     await mkdirP(artifactPath);
 
     const adm = new AdmZip(Buffer.from(zip));
 
     adm.getEntries().forEach((entry) => {
-        const action = entry.isDirectory ? 'creating' : 'inflating';
+        const action = entry.isDirectory ? "creating" : "inflating";
         const filepath = `${artifactPath}/${entry.entryName}`;
 
         core.info(`  ${action}: ${filepath}`);
-    })
+    });
 
     adm.extractAllTo(artifactPath, true);
 
     core.info(`==> Extracted artifact ZIP archive to ${artifactPath}`);
 
     const tarPath = path.join(artifactPath, `${artifactName}.tar`);
-    const dependenciesPath = path.join(artifactPath, `${artifactName}-dependencies.json`);
+    const dependenciesPath = path.join(
+        artifactPath,
+        `${artifactName}-dependencies.json`
+    );
 
     // Check artifact compatibility by going through its dependencies and verifying against current ones.
     if (fs.existsSync(dependenciesPath)) {
-        const dependenciesContent = fs.readFileSync(dependenciesPath).toString();
+        const dependenciesContent = fs
+            .readFileSync(dependenciesPath)
+            .toString();
 
         core.info(`==> Found ${dependenciesPath}`);
 
         const dependencies = JSON.parse(dependenciesContent);
 
-        for (const [dependency, dependencySha] of Object.entries(dependencies)) {
+        for (const [dependency, dependencySha] of Object.entries(
+            dependencies
+        )) {
             if (
-                env.DEPENDENCIES
-                && env.DEPENDENCIES[dependency as keyof DependenciesObject]
-                && env.DEPENDENCIES[dependency as keyof DependenciesObject] !== dependencySha
+                env.DEPENDENCIES &&
+                env.DEPENDENCIES[dependency as keyof DependenciesObject] &&
+                env.DEPENDENCIES[dependency as keyof DependenciesObject] !==
+                    dependencySha
             ) {
                 fs.unlinkSync(tarPath);
                 fs.unlinkSync(dependenciesPath);
 
-                isError(true, `Error matching dependency ${dependency} for ${repo}: ${env.DEPENDENCIES[dependency as keyof DependenciesObject]} !== ${dependencySha}`);
+                isError(
+                    true,
+                    `Error matching dependency ${dependency} for ${repo}: ${
+                        env.DEPENDENCIES[dependency as keyof DependenciesObject]
+                    } !== ${dependencySha}`
+                );
 
                 return false;
             }
@@ -196,9 +274,12 @@ const downloadArtifact = async (repository: string, branch: string, githubToken:
             C: installDir,
             file: tarPath,
         });
-    }
-    catch (error) {
-        if (error instanceof Error) isError(true, `Error extracting artifact TAR for ${repo}: ${error.message}`);
+    } catch (error) {
+        if (error instanceof Error)
+            isError(
+                true,
+                `Error extracting artifact TAR for ${repo}: ${error.message}`
+            );
         return false;
     }
 
