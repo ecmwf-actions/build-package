@@ -102,6 +102,13 @@ jobs:
           python -m pip install pytest pytest-cov
           test -f requirements.txt && python -m pip install -r requirements.txt
 
+      - name: Verify Source Distribution
+        working-directory: pyodc
+        shell: bash -eux {0}
+        run: |
+          python setup.py sdist
+          python -m pip install dist/*
+
       - name: Run Tests
         env:
           LD_LIBRARY_PATH: ${{ steps.install-dependencies.outputs.lib_path }}
