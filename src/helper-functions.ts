@@ -23,6 +23,22 @@ export const isError = (
 };
 
 export const getProjectVersion = (sourceDir: string): string => {
+    // Prefer to get version from `VERSION` file
+    const versionPath = path.join(sourceDir, "VERSION");
+    if (fs.existsSync(versionPath)) {
+        try {
+            const version = fs.readFileSync(versionPath, "utf-8").trim();
+            return version;
+        } catch (error) {
+            if (error instanceof Error)
+                isError(
+                    true,
+                    `Error reading ${versionPath}. Using VERSION is the preferred method.`
+                );
+        }
+    }
+
+    // Fallback to parsing CMakeLists.txt
     const cmakeListsPath = path.join(sourceDir, "CMakeLists.txt");
     try {
         const data = fs.readFileSync(cmakeListsPath, "utf-8");
