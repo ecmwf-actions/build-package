@@ -212,7 +212,9 @@ const buildPackage = async (
             );
             core.info("==> Checking if lcov is installed...");
             const lcovInstalled =
-                (await exec.exec("dpkg-query", ["-W", "lcov"])) == 0;
+                (await exec.exec("dpkg-query", ["-W", "lcov"], {
+                    ignoreReturnCode: true,
+                })) == 0;
             if (!lcovInstalled) {
                 core.info("==> lcov not found, installing...");
                 let exitCode = await exec.exec("sudo", [
