@@ -552,12 +552,15 @@ describe("buildPackage", () => {
 
         (exec.exec as jest.Mock).mockImplementation((command, args) => {
             if (
-                command === "sudo" &&
-                args[0] === "apt-get" &&
-                args[1] === "-y" &&
-                args[2] === "-q" &&
-                args[3] === "install" &&
-                args[4] === "lcov"
+                (command === "sudo" &&
+                    args[0] === "apt-get" &&
+                    args[1] === "-y" &&
+                    args[2] === "-q" &&
+                    args[3] === "install" &&
+                    args[4] === "lcov") ||
+                (command === "dpkg-query" &&
+                    args[0] === "-W" &&
+                    args[1] === "lcov")
             ) {
                 return Promise.resolve(1);
             }

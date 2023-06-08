@@ -210,26 +210,33 @@ const buildPackage = async (
             core.info(
                 "==> Code coverage collection enabled, installing lcov..."
             );
+            core.info("==> Checking if lcov is installed...");
+            const lcovInstalled =
+                (await exec.exec("dpkg-query", ["-W", "lcov"])) == 0;
+            if (!lcovInstalled) {
+                core.info("==> lcov not found, installing...");
+                let exitCode = await exec.exec("sudo", [
+                    "apt-get",
+                    "-y",
+                    "-q",
+                    "update",
+                ]);
 
-            let exitCode = await exec.exec("sudo", [
-                "apt-get",
-                "-y",
-                "-q",
-                "update",
-            ]);
+                if (isError(exitCode, "Error updating apt repositories"))
+                    return false;
 
-            if (isError(exitCode, "Error updating apt repositories"))
-                return false;
+                exitCode = await exec.exec("sudo", [
+                    "apt-get",
+                    "-y",
+                    "-q",
+                    "install",
+                    "lcov",
+                ]);
 
-            exitCode = await exec.exec("sudo", [
-                "apt-get",
-                "-y",
-                "-q",
-                "install",
-                "lcov",
-            ]);
-
-            if (isError(exitCode, "Error installing lcov")) return false;
+                if (isError(exitCode, "Error installing lcov")) return false;
+            } else {
+                core.info("==> lcov is already installed");
+            }
 
             const instrumentationOptions = "--coverage";
 
