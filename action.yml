@@ -106,6 +106,10 @@ inputs:
     description: Current Fortran compiler alias.
     required: false
     default: ${{ matrix.compiler_fc }}
+  toolchain_file:
+    description: Path to toolchan file.
+    required: false
+    default: ${{ matrix.toolchain_file }}
   github_token:
     description: Github access token, with `repo` and `actions:read` scopes.
     required: true
