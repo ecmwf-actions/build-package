@@ -221,6 +221,7 @@ describe("main", () => {
             testEnv,
             inputs.parallelism_factor,
             undefined,
+            undefined,
             undefined
         );
     });
@@ -279,7 +280,10 @@ describe("main", () => {
             inputs.os,
             inputs.compiler,
             testEnv,
-            inputs.parallelism_factor
+            inputs.parallelism_factor,
+            undefined,
+            undefined,
+            undefined
         );
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[1],
@@ -293,7 +297,10 @@ describe("main", () => {
             inputs.os,
             inputs.compiler,
             testEnv,
-            inputs.parallelism_factor
+            inputs.parallelism_factor,
+            undefined,
+            undefined,
+            undefined
         );
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[2],
@@ -307,7 +314,10 @@ describe("main", () => {
             inputs.os,
             inputs.compiler,
             testEnv,
-            inputs.parallelism_factor
+            inputs.parallelism_factor,
+            undefined,
+            undefined,
+            undefined
         );
     });
 

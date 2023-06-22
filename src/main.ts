@@ -66,6 +66,9 @@ const main = async () => {
         const compilerCc = core.getInput("compiler_cc", { required: false });
         const compilerCxx = core.getInput("compiler_cxx", { required: false });
         const compilerFc = core.getInput("compiler_fc", { required: false });
+        const toolchain_file = core.getInput("toolchain_file", {
+            required: false,
+        });
         const githubToken = core.getInput("github_token", { required: true });
         const installDir = core.getInput("install_dir", { required: true });
         const downloadDir = core.getInput("download_dir", { required: true });
@@ -188,7 +191,10 @@ const main = async () => {
                 os,
                 compiler,
                 env,
-                parallelismFactor
+                parallelismFactor,
+                undefined,
+                undefined,
+                toolchain_file
             );
 
             if (!isBuilt) return Promise.reject("Error building dependency");
@@ -254,7 +260,8 @@ const main = async () => {
                     env,
                     parallelismFactor,
                     cpackGenerator,
-                    cpackOptions
+                    cpackOptions,
+                    toolchain_file
                 );
 
                 if (!isBuilt) return Promise.reject("Error building package");

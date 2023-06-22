@@ -135,7 +135,8 @@ const buildPackage = async (
     env: EnvironmentVariables,
     parallelismFactor: string,
     cpackGenerator?: string,
-    cpackOptions?: string
+    cpackOptions?: string,
+    toolchainFile?: string
 ): Promise<boolean> => {
     core.startGroup(`Build ${repository}`);
 
@@ -164,6 +165,11 @@ const buildPackage = async (
 
         const srcDir = path.resolve(sourceDir);
         core.info(`==> srcDir: ${srcDir}`);
+
+        if (toolchainFile && fs.existsSync(toolchainFile)) {
+            configureOptions.push(`-DCMAKE_TOOLCHAIN_FILE=${toolchainFile}`);
+            core.info(`==> using toolchain file: ${toolchainFile}`);
+        }
 
         const cmakeOptionsFile = path.join(srcDir, ".github", ".cmake-options");
         const deprecatedCmakeOptionsFile = path.join(

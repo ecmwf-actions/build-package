@@ -42,6 +42,7 @@ import main from "./main";
  *   @param {string} compiler_cc Current C compiler alias.
  *   @param {string} compiler_cxx Current C++ compiler alias.
  *   @param {string} compiler_fc Current Fortran compiler alias.
+ *   @param {string} toolchain_file Path to toolchain file.
  *   @param {string} github_token Github access token, with `repo` and `actions:read` scopes.
  *   @param {string} install_dir Directory where the dependencies and current package will be installed. Each
  *     dependency will be installed in its own subdirectory.
