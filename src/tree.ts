@@ -6,38 +6,21 @@ import * as core from "@actions/core";
 import process from "process";
 
 export const loadTree = (): DependencyTree => {
-    const fileName = "dependency-tree.yml";
-
-    if (
-        !process.env.RUNNER_WORKSPACE ||
-        !process.env.GITHUB_ACTION_REPOSITORY ||
-        !process.env.GITHUB_ACTION_REF
-    ) {
+    core.startGroup("Load dependency tree");
+    if (!process.env.DEP_TREE) {
         return {};
     }
-
-    const filePath = path.join(
-        process.env.RUNNER_WORKSPACE,
-        "..",
-        "_actions",
-        process.env.GITHUB_ACTION_REPOSITORY,
-        process.env.GITHUB_ACTION_REF,
-        fileName
-    );
-
-    core.info(`Dependency tree path: ${filePath}`);
 
     let treeData: DependencyTree;
     try {
-        treeData = yaml.load(
-            fs.readFileSync(filePath, "utf8")
-        ) as DependencyTree;
+        treeData = yaml.load(process.env.DEP_TREE) as DependencyTree;
     } catch (error) {
         if (error instanceof Error)
-            isError(true, `Error loading data from ${fileName}`);
+            isError(true, `Error loading dependency tree from $DEP_TREE`);
         return {};
     }
     core.info(`Dependency tree: ${JSON.stringify(treeData, null, 4)}`);
+    core.endGroup();
     return treeData;
 };
 
