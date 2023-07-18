@@ -82,7 +82,7 @@ const main = async () => {
             required: false,
         });
 
-        const supportedGenerators = ["DEB"];
+        const supportedGenerators = ["DEB", "RPM"];
         if (
             cpackGenerator &&
             !supportedGenerators.includes(cpackGenerator.toUpperCase())

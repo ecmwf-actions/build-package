@@ -130,7 +130,7 @@ inputs:
     default: "2"
   cpack_generator:
     description: >
-      Select which package type to create, options: `deb`. If selected, the currently checked out repository will be packaged.
+      Select which package type to create, options: `deb, rpm`. If selected, the currently checked out repository will be packaged.
     required: false
   cpack_options:
     description: List of options for cpack, use the same form as for `cmake_options`.
