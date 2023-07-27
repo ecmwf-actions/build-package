@@ -429,14 +429,18 @@ const buildPackage = async (
                 return false;
             }
 
-            const packageFileName = `${repo}-${packageVersion}-Linux-x86_64.${cpackGenerator.toLowerCase()}`;
-            env.PACKAGE_PATH = path.join(buildDir, packageFileName);
-            if (
-                isError(
-                    !fs.existsSync(env.PACKAGE_PATH),
-                    "Generated binary not found"
-                )
-            ) {
+            const packageFileNames = fs
+                .readdirSync(buildDir)
+                .filter(
+                    (file) =>
+                        path.extname(file) ===
+                        `.${cpackGenerator.toLowerCase()}`
+                );
+
+            if (packageFileNames.length != 1) {
+                env.PACKAGE_PATH = path.join(buildDir, packageFileNames[0]);
+            } else {
+                isError(true, "Generated binary not found");
                 return false;
             }
         }
