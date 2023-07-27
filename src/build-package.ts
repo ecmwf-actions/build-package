@@ -437,7 +437,7 @@ const buildPackage = async (
                         `.${cpackGenerator.toLowerCase()}`
                 );
 
-            if (packageFileNames.length != 1) {
+            if (packageFileNames.length == 1) {
                 env.PACKAGE_PATH = path.join(buildDir, packageFileNames[0]);
             } else {
                 isError(true, "Generated binary not found");
