@@ -10,7 +10,7 @@
     "lint": "eslint --ext .ts,.yml --fix action.yml .github src tests",
     "lint-no-fix": "npm run lint -- --no-fix",
     "version": "auto-changelog && git add CHANGELOG.md",
-    "git-post-merge": "npm install",
+    "git-post-merge": "npm ci",
     "format": "prettier --write .",
     "format-check": "prettier --check ."
   },
