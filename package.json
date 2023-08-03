@@ -40,7 +40,7 @@
     "filesize": "^10.0.7",
     "js-yaml": "^4.1.0",
     "lodash.isequal": "^4.5.0",
-    "tar": "^6.1.14",
+    "tar": "^6.1.15",
     "yargs-parser": "^21.1.1"
   },
   "devDependencies": {
