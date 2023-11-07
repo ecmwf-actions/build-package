@@ -126,6 +126,7 @@ const buildPackage = async (
     sourceDir: string,
     installDir: string,
     cmake: boolean,
+    ecbundle: boolean,
     cmakeOptions: string | null,
     ctestOptions: string | null,
     test: boolean,
@@ -134,6 +135,7 @@ const buildPackage = async (
     compiler: string,
     env: EnvironmentVariables,
     parallelismFactor: string,
+    token: string,
     cpackGenerator?: string,
     cpackOptions?: string,
     toolchainFile?: string
@@ -145,6 +147,25 @@ const buildPackage = async (
     try {
         let configurePath;
         let configureOptions = [];
+
+        if (repo === "ecbundle") {
+            const ecbundlePath = path.join(path.resolve(sourceDir), "bin");
+            await extendPaths(env, ecbundlePath, repo);
+            core.endGroup();
+            return true;
+        }
+
+        if (ecbundle) {
+            return await ecbundleBuild(
+                test,
+                token,
+                parallelismFactor,
+                env,
+                cmakeOptions,
+                ctestOptions,
+                installDir
+            );
+        }
 
         if (cmake) {
             configurePath = "cmake";
@@ -451,6 +472,74 @@ const buildPackage = async (
 
     core.endGroup();
 
+    return true;
+};
+
+const ecbundleBuild = async (
+    test: boolean,
+    token: string,
+    parallelismFactor: string,
+    env: EnvironmentVariables,
+    cmakeOptions: string | null,
+    ctestOptions: string | null,
+    installDir: string
+): Promise<boolean> => {
+    const options = {
+        env: {
+            CMAKE_BUILD_PARALLEL_LEVEL: parallelismFactor,
+            ...(test ? { CTEST_OUTPUT_ON_FAILURE: "1" } : {}), // show output of failing tests only
+            ...(test ? { CTEST_PARALLEL_LEVEL: parallelismFactor } : {}),
+            ...process.env, // preserve existing environment
+            ...env, // compiler env must win
+        },
+    };
+
+    // ecbundle create
+    let exitCode = await exec.exec(
+        "env",
+        ["ecbundle", "create", `--github-token=${token}`, "--shallow"],
+        options
+    );
+    if (isError(exitCode, "Error creating bundle")) return false;
+
+    // prepare cmake options
+    let configureOptions = [];
+    if (cmakeOptions) {
+        configureOptions.push(...parseOptions(cmakeOptions));
+    }
+    configureOptions = expandShellVariables({ configureOptions }, options.env);
+
+    // ecbundle build and install
+    exitCode = await exec.exec(
+        "env",
+        [
+            "ecbundle",
+            "build",
+            `--install`,
+            `--threads=${parallelismFactor}`,
+            `--prefix=${installDir}`,
+            `--cmake="${configureOptions.join(" ")}"`,
+        ],
+        options
+    );
+    if (isError(exitCode, "Error building bundle")) return false;
+
+    // ctest
+    if (test) {
+        let testOptions = [];
+
+        if (ctestOptions) {
+            testOptions.push(...parseOptions(ctestOptions));
+            core.info(`==> testOptions: ${testOptions}`);
+        }
+        testOptions = expandShellVariables({ testOptions }, options.env);
+
+        exitCode = await exec.exec("env", ["ctest", ...testOptions], options);
+
+        if (isError(exitCode, "Error testing bundle")) return false;
+    }
+
+    core.endGroup();
     return true;
 };
 

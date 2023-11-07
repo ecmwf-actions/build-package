@@ -27,6 +27,7 @@ const main = async () => {
         const repositoryInput = core.getInput("repository", { required: true });
         const shaInput = core.getInput("sha", { required: true });
         const cmake = core.getBooleanInput("cmake", { required: true });
+        const ecbundle = core.getBooleanInput("ecbundle", { required: true });
         const cmakeOptions = core.getInput("cmake_options", {
             required: false,
         });
@@ -184,6 +185,7 @@ const main = async () => {
                 path.join(downloadDir, repo),
                 path.join(installDir, repo),
                 cmake,
+                ecbundle,
                 dependencyCmakeOptions,
                 null,
                 false,
@@ -192,6 +194,7 @@ const main = async () => {
                 compiler,
                 env,
                 parallelismFactor,
+                githubToken,
                 undefined,
                 undefined,
                 toolchain_file
@@ -251,6 +254,7 @@ const main = async () => {
                     workspace,
                     path.join(installDir, repo),
                     cmake,
+                    ecbundle,
                     cmakeOptions,
                     ctestOptions,
                     selfTest,
@@ -259,6 +263,7 @@ const main = async () => {
                     compiler,
                     env,
                     parallelismFactor,
+                    githubToken,
                     cpackGenerator,
                     cpackOptions,
                     toolchain_file

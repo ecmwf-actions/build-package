@@ -21,6 +21,7 @@ const buildDir = `${sourceDir}/build`;
 const coverageFile = `${buildDir}/coverage.info`;
 const coverageDir = `${buildDir}/coverage`;
 const cmake = false;
+const ecbundle = false;
 const cmakeOptions = null;
 const ctestOptions = null;
 const test = true;
@@ -31,6 +32,7 @@ const compiler = "gnu-10";
 const errorObject = new Error("spawn /bin/sh ENOENT");
 const emptyObject = {};
 const parallelismFactor = "2";
+const githubToken = "secrettoken";
 
 // Base environment object, we will take care not to modify it.
 const env: EnvironmentVariables = {
@@ -55,6 +57,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -62,7 +65,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -82,6 +86,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -89,7 +94,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -109,6 +115,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             !cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -116,7 +123,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -140,6 +148,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -147,7 +156,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv1,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -167,6 +177,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -174,7 +185,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv2,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -210,6 +222,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             !cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -217,7 +230,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv1,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -237,6 +251,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -244,7 +259,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv2,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -277,6 +293,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             !cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -284,7 +301,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv1,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -303,6 +321,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -310,7 +329,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv2,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -333,6 +353,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -340,7 +361,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -388,6 +410,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -395,7 +418,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -448,6 +472,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -455,7 +480,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -521,6 +547,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -528,7 +555,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv1,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -573,6 +601,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -580,7 +609,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -600,6 +630,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -607,7 +638,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -633,6 +665,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -640,7 +673,8 @@ describe("buildPackage", () => {
             macOs,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -663,6 +697,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -670,7 +705,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -710,6 +746,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -717,7 +754,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -809,6 +847,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -816,7 +855,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -848,6 +888,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -855,7 +896,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -945,6 +987,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -952,7 +995,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -1033,6 +1077,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             !test,
@@ -1040,7 +1085,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -1123,6 +1169,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             !test,
@@ -1130,7 +1177,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1161,6 +1209,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             !test,
@@ -1168,7 +1217,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1194,6 +1244,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1201,7 +1252,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1235,6 +1287,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1242,7 +1295,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1278,6 +1332,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1285,7 +1340,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1316,6 +1372,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1323,7 +1380,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1355,6 +1413,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1362,7 +1421,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1393,6 +1453,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1400,7 +1461,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(false);
@@ -1432,6 +1494,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1439,7 +1502,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -1476,6 +1540,7 @@ describe("buildPackage", () => {
             sourceDir,
             installDir,
             cmake,
+            ecbundle,
             cmakeOptions,
             ctestOptions,
             test,
@@ -1483,7 +1548,8 @@ describe("buildPackage", () => {
             os,
             compiler,
             testEnv,
-            parallelismFactor
+            parallelismFactor,
+            githubToken
         );
 
         expect(isBuilt).toBe(true);
@@ -1512,6 +1578,7 @@ describe("buildPackage", () => {
                 sourceDir,
                 installDir,
                 cmake,
+                ecbundle,
                 cmakeOptions,
                 ctestOptions,
                 test,
@@ -1519,7 +1586,8 @@ describe("buildPackage", () => {
                 os,
                 compiler,
                 testEnv,
-                parallelismFactor
+                parallelismFactor,
+                githubToken
             );
 
             expect(isBuilt).toBe(false);

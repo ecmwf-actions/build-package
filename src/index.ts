@@ -11,6 +11,7 @@ import main from "./main";
  *     standard Github `owner/name@ref` format. `@ref` is optional, takes precedence over `sha` input.
  *   @param {string} sha The currently checked out source repository commit SHA.
  *   @param {boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
+ *   @param {boolean} ecbundle Whether to use ecbundle for building bundles.
  *   @param {string} cmake_options The list of ecbuild/CMake options to be passed during the current
  *     repository build configuration phase. Use the form of `-DCMAKE_VAR=1 -DCMAKE_ANOTHER_VAR=0` to define multiple
  *     options. If left empty, the repository will be configured with default options only.
