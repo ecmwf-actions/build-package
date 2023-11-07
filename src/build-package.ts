@@ -163,7 +163,8 @@ const buildPackage = async (
                 env,
                 cmakeOptions,
                 ctestOptions,
-                installDir
+                installDir,
+                path.resolve(sourceDir)
             );
         }
 
@@ -478,9 +479,11 @@ const ecbundleBuild = async (
     env: EnvironmentVariables,
     cmakeOptions: string | null,
     ctestOptions: string | null,
-    installDir: string
+    installDir: string,
+    sourceDir: string
 ): Promise<boolean> => {
     const options = {
+        cwd: sourceDir,
         env: {
             CMAKE_BUILD_PARALLEL_LEVEL: parallelismFactor,
             ...(test ? { CTEST_OUTPUT_ON_FAILURE: "1" } : {}), // show output of failing tests only
@@ -537,7 +540,7 @@ const ecbundleBuild = async (
             core.info(`==> testOptions: ${testOptions}`);
         }
         testOptions = expandShellVariables({ testOptions }, options.env);
-
+        options.cwd = path.join(sourceDir, "build");
         exitCode = await exec.exec("env", ["ctest", ...testOptions], options);
 
         if (isError(exitCode, "Error testing bundle")) return false;
