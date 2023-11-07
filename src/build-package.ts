@@ -518,7 +518,9 @@ const ecbundleBuild = async (
             `--install`,
             `--threads=${parallelismFactor}`,
             `--install-dir=${installDir}`,
-            `--cmake="${configureOptions.join(" ")}"`,
+            ...(configureOptions.length
+                ? [`--cmake="${configureOptions.join(" ")}"`]
+                : []),
         ],
         options
     );
