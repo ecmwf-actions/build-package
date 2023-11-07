@@ -497,7 +497,13 @@ const ecbundleBuild = async (
     // ecbundle create
     let exitCode = await exec.exec(
         "env",
-        ["ecbundle", "create", `--github-token=${token}`, "--shallow"],
+        [
+            "ecbundle",
+            "create",
+            `--github-token=${token}`,
+            "--shallow",
+            `--threads=${parallelismFactor}`,
+        ],
         options
     );
     if (isError(exitCode, "Error creating bundle")) return false;
