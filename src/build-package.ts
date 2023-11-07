@@ -149,7 +149,7 @@ const buildPackage = async (
         let configureOptions = [];
 
         if (repo === "ecbundle") {
-            const ecbundlePath = path.join(path.resolve(sourceDir), "bin");
+            const ecbundlePath = path.join(path.resolve(sourceDir));
             await extendPaths(env, ecbundlePath, repo);
             core.endGroup();
             return true;

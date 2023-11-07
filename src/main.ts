@@ -130,7 +130,7 @@ const main = async () => {
                 dependencyBranchSpecific || dependencyBranchDefault;
 
             // If the build is not forced, first try to download an artifact.
-            if (!forceBuild) {
+            if (!forceBuild && repo !== "ecbundle") {
                 const isArtifactDownloaded = await downloadArtifact(
                     dependencyRepository,
                     dependencyBranch,
@@ -150,7 +150,7 @@ const main = async () => {
 
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
-            if (!recreateCache) {
+            if (!recreateCache && repo !== "ecbundle") {
                 const cacheHit = await restoreCache(
                     dependencyRepository,
                     dependencyBranch,
@@ -202,7 +202,7 @@ const main = async () => {
 
             if (!isBuilt) return Promise.reject("Error building dependency");
 
-            if (saveCacheInput) {
+            if (saveCacheInput && repo !== "ecbundle") {
                 // Save built package to the cache.
                 await saveCache(
                     dependencyRepository,
