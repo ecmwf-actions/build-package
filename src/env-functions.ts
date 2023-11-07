@@ -83,13 +83,13 @@ export const setupEnv = async (
         output = "";
         exitCode = await exec.exec(
             "env",
-            ["brew", "--prefix", "openssl@1.1"],
+            ["brew", "--prefix", "openssl"],
             options
         );
 
         if (isError(exitCode, "Homebrew command failed")) return env;
 
-        if (isError(!output, "Homebrew OpenSSL 1.1 prefix not found"))
+        if (isError(!output, "Homebrew OpenSSL prefix not found"))
             return env;
 
         const openSslDir = output.replace(/\n$/, "");
