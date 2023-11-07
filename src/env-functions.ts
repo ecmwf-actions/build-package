@@ -89,8 +89,7 @@ export const setupEnv = async (
 
         if (isError(exitCode, "Homebrew command failed")) return env;
 
-        if (isError(!output, "Homebrew OpenSSL prefix not found"))
-            return env;
+        if (isError(!output, "Homebrew OpenSSL prefix not found")) return env;
 
         const openSslDir = output.replace(/\n$/, "");
 
