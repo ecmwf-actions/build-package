@@ -78,7 +78,7 @@ export const setupEnv = async (
     core.info(`==> CMake version: ${env.CMAKE_VERSION}`);
 
     // On macOS, linking against system OpenSSL library is not permitted.
-    //   Instead, we link against Homebrew version. Here we prepare necessary environment variables.
+    //   Instead, we link against the Homebrew version. Here we prepare necessary environment variables.
     if (/^macos-/.test(os)) {
         output = "";
         exitCode = await exec.exec(
