@@ -164,7 +164,9 @@ const buildPackage = async (
                 cmakeOptions,
                 ctestOptions,
                 installDir,
-                path.resolve(sourceDir)
+                path.resolve(sourceDir),
+                cpackGenerator,
+                cpackOptions
             );
         }
 
@@ -423,44 +425,16 @@ const buildPackage = async (
         }
 
         if (cpackGenerator) {
-            const cpackOptionsParsed = [];
-            if (cpackOptions) {
-                cpackOptionsParsed.push(...parseOptions(cpackOptions));
-                core.info(`==> cpackOptionsParsed: ${cpackOptionsParsed}`);
-            }
-
-            exitCode = await exec.exec(
-                "env",
-                [
-                    "cpack",
-                    "-G",
-                    cpackGenerator.toUpperCase(),
-                    ...cpackOptionsParsed,
-                ],
-                options
+            const cpackSuccess = await cpack(
+                options,
+                sourceDir,
+                buildDir,
+                env,
+                cpackGenerator,
+                cpackOptions
             );
-            if (isError(exitCode, "Error while generating package"))
+            if (isError(!cpackSuccess, "Error generating package."))
                 return false;
-
-            const packageVersion = getProjectVersion(sourceDir);
-            if (isError(!packageVersion, "Error reading version number")) {
-                return false;
-            }
-
-            const packageFileNames = fs
-                .readdirSync(buildDir)
-                .filter(
-                    (file) =>
-                        path.extname(file) ===
-                        `.${cpackGenerator.toLowerCase()}`
-                );
-
-            if (packageFileNames.length == 1) {
-                env.PACKAGE_PATH = path.join(buildDir, packageFileNames[0]);
-            } else {
-                isError(true, "Generated binary not found");
-                return false;
-            }
         }
     } catch (error) {
         if (error instanceof Error) isError(true, error.message);
@@ -480,7 +454,9 @@ const ecbundleBuild = async (
     cmakeOptions: string | null,
     ctestOptions: string | null,
     installDir: string,
-    sourceDir: string
+    sourceDir: string,
+    cpackGenerator?: string,
+    cpackOptions?: string
 ): Promise<boolean> => {
     const options = {
         cwd: sourceDir,
@@ -546,7 +522,60 @@ const ecbundleBuild = async (
         if (isError(exitCode, "Error testing bundle")) return false;
     }
 
+    if (cpackGenerator) {
+        const cpackSuccess = await cpack(
+            options,
+            sourceDir,
+            path.join(sourceDir, "build"),
+            env,
+            cpackGenerator,
+            cpackOptions
+        );
+        if (isError(!cpackSuccess, "Error generating package.")) return false;
+    }
+
     core.endGroup();
+    return true;
+};
+
+const cpack = async (
+    options: exec.ExecOptions,
+    sourceDir: string,
+    buildDir: string,
+    env: EnvironmentVariables,
+    cpackGenerator: string,
+    cpackOptions?: string
+) => {
+    const cpackOptionsParsed = [];
+    if (cpackOptions) {
+        cpackOptionsParsed.push(...parseOptions(cpackOptions));
+        core.info(`==> cpackOptionsParsed: ${cpackOptionsParsed}`);
+    }
+
+    const exitCode = await exec.exec(
+        "env",
+        ["cpack", "-G", cpackGenerator.toUpperCase(), ...cpackOptionsParsed],
+        options
+    );
+    if (isError(exitCode, "Error while generating package")) return false;
+
+    const packageVersion = getProjectVersion(sourceDir);
+    if (isError(!packageVersion, "Error reading version number")) {
+        return false;
+    }
+
+    const packageFileNames = fs
+        .readdirSync(buildDir)
+        .filter(
+            (file) => path.extname(file) === `.${cpackGenerator.toLowerCase()}`
+        );
+
+    if (packageFileNames.length == 1) {
+        env.PACKAGE_PATH = path.join(buildDir, packageFileNames[0]);
+    } else {
+        isError(true, "Generated binary not found");
+        return false;
+    }
     return true;
 };
 
