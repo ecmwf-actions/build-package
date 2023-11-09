@@ -551,7 +551,7 @@ const cpack = async (
         cpackOptionsParsed.push(...parseOptions(cpackOptions));
         core.info(`==> cpackOptionsParsed: ${cpackOptionsParsed}`);
     }
-
+    options.cwd = buildDir;
     const exitCode = await exec.exec(
         "env",
         ["cpack", "-G", cpackGenerator.toUpperCase(), ...cpackOptionsParsed],
