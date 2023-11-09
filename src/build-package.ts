@@ -126,6 +126,7 @@ const buildPackage = async (
     sourceDir: string,
     installDir: string,
     cmake: boolean,
+    ecbundle: boolean,
     cmakeOptions: string | null,
     ctestOptions: string | null,
     test: boolean,
@@ -134,6 +135,7 @@ const buildPackage = async (
     compiler: string,
     env: EnvironmentVariables,
     parallelismFactor: string,
+    token: string,
     cpackGenerator?: string,
     cpackOptions?: string,
     toolchainFile?: string
@@ -145,6 +147,28 @@ const buildPackage = async (
     try {
         let configurePath;
         let configureOptions = [];
+
+        if (repo === "ecbundle") {
+            const ecbundlePath = path.join(path.resolve(sourceDir));
+            await extendPaths(env, ecbundlePath, repo);
+            core.endGroup();
+            return true;
+        }
+
+        if (ecbundle) {
+            return await ecbundleBuild(
+                test,
+                token,
+                parallelismFactor,
+                env,
+                cmakeOptions,
+                ctestOptions,
+                installDir,
+                path.resolve(sourceDir),
+                cpackGenerator,
+                cpackOptions
+            );
+        }
 
         if (cmake) {
             configurePath = "cmake";
@@ -309,12 +333,14 @@ const buildPackage = async (
             [configurePath, ...configureOptions, srcDir],
             options
         );
-
         if (isError(exitCode, "Error configuring package")) return false;
 
         exitCode = await exec.exec("env", ["cmake", "--build", "."], options);
-
         if (isError(exitCode, "Error building package")) return false;
+
+        exitCode = await exec.exec("env", ["cmake", "--install", "."], options);
+        if (isError(exitCode, "Error installing package")) return false;
+        await extendPaths(env, installDir, repo);
 
         if (test) {
             exitCode = await exec.exec(
@@ -398,51 +424,17 @@ const buildPackage = async (
             }
         }
 
-        exitCode = await exec.exec("env", ["cmake", "--install", "."], options);
-
-        if (isError(exitCode, "Error installing package")) return false;
-
-        await extendPaths(env, installDir, repo);
-
         if (cpackGenerator) {
-            const cpackOptionsParsed = [];
-            if (cpackOptions) {
-                cpackOptionsParsed.push(...parseOptions(cpackOptions));
-                core.info(`==> cpackOptionsParsed: ${cpackOptionsParsed}`);
-            }
-
-            exitCode = await exec.exec(
-                "env",
-                [
-                    "cpack",
-                    "-G",
-                    cpackGenerator.toUpperCase(),
-                    ...cpackOptionsParsed,
-                ],
-                options
+            const cpackSuccess = await cpack(
+                options,
+                sourceDir,
+                buildDir,
+                env,
+                cpackGenerator,
+                cpackOptions
             );
-            if (isError(exitCode, "Error while generating package"))
+            if (isError(!cpackSuccess, "Error generating package."))
                 return false;
-
-            const packageVersion = getProjectVersion(sourceDir);
-            if (isError(!packageVersion, "Error reading version number")) {
-                return false;
-            }
-
-            const packageFileNames = fs
-                .readdirSync(buildDir)
-                .filter(
-                    (file) =>
-                        path.extname(file) ===
-                        `.${cpackGenerator.toLowerCase()}`
-                );
-
-            if (packageFileNames.length == 1) {
-                env.PACKAGE_PATH = path.join(buildDir, packageFileNames[0]);
-            } else {
-                isError(true, "Generated binary not found");
-                return false;
-            }
         }
     } catch (error) {
         if (error instanceof Error) isError(true, error.message);
@@ -451,6 +443,139 @@ const buildPackage = async (
 
     core.endGroup();
 
+    return true;
+};
+
+const ecbundleBuild = async (
+    test: boolean,
+    token: string,
+    parallelismFactor: string,
+    env: EnvironmentVariables,
+    cmakeOptions: string | null,
+    ctestOptions: string | null,
+    installDir: string,
+    sourceDir: string,
+    cpackGenerator?: string,
+    cpackOptions?: string
+): Promise<boolean> => {
+    const options = {
+        cwd: sourceDir,
+        env: {
+            CMAKE_BUILD_PARALLEL_LEVEL: parallelismFactor,
+            ...(test ? { CTEST_OUTPUT_ON_FAILURE: "1" } : {}), // show output of failing tests only
+            ...(test ? { CTEST_PARALLEL_LEVEL: parallelismFactor } : {}),
+            ...process.env, // preserve existing environment
+            ...env, // compiler env must win
+        },
+    };
+
+    // ecbundle create
+    let exitCode = await exec.exec(
+        "env",
+        [
+            "ecbundle",
+            "create",
+            `--github-token=${token}`,
+            "--shallow",
+            `--threads=${parallelismFactor}`,
+        ],
+        options
+    );
+    if (isError(exitCode, "Error creating bundle")) return false;
+
+    // prepare cmake options
+    let configureOptions = [];
+    if (cmakeOptions) {
+        configureOptions.push(...parseOptions(cmakeOptions));
+    }
+    configureOptions = expandShellVariables({ configureOptions }, options.env);
+
+    // ecbundle build and install
+    exitCode = await exec.exec(
+        "env",
+        [
+            "ecbundle",
+            "build",
+            `--install`,
+            `--threads=${parallelismFactor}`,
+            `--install-dir=${installDir}`,
+            ...(configureOptions.length
+                ? [`--cmake="${configureOptions.join(" ")}"`]
+                : []),
+        ],
+        options
+    );
+    if (isError(exitCode, "Error building bundle")) return false;
+
+    // ctest
+    if (test) {
+        let testOptions = [];
+
+        if (ctestOptions) {
+            testOptions.push(...parseOptions(ctestOptions));
+            core.info(`==> testOptions: ${testOptions}`);
+        }
+        testOptions = expandShellVariables({ testOptions }, options.env);
+        options.cwd = path.join(sourceDir, "build");
+        exitCode = await exec.exec("env", ["ctest", ...testOptions], options);
+
+        if (isError(exitCode, "Error testing bundle")) return false;
+    }
+
+    if (cpackGenerator) {
+        const cpackSuccess = await cpack(
+            options,
+            sourceDir,
+            path.join(sourceDir, "build"),
+            env,
+            cpackGenerator,
+            cpackOptions
+        );
+        if (isError(!cpackSuccess, "Error generating package.")) return false;
+    }
+
+    core.endGroup();
+    return true;
+};
+
+const cpack = async (
+    options: exec.ExecOptions,
+    sourceDir: string,
+    buildDir: string,
+    env: EnvironmentVariables,
+    cpackGenerator: string,
+    cpackOptions?: string
+) => {
+    const cpackOptionsParsed = [];
+    if (cpackOptions) {
+        cpackOptionsParsed.push(...parseOptions(cpackOptions));
+        core.info(`==> cpackOptionsParsed: ${cpackOptionsParsed}`);
+    }
+    options.cwd = buildDir;
+    const exitCode = await exec.exec(
+        "env",
+        ["cpack", "-G", cpackGenerator.toUpperCase(), ...cpackOptionsParsed],
+        options
+    );
+    if (isError(exitCode, "Error while generating package")) return false;
+
+    const packageVersion = getProjectVersion(sourceDir);
+    if (isError(!packageVersion, "Error reading version number")) {
+        return false;
+    }
+
+    const packageFileNames = fs
+        .readdirSync(buildDir)
+        .filter(
+            (file) => path.extname(file) === `.${cpackGenerator.toLowerCase()}`
+        );
+
+    if (packageFileNames.length == 1) {
+        env.PACKAGE_PATH = path.join(buildDir, packageFileNames[0]);
+    } else {
+        isError(true, "Generated binary not found");
+        return false;
+    }
     return true;
 };
 

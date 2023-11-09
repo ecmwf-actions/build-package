@@ -21,6 +21,10 @@ inputs:
     description: Whether to use CMake for build configuration, instead of ecbuild.
     required: true
     default: "false"
+  ecbundle:
+    description: Whether to use ecbundle for building bundles.
+    required: true
+    default: "false"
   cmake_options:
     description:
       "The list of ecbuild/CMake options to be passed during the current repository build configuration

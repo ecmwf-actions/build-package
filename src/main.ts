@@ -27,6 +27,7 @@ const main = async () => {
         const repositoryInput = core.getInput("repository", { required: true });
         const shaInput = core.getInput("sha", { required: true });
         const cmake = core.getBooleanInput("cmake", { required: true });
+        const ecbundle = core.getBooleanInput("ecbundle", { required: true });
         const cmakeOptions = core.getInput("cmake_options", {
             required: false,
         });
@@ -129,7 +130,7 @@ const main = async () => {
                 dependencyBranchSpecific || dependencyBranchDefault;
 
             // If the build is not forced, first try to download an artifact.
-            if (!forceBuild) {
+            if (!forceBuild && repo !== "ecbundle") {
                 const isArtifactDownloaded = await downloadArtifact(
                     dependencyRepository,
                     dependencyBranch,
@@ -149,7 +150,7 @@ const main = async () => {
 
             // Check if we already cached the build of this package.
             //   Skip this part if we were told to always recreate cache.
-            if (!recreateCache) {
+            if (!recreateCache && repo !== "ecbundle") {
                 const cacheHit = await restoreCache(
                     dependencyRepository,
                     dependencyBranch,
@@ -184,6 +185,7 @@ const main = async () => {
                 path.join(downloadDir, repo),
                 path.join(installDir, repo),
                 cmake,
+                ecbundle,
                 dependencyCmakeOptions,
                 null,
                 false,
@@ -192,6 +194,7 @@ const main = async () => {
                 compiler,
                 env,
                 parallelismFactor,
+                githubToken,
                 undefined,
                 undefined,
                 toolchain_file
@@ -199,7 +202,7 @@ const main = async () => {
 
             if (!isBuilt) return Promise.reject("Error building dependency");
 
-            if (saveCacheInput) {
+            if (saveCacheInput && repo !== "ecbundle") {
                 // Save built package to the cache.
                 await saveCache(
                     dependencyRepository,
@@ -251,6 +254,7 @@ const main = async () => {
                     workspace,
                     path.join(installDir, repo),
                     cmake,
+                    ecbundle,
                     cmakeOptions,
                     ctestOptions,
                     selfTest,
@@ -259,6 +263,7 @@ const main = async () => {
                     compiler,
                     env,
                     parallelismFactor,
+                    githubToken,
                     cpackGenerator,
                     cpackOptions,
                     toolchain_file
