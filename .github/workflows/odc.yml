@@ -62,10 +62,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Checkout odc Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ecmwf/odc
           ref: develop
