@@ -1,7 +1,5 @@
-import fs from "fs";
 import * as yaml from "js-yaml";
 import { isError } from "./helper-functions";
-import path from "path";
 import * as core from "@actions/core";
 import process from "process";
 
