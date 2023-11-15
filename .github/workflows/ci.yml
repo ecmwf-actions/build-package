@@ -26,3 +26,46 @@ jobs:
       notify_teams: true
     secrets:
       incoming_webhook: ${{ secrets.MS_TEAMS_INCOMING_WEBHOOK }}
+
+  build:
+    # Builds the action if it wasn't built already by the pre-commit hook
+    # and push it in a new commit
+    if: github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]' && !github.event.pull_request.head.repo.fork
+    needs: [ci]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref  }}
+          token: ${{ secrets.REBUILD_PUSH_TOKEN }}
+
+      - name: Git config
+        run: |
+          git config --global user.email "github-actions@example.com"
+          git config --global user.name "github-actions[bot]"
+
+      - uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build index.js
+        run: npm run build
+
+      - name: Check Git status
+        id: git_status
+        run: |
+          GIT_STATUS_OUTPUT=$(git status --porcelain)
+          if [[ -n "$GIT_STATUS_OUTPUT" ]]; then
+            echo "GIT_STATUS_MODIFIED=true" >> $GITHUB_ENV
+          else
+            echo "GIT_STATUS_MODIFIED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Commit & push index.js
+        # Push only if the built index.js has changed.
+        if: env.GIT_STATUS_MODIFIED == 'true'
+        run: |
+          git add dist/index.js
+          git commit --no-verify -m "Build index.js"
+          git push origin ${{ github.head_ref || github.ref  }}
