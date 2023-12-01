@@ -46,7 +46,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.23.3",
     "@babel/preset-typescript": "^7.23.3",
-    "@types/adm-zip": "^0.5.0",
+    "@types/adm-zip": "^0.5.5",
     "@types/jest": "^29.5.8",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.isequal": "^4.5.6",
