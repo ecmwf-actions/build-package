@@ -30,7 +30,7 @@ export const getDependenciesFromTree = (
     if (!dependencies) {
         dependencies = [];
     }
-    if (tree[repo] == null) {
+    if (tree[repo] == null || !("deps" in tree[repo])) {
         return dependencies;
     }
     for (const dep of tree[repo].deps) {
