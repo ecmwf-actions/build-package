@@ -22,6 +22,7 @@ jest.mock("@octokit/core");
 jest.mock("fast-folder-size");
 
 const repository = "owner/repo";
+const packageName = "repo";
 const branch = "branch";
 const githubToken = "123";
 const repo = "repo";
@@ -38,8 +39,8 @@ const cmakeOptions =
 const env = {
     CMAKE_VERSION: "3.20.5",
     DEPENDENCIES: {
-        "owner/repo1": "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
-        "owner/repo2": "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
+        repo1: "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
+        repo2: "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
     },
 };
 
@@ -79,18 +80,15 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
 
-            if (dependencyCmakeOptionsLookup[dependencyRepo]) {
+            if (dependencyCmakeOptionsLookup[dependency]) {
                 const dependencyCmakeOptions = [];
                 dependencyCmakeOptions.push(
-                    ...parseOptions(
-                        dependencyCmakeOptionsLookup[dependencyRepo]
-                    )
+                    ...parseOptions(dependencyCmakeOptionsLookup[dependency])
                 );
                 dependencyCmakeOptions.sort();
-                cacheKeyStr += `::${dependencyRepo}-options=${dependencyCmakeOptions.join()}`;
+                cacheKeyStr += `::${dependency}-options=${dependencyCmakeOptions.join()}`;
             }
         }
 
@@ -116,6 +114,7 @@ describe("getCacheKey", () => {
             const result = await getCacheKey(
                 repository,
                 branch,
+                packageName,
                 githubToken,
                 os,
                 compiler,
@@ -127,7 +126,7 @@ describe("getCacheKey", () => {
             );
 
             expect(result.cacheKey).toBe(
-                `${os}-${compiler}-${repo}-${cacheKeySha}`
+                `${os}-${compiler}-${packageName}-${cacheKeySha}`
             );
             expect(result.headSha).toStrictEqual(sha);
 
@@ -156,8 +155,7 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -172,7 +170,7 @@ describe("getCacheKey", () => {
         );
 
         const result = getCacheKeyHash(
-            repo,
+            packageName,
             cacheSuffix,
             testEnv,
             {},
@@ -194,8 +192,7 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -206,6 +203,7 @@ describe("getCacheKey", () => {
         const { cacheKey } = await getCacheKey(
             repository,
             sha,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -215,7 +213,9 @@ describe("getCacheKey", () => {
             undefined
         );
 
-        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+        );
     });
 
     it("returns cache key if cmakeOptions parameter is empty", async () => {
@@ -229,8 +229,7 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -241,6 +240,7 @@ describe("getCacheKey", () => {
         const { cacheKey } = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -250,7 +250,9 @@ describe("getCacheKey", () => {
             ""
         );
 
-        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+        );
     });
 
     it("returns cache key if dependencyCmakeOptionsLookup is missing", async () => {
@@ -271,8 +273,7 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -289,6 +290,7 @@ describe("getCacheKey", () => {
         const result = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -299,7 +301,7 @@ describe("getCacheKey", () => {
         );
 
         expect(result.cacheKey).toBe(
-            `${os}-${compiler}-${repo}-${cacheKeySha}`
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`
         );
     });
 
@@ -319,13 +321,12 @@ describe("getCacheKey", () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${
             testEnv.CMAKE_VERSION
-        }::options=${buildOptions.join()}::${repo}=${sha}`;
+        }::options=${buildOptions.join()}::${packageName}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -342,6 +343,7 @@ describe("getCacheKey", () => {
         const { cacheKey } = await getCacheKey(
             repository,
             testBranch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -351,7 +353,9 @@ describe("getCacheKey", () => {
             cmakeOptions
         );
 
-        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+        );
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
         expect(core.info).toHaveBeenCalledWith(`==> Ref: tags/${testTag}`);
     });
@@ -378,9 +382,8 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            if (dependency === repository) continue;
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            if (dependency === packageName) continue;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -397,6 +400,7 @@ describe("getCacheKey", () => {
         const { cacheKey } = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -406,7 +410,9 @@ describe("getCacheKey", () => {
             cmakeOptions
         );
 
-        expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
+        expect(cacheKey).toBe(
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+        );
     });
 
     it("returns cache key if dependencies object is undefined", async () => {
@@ -439,6 +445,7 @@ describe("getCacheKey", () => {
         const { cacheKey } = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -481,6 +488,7 @@ describe("getCacheKey", () => {
         const { cacheKey } = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -517,8 +525,7 @@ describe("getCacheKey", () => {
             for (const [dependency, dependencySha] of Object.entries(
                 testEnv.DEPENDENCIES || {}
             ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-                const [, dependencyRepo] = dependency.split("/");
-                cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+                cacheKeyStr += `::${dependency}=${dependencySha}`;
             }
 
             const cacheKeySha = crypto
@@ -537,6 +544,7 @@ describe("getCacheKey", () => {
             const { cacheKey } = await getCacheKey(
                 repository,
                 branch,
+                packageName,
                 githubToken,
                 os,
                 compiler,
@@ -576,8 +584,7 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const cacheKeySha = crypto
@@ -594,6 +601,7 @@ describe("getCacheKey", () => {
         const result = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -617,8 +625,7 @@ describe("getCacheKey", () => {
         for (const [dependency, dependencySha] of Object.entries(
             testEnv.DEPENDENCIES || {}
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-            const [, dependencyRepo] = dependency.split("/");
-            newCacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+            newCacheKeyStr += `::${dependency}=${dependencySha}`;
         }
 
         const newCacheKeySha = crypto
@@ -629,6 +636,7 @@ describe("getCacheKey", () => {
         const newResult = await getCacheKey(
             repository,
             branch,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -664,6 +672,7 @@ describe("restoreCache", () => {
             const cacheHit = await restoreCache(
                 repository,
                 branch,
+                packageName,
                 githubToken,
                 installDir,
                 os,
@@ -701,6 +710,7 @@ describe("restoreCache", () => {
         const cacheHit = await restoreCache(
             repository,
             branch,
+            packageName,
             githubToken,
             installDir,
             os,
@@ -715,7 +725,7 @@ describe("restoreCache", () => {
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(
-            `Error restoring cache for ${repository}: ${error.message}`
+            `Error restoring cache for ${packageName}: ${error.message}`
         );
     });
 });
@@ -737,6 +747,7 @@ describe("saveCache", () => {
 
             const isSaved = await saveCache(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 installDir,
@@ -772,6 +783,7 @@ describe("saveCache", () => {
 
         const isSaved = await saveCache(
             repository,
+            packageName,
             branch,
             githubToken,
             installDir,
@@ -808,6 +820,7 @@ describe("saveCache", () => {
 
         const isSaved = await saveCache(
             repository,
+            packageName,
             branch,
             githubToken,
             installDir,
@@ -821,7 +834,7 @@ describe("saveCache", () => {
 
         expect(isSaved).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error saving cache for ${repository}: ${errorMessage}`
+            `Error saving cache for ${packageName}: ${errorMessage}`
         );
     });
 
@@ -848,6 +861,7 @@ describe("saveCache", () => {
 
         const isSaved = await saveCache(
             repository,
+            packageName,
             branch,
             githubToken,
             installDir,
@@ -863,7 +877,7 @@ describe("saveCache", () => {
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(
-            `Error saving cache for ${repository}: ${error.message}`
+            `Error saving cache for ${packageName}: ${error.message}`
         );
     });
 });

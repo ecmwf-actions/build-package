@@ -170,7 +170,7 @@ export const extendPaths = async (
  */
 export const extendDependencies = async (
     env: EnvironmentVariables | null,
-    repository: string,
+    packageName: string,
     sha: string
 ) => {
     if (!env) return;
@@ -178,15 +178,15 @@ export const extendDependencies = async (
     if (env.DEPENDENCIES instanceof Object) {
         Object.assign(env.DEPENDENCIES, {
             ...env.DEPENDENCIES,
-            [repository]: sha,
+            [packageName]: sha,
         });
     } else {
         env.DEPENDENCIES = {
-            [repository]: sha,
+            [packageName]: sha,
         };
     }
 
     core.info(
-        `==> Extended list of dependencies to include ${repository}: ${sha}`
+        `==> Extended list of dependencies to include ${packageName}: ${sha}`
     );
 };

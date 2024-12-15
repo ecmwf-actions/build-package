@@ -23,17 +23,17 @@ export const loadTree = (): DependencyTree => {
 };
 
 export const getDependenciesFromTree = (
-    repo: string,
+    pkg: string,
     tree: DependencyTree,
     dependencies: string[] | null
 ): string[] => {
     if (!dependencies) {
         dependencies = [];
     }
-    if (tree[repo] == null || !("deps" in tree[repo])) {
+    if (tree[pkg] == null || !("deps" in tree[pkg])) {
         return dependencies;
     }
-    for (const dep of tree[repo].deps) {
+    for (const dep of tree[pkg].deps) {
         dependencies.push(dep);
         if (dep in tree) {
             getDependenciesFromTree(dep, tree, dependencies);

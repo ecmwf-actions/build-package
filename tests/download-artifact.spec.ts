@@ -47,6 +47,7 @@ const env = {
 
 // Test parameters.
 const repository = "owner/repo";
+const packageName = "repo";
 const repo = "repo";
 const branch = "develop";
 const githubToken = "12345";
@@ -197,6 +198,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -307,6 +309,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -357,6 +360,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             "ecmwf/ecbuild",
+            "ecbuild",
             branch,
             githubToken,
             downloadDir,
@@ -397,6 +401,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -443,6 +448,7 @@ describe("downloadArtifact", () => {
 
             const isArtifactDownloaded = await downloadArtifact(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 downloadDir,
@@ -489,6 +495,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -548,6 +555,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -604,6 +612,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             "ecmwf/ecbuild",
+            "ecbuild",
             branch,
             githubToken,
             downloadDir,
@@ -644,6 +653,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -693,6 +703,7 @@ describe("downloadArtifact", () => {
 
             const isArtifactDownloaded = await downloadArtifact(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 downloadDir,
@@ -757,6 +768,7 @@ describe("downloadArtifact", () => {
 
             const isArtifactDownloaded = await downloadArtifact(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 downloadDir,
@@ -848,6 +860,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -885,7 +898,7 @@ describe("downloadArtifact", () => {
             [`${repo.toUpperCase()}_DIR`]: installDir,
             [`${repo.toUpperCase()}_PATH`]: installDir,
             DEPENDENCIES: {
-                [repository]: headSha,
+                [packageName]: headSha,
             },
         };
 
@@ -914,6 +927,7 @@ describe("downloadArtifact", () => {
 
         const isArtifactDownloaded = await downloadArtifact(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,

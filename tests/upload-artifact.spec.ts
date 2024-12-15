@@ -50,6 +50,7 @@ const env = {
 // Test parameters.
 const repository = "owner/repo";
 const repo = "repo";
+const packageName = "repo";
 const githubToken = "12345";
 const installDir = "/path/to/install/repo";
 const os = "ubuntu-20.04";
@@ -112,6 +113,7 @@ describe("uploadArtifact", () => {
 
         const isUploaded = await uploadArtifact(
             repository,
+            packageName,
             sha,
             installDir,
             dependencies,
@@ -165,7 +167,8 @@ describe("uploadArtifact", () => {
         });
 
         const isUploaded = await uploadArtifact(
-            `coverage-${repo}`,
+            `coverage-${packageName}`,
+            packageName,
             sha,
             installDir,
             null,
@@ -219,6 +222,7 @@ describe("uploadArtifact", () => {
 
         const isUploaded = await uploadArtifact(
             "ecmwf/ecbuild",
+            "ecbuild",
             sha,
             installDir,
             {},
@@ -256,6 +260,7 @@ describe("uploadArtifact", () => {
 
             const isUploaded = await uploadArtifact(
                 repository,
+                packageName,
                 sha,
                 installDir,
                 dependencies,
@@ -295,6 +300,7 @@ describe("uploadArtifact", () => {
 
         const isUploaded = await uploadArtifact(
             repository,
+            packageName,
             sha,
             installDir,
             dependencies,
@@ -347,6 +353,7 @@ describe("uploadArtifact", () => {
 
             const isUploaded = await uploadArtifact(
                 repository,
+                packageName,
                 sha,
                 installDir,
                 dependencies,
@@ -398,6 +405,7 @@ describe("uploadArtifact", () => {
 
         const isUploaded = await uploadArtifact(
             repository,
+            packageName,
             sha,
             installDir,
             dependencies,
@@ -439,6 +447,7 @@ describe("uploadArtifact", () => {
 
         const isUploaded = await uploadArtifact(
             repository,
+            packageName,
             sha,
             installDir,
             dependencies,
@@ -486,6 +495,7 @@ describe("uploadArtifact", () => {
 
             const isUploaded = await uploadArtifact(
                 repository,
+                packageName,
                 sha,
                 installDir,
                 dependencies,

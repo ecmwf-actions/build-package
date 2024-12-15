@@ -16,6 +16,7 @@ import { EnvironmentVariables } from "./types/env-functions";
  * Downloads a Github repository state and extracts it to a directory with supplied name.
  *
  * @param {string} repository Github repository owner and name.
+ * @param {string} packageName Name of the package.
  * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {string} downloadDir Directory where the repository will be downloaded.
@@ -24,12 +25,13 @@ import { EnvironmentVariables } from "./types/env-functions";
  */
 const downloadRepository = async (
     repository: string,
+    packageName: string,
     branch: string,
     githubToken: string,
     downloadDir: string,
     env: EnvironmentVariables
 ): Promise<boolean> => {
-    core.startGroup(`Download ${repository} Repository`);
+    core.startGroup(`Download ${packageName} Repository`);
 
     const [owner, repo] = repository.split("/");
 
@@ -148,7 +150,7 @@ const downloadRepository = async (
     core.info(`==> Downloaded: ${tarName} (${size})`);
 
     // Create source directory.
-    const sourceDir = path.join(downloadDir, repo);
+    const sourceDir = path.join(downloadDir, packageName);
     await mkdirP(sourceDir);
 
     try {
@@ -170,7 +172,7 @@ const downloadRepository = async (
 
     fs.unlinkSync(tarName);
 
-    await extendDependencies(env, repository, headSha);
+    await extendDependencies(env, packageName, headSha);
 
     core.endGroup();
 
