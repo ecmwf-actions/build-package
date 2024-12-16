@@ -19,6 +19,7 @@ import { CmakeOptionsLookup } from "./types/main";
  * Downloads and extracts package artifact.
  *
  * @param {string} repository Github repository owner and name.
+ * @param {string} packageName Name of the package.
  * @param {string} branch Branch name.
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {string} downloadDir Directory where the artifact will be downloaded.
@@ -33,6 +34,7 @@ import { CmakeOptionsLookup } from "./types/main";
  */
 const downloadArtifact = async (
     repository: string,
+    packageName: string,
     branch: string,
     githubToken: string,
     downloadDir: string,
@@ -45,11 +47,12 @@ const downloadArtifact = async (
     cmakeOptions: string | undefined,
     dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
 ): Promise<boolean> => {
-    core.startGroup(`Download ${repository} Artifact`);
+    core.startGroup(`Download ${packageName} Artifact`);
 
     const [owner, repo] = repository.split("/");
 
     core.info(`==> Repository: ${owner}/${repo}`);
+    core.info(`==> Package name: ${packageName}`);
 
     branch = branch.replace(/^refs\/heads\//, "");
 
@@ -100,12 +103,13 @@ const downloadArtifact = async (
     let artifactName: string;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === "ecbuild") {
+    if (packageName === "ecbuild") {
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${headSha}`;
     } else {
         const { cacheKey } = await getCacheKey(
             repository,
             headSha,
+            packageName,
             githubToken,
             os,
             compiler,
@@ -133,7 +137,7 @@ const downloadArtifact = async (
         if (
             isError(
                 response.status != 200,
-                `Wrong response code while fetching artifacts for ${repo}: ${response.status}`
+                `Wrong response code while fetching artifacts for ${packageName}: ${response.status}`
             )
         )
             return false;
@@ -143,7 +147,7 @@ const downloadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error fetching artifacts for ${repo}: ${error.message}`
+                `Error fetching artifacts for ${packageName}: ${error.message}`
             );
         return false;
     }
@@ -151,7 +155,7 @@ const downloadArtifact = async (
     core.info(`==> Artifacts: ${artifacts.length}`);
 
     if (!artifacts.length) {
-        isError(true, `No workflow artifacts found for ${repo}`);
+        isError(true, `No workflow artifacts found for ${packageName}`);
         return false;
     }
 
@@ -187,7 +191,7 @@ const downloadArtifact = async (
         if (
             isError(
                 response.status === 302 || response.status !== 200,
-                `Wrong response code while downloading workflow run artifact for ${repo}: ${response.status}`
+                `Wrong response code while downloading workflow run artifact for ${packageName}: ${response.status}`
             )
         )
             return false;
@@ -197,7 +201,7 @@ const downloadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error downloading workflow run artifact for ${repo}: ${error.message}`
+                `Error downloading workflow run artifact for ${packageName}: ${error.message}`
             );
         return false;
     }
@@ -255,7 +259,7 @@ const downloadArtifact = async (
 
                 isError(
                     true,
-                    `Error matching dependency ${dependency} for ${repo}: ${
+                    `Error matching dependency ${dependency} for ${packageName}: ${
                         env.DEPENDENCIES[dependency as keyof DependenciesObject]
                     } !== ${dependencySha}`
                 );
@@ -278,7 +282,7 @@ const downloadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error extracting artifact TAR for ${repo}: ${error.message}`
+                `Error extracting artifact TAR for ${packageName}: ${error.message}`
             );
         return false;
     }
@@ -289,7 +293,7 @@ const downloadArtifact = async (
 
     await extendPaths(env, installDir, repo);
 
-    await extendDependencies(env, repository, headSha);
+    await extendDependencies(env, packageName, headSha);
 
     core.endGroup();
 

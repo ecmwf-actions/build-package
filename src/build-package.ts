@@ -106,6 +106,7 @@ const expandShellVariables = (
  * Builds and installs a package from source. Optionally, runs tests and collects code coverage information.
  *
  * @param {string} repository Github repository owner and name.
+ * @param {string} packageName Name of the package.
  * @param {string} sourceDir Path to source directory.
  * @param {string} installDir Directory where to install the package.
  * @param {boolean} cmake Whether to use CMake for build configuration, instead of ecbuild.
@@ -123,6 +124,7 @@ const expandShellVariables = (
  */
 const buildPackage = async (
     repository: string,
+    packageName: string,
     sourceDir: string,
     installDir: string,
     cmake: boolean,
@@ -140,17 +142,15 @@ const buildPackage = async (
     cpackOptions?: string,
     toolchainFile?: string
 ): Promise<boolean> => {
-    core.startGroup(`Build ${repository}`);
-
-    const [, repo] = repository.split("/");
+    core.startGroup(`Build ${packageName}`);
 
     try {
         let configurePath;
         let configureOptions = [];
 
-        if (repo === "ecbundle") {
+        if (packageName === "ecbundle") {
             const ecbundlePath = path.join(path.resolve(sourceDir));
-            await extendPaths(env, ecbundlePath, repo);
+            await extendPaths(env, ecbundlePath, packageName);
             core.endGroup();
             return true;
         }
@@ -173,7 +173,7 @@ const buildPackage = async (
         if (cmake) {
             configurePath = "cmake";
             configureOptions.push(`-DCMAKE_INSTALL_PREFIX=${installDir}`);
-        } else if (repo === "ecbuild") {
+        } else if (packageName === "ecbuild") {
             configurePath = path.join(
                 path.resolve(sourceDir),
                 "bin",
@@ -340,7 +340,7 @@ const buildPackage = async (
 
         exitCode = await exec.exec("env", ["cmake", "--install", "."], options);
         if (isError(exitCode, "Error installing package")) return false;
-        await extendPaths(env, installDir, repo);
+        await extendPaths(env, installDir, packageName);
 
         if (test) {
             exitCode = await exec.exec(

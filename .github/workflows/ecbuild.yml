@@ -24,14 +24,14 @@ jobs:
         name:
           - ubuntu-20.04
           - ubuntu-22.04
-          - macos-12
+          - macos-latest
         include:
           - name: ubuntu-20.04
             os: ubuntu-20.04
           - name: ubuntu-22.04
             os: ubuntu-22.04
-          - name: macos-12
-            os: macos-12
+          - name: macos-latest
+            os: macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository

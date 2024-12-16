@@ -16,6 +16,7 @@ jest.mock("../src/download-file");
 
 // Test parameters.
 const repository = "owner/repo";
+const packageName = "repo";
 const repo = "repo";
 const branch = "develop";
 const headSha = "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2";
@@ -95,6 +96,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -149,6 +151,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             testBranch,
             githubToken,
             downloadDir,
@@ -182,6 +185,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -220,6 +224,7 @@ describe("downloadRepository", () => {
 
             const isRepositoryDownloaded = await downloadRepository(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 downloadDir,
@@ -257,6 +262,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -297,6 +303,7 @@ describe("downloadRepository", () => {
 
             const isRepositoryDownloaded = await downloadRepository(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 downloadDir,
@@ -340,6 +347,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -381,6 +389,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,
@@ -432,6 +441,7 @@ describe("downloadRepository", () => {
 
             const isRepositoryDownloaded = await downloadRepository(
                 repository,
+                packageName,
                 branch,
                 githubToken,
                 downloadDir,
@@ -457,7 +467,7 @@ describe("downloadRepository", () => {
         const expectedEnv = {
             ...testEnv,
             DEPENDENCIES: {
-                [repository]: headSha,
+                [packageName]: headSha,
             },
         };
 
@@ -486,6 +496,7 @@ describe("downloadRepository", () => {
 
         const isRepositoryDownloaded = await downloadRepository(
             repository,
+            packageName,
             branch,
             githubToken,
             downloadDir,

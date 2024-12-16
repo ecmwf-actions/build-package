@@ -15,6 +15,7 @@ import { CmakeOptionsLookup } from "./types/main";
  * Archives and uploads package artifact.
  *
  * @param {string} repository Github repository owner and name to upload artifact for.
+ * @param {string} packageName Name of the package.
  * @param {string} sha Github repository commit SHA.
  * @param {string} targetDir Target directory to upload as artifact.
  * @param {DependenciesObject} dependencies Dependencies object.
@@ -29,6 +30,7 @@ import { CmakeOptionsLookup } from "./types/main";
  */
 const uploadArtifact = async (
     repository: string,
+    packageName: string,
     sha: string,
     targetDir: string,
     dependencies: DependenciesObject,
@@ -41,7 +43,7 @@ const uploadArtifact = async (
     cmakeOptions: string | undefined,
     dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
 ): Promise<boolean> => {
-    core.startGroup(`Upload ${repository} Artifact`);
+    core.startGroup(`Upload ${packageName} Artifact`);
 
     const [owner] = repository.split("/");
     let [, repo] = repository.split("/");
@@ -50,12 +52,13 @@ const uploadArtifact = async (
     let artifactName;
 
     // Ecbuild has a different artifact name, as it is not actually built.
-    if (repo === "ecbuild") {
+    if (packageName === "ecbuild") {
         artifactName = `ecbuild-${os}-cmake-${env.CMAKE_VERSION}-${sha}`;
     } else {
         const { cacheKey } = await getCacheKey(
             repository,
             sha,
+            packageName,
             githubToken,
             os,
             compiler || "",
@@ -85,7 +88,7 @@ const uploadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error creating artifact TAR for ${repo}: ${error.message}`
+                `Error creating artifact TAR for ${packageName}: ${error.message}`
             );
         return false;
     }
@@ -95,7 +98,7 @@ const uploadArtifact = async (
     if (
         isError(
             !stats.size,
-            `Error determining size of artifact TAR for ${repo}`
+            `Error determining size of artifact TAR for ${packageName}`
         )
     )
         return false;
@@ -118,7 +121,7 @@ const uploadArtifact = async (
             if (error instanceof Error)
                 isError(
                     true,
-                    `Error writing dependencies file for ${repo}: ${error.message}`
+                    `Error writing dependencies file for ${packageName}: ${error.message}`
                 );
             return false;
         }
@@ -146,12 +149,12 @@ const uploadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error uploading artifact for ${repo}: ${error.message}`
+                `Error uploading artifact for ${packageName}: ${error.message}`
             );
         return false;
     }
 
-    if (isError(!uploadResult, `Error uploading artifact for ${repo}`))
+    if (isError(!uploadResult, `Error uploading artifact for ${packageName}`))
         return false;
 
     if (
@@ -159,7 +162,7 @@ const uploadArtifact = async (
             uploadResult &&
                 uploadResult.failedItems &&
                 uploadResult.failedItems.length,
-            `Error uploading artifact for ${repo}: ${uploadResult.failedItems}`
+            `Error uploading artifact for ${packageName}: ${uploadResult.failedItems}`
         )
     ) {
         return false;

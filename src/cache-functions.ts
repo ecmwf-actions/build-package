@@ -20,7 +20,7 @@ import { getDependenciesFromTree } from "./tree";
 /**
  * Returns cache key hash
  *
- * @param {string} repo Github repository name
+ * @param {string} packageName Github repository name
  * @param {string} cacheSuffix A string which will be appended to the cache key.
  * @param {EnvironmentVariables} env Local environment object.
  * @param {string|undefined} cmakeOptions Build options string which is added to cache key hash
@@ -29,7 +29,7 @@ import { getDependenciesFromTree } from "./tree";
  * @returns {string} Cache key hash
  */
 export const getCacheKeyHash = (
-    repo: string,
+    packageName: string,
     cacheSuffix: string,
     env: EnvironmentVariables,
     dependencyTree: DependencyTree,
@@ -45,31 +45,30 @@ export const getCacheKeyHash = (
 
     let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${
         env.CMAKE_VERSION
-    }::options=${buildOptions.join()}::${repo}=${sha}`;
+    }::options=${buildOptions.join()}::${packageName}=${sha}`;
 
-    const treeDeps = getDependenciesFromTree(repo, dependencyTree, null);
+    const treeDeps = getDependenciesFromTree(packageName, dependencyTree, null);
 
-    for (const [dependency, dependencySha] of Object.entries(
+    for (const [dependencyName, dependencySha] of Object.entries(
         env.DEPENDENCIES || {}
     ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
-        const [, dependencyRepo] = dependency.split("/");
         if (
-            !treeDeps.includes(dependencyRepo) &&
-            dependencyRepo in dependencyTree
+            !treeDeps.includes(dependencyName) &&
+            dependencyName in dependencyTree
         ) {
             continue;
         }
-        if (dependencyRepo === repo) continue;
-        cacheKeyStr += `::${dependencyRepo}=${dependencySha}`;
+        if (dependencyName === packageName) continue;
+        cacheKeyStr += `::${dependencyName}=${dependencySha}`;
 
         // sort and append dependency cmake options to respective deps
-        if (dependencyCmakeOptionsLookup[dependencyRepo]) {
+        if (dependencyCmakeOptionsLookup[dependencyName]) {
             const dependencyCmakeOptions = [];
             dependencyCmakeOptions.push(
-                ...parseOptions(dependencyCmakeOptionsLookup[dependencyRepo])
+                ...parseOptions(dependencyCmakeOptionsLookup[dependencyName])
             );
             dependencyCmakeOptions.sort();
-            cacheKeyStr += `::${dependencyRepo}-options=${dependencyCmakeOptions.join()}`;
+            cacheKeyStr += `::${dependencyName}-options=${dependencyCmakeOptions.join()}`;
         }
     }
 
@@ -88,6 +87,7 @@ export const getCacheKeyHash = (
  *
  * @param {string} repository Github repository owner and name.
  * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} packageName Name of the package.
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {string} os Current OS platform.
  * @param {string} compiler Current compiler family.
@@ -100,6 +100,7 @@ export const getCacheKeyHash = (
 export const getCacheKey = async (
     repository: string,
     branch: string,
+    packageName: string,
     githubToken: string,
     os: string,
     compiler: string,
@@ -166,7 +167,7 @@ export const getCacheKey = async (
     core.info(`==> result.headSha: ${result.headSha}`);
 
     const cacheKeySha = getCacheKeyHash(
-        repo,
+        packageName,
         cacheSuffix,
         env,
         dependencyTree,
@@ -177,7 +178,7 @@ export const getCacheKey = async (
 
     core.info(`==> cacheKeySha: ${cacheKeySha}`);
 
-    result.cacheKey = `${os}-${compiler}-${repo}-${cacheKeySha}`;
+    result.cacheKey = `${os}-${compiler}-${packageName}-${cacheKeySha}`;
 
     core.info(`==> result.cacheKey: ${result.cacheKey}`);
 
@@ -191,8 +192,8 @@ export const getCacheKey = async (
  *
  * @param {string} repository Github repository owner and name.
  * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
+ * @param {string} packageName Name of the package.
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
- * @param {string} repo Name of the package to download, will be used as the final extraction directory.
  * @param {string} installDir Directory to restore to.
  * @param {string} os Current OS platform.
  * @param {string} compiler Current compiler family.
@@ -205,6 +206,7 @@ export const getCacheKey = async (
 export const restoreCache = async (
     repository: string,
     branch: string,
+    packageName: string,
     githubToken: string,
     installDir: string,
     os: string,
@@ -218,6 +220,7 @@ export const restoreCache = async (
     const { cacheKey, headSha } = await getCacheKey(
         repository,
         branch,
+        packageName,
         githubToken,
         os,
         compiler,
@@ -228,7 +231,7 @@ export const restoreCache = async (
         dependencyCmakeOptionsLookup
     );
 
-    core.startGroup(`Restore ${repository} Cache`);
+    core.startGroup(`Restore ${packageName} Cache`);
 
     let cacheHit;
 
@@ -238,7 +241,7 @@ export const restoreCache = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error restoring cache for ${repository}: ${error.message}`
+                `Error restoring cache for ${packageName}: ${error.message}`
             );
         return false;
     }
@@ -247,9 +250,8 @@ export const restoreCache = async (
 
     // If we have cache, extend the environment.
     if (cacheHit) {
-        const [, repo] = repository.split("/");
-        await extendPaths(env, installDir, repo);
-        await extendDependencies(env, repository, headSha);
+        await extendPaths(env, installDir, packageName);
+        await extendDependencies(env, packageName, headSha);
     }
 
     core.endGroup();
@@ -261,6 +263,7 @@ export const restoreCache = async (
  * Saves target directory to cache.
  *
  * @param {string} repository Github repository owner and name.
+ * @param {string} packageName Name of the package.
  * @param {string} branch Branch (or tag) name. Make sure to supply tags in their verbose form: `refs/tags/tag-name`.
  * @param {string} githubToken Github access token, with `repo` and `actions:read` scopes.
  * @param {string} targetDir Target directory to save.
@@ -274,6 +277,7 @@ export const restoreCache = async (
  */
 export const saveCache = async (
     repository: string,
+    packageName: string,
     branch: string,
     githubToken: string,
     targetDir: string,
@@ -288,6 +292,7 @@ export const saveCache = async (
     const { cacheKey } = await getCacheKey(
         repository,
         branch,
+        packageName,
         githubToken,
         os,
         compiler,
@@ -298,7 +303,7 @@ export const saveCache = async (
         dependencyCmakeOptionsLookup
     );
 
-    core.startGroup(`Save ${repository} Cache`);
+    core.startGroup(`Save ${packageName} Cache`);
 
     const fastFolderSizeAsync = promisify(fastFolderSize);
 
@@ -307,7 +312,7 @@ export const saveCache = async (
     if (!bytes) {
         isError(
             true,
-            `Empty target dir, skipping saving cache for ${repository}`
+            `Empty target dir, skipping saving cache for ${packageName}`
         );
         return false;
     }
@@ -320,7 +325,7 @@ export const saveCache = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error saving cache for ${repository}: ${error.message}`
+                `Error saving cache for ${packageName}: ${error.message}`
             );
         return false;
     }

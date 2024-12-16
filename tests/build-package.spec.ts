@@ -15,6 +15,7 @@ jest.mock("@actions/io");
 // Test parameters.
 const repository = "owner/repo";
 const repo = "repo";
+const packageName = "repo";
 const sourceDir = "/path/to/source/repo";
 const installDir = "/path/to/install/repo";
 const buildDir = `${sourceDir}/build`;
@@ -54,6 +55,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -83,6 +85,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -112,6 +115,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             !cmake,
@@ -145,6 +149,7 @@ describe("buildPackage", () => {
 
         let isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -174,6 +179,7 @@ describe("buildPackage", () => {
 
         isBuilt = await buildPackage(
             "ecmwf/ecbuild",
+            "ecbuild",
             sourceDir,
             installDir,
             cmake,
@@ -219,6 +225,7 @@ describe("buildPackage", () => {
 
         let isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             !cmake,
@@ -248,6 +255,7 @@ describe("buildPackage", () => {
 
         isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -290,6 +298,7 @@ describe("buildPackage", () => {
 
         let isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             !cmake,
@@ -318,6 +327,7 @@ describe("buildPackage", () => {
 
         isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -350,6 +360,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -407,6 +418,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -469,6 +481,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -544,6 +557,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -598,6 +612,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -627,6 +642,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -662,6 +678,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -694,6 +711,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -743,6 +761,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -844,6 +863,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -885,6 +905,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -984,6 +1005,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1074,6 +1096,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1166,6 +1189,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1206,6 +1230,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1241,6 +1266,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1284,6 +1310,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1329,6 +1356,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1369,6 +1397,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1410,6 +1439,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1450,6 +1480,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1491,6 +1522,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1537,6 +1569,7 @@ describe("buildPackage", () => {
 
         const isBuilt = await buildPackage(
             repository,
+            packageName,
             sourceDir,
             installDir,
             cmake,
@@ -1575,6 +1608,7 @@ describe("buildPackage", () => {
 
             const isBuilt = await buildPackage(
                 repository,
+                packageName,
                 sourceDir,
                 installDir,
                 cmake,

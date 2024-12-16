@@ -95,12 +95,18 @@ const main = async () => {
 
         const dependencyCmakeOptionsLookup: CmakeOptionsLookup = {};
         for (const dependencyCmakeOptionLine of dependencyCmakeOptionLines) {
-            const [repo, options] = dependencyCmakeOptionLine.split(/:\s?(.+)/);
-            if (!repo || !options)
+            let packageName;
+            let options = "";
+            [packageName, options] =
+                dependencyCmakeOptionLine.split(/:\s?(.+)/);
+            if (!packageName || !options)
                 return Promise.reject(
-                    `Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptionLine}`
+                    `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptionLine}`
                 );
-            dependencyCmakeOptionsLookup[repo] = options.replace(
+            if (packageName.includes("/")) {
+                [, packageName] = packageName.split("/");
+            }
+            dependencyCmakeOptionsLookup[packageName] = options.replace(
                 /^['"]|['"]$/g,
                 ""
             );
@@ -117,13 +123,22 @@ const main = async () => {
         for (const dependency of dependencies) {
             const [dependencyRepository, dependencyBranchSpecific] =
                 dependency.split("@");
-            const [owner, repo] = dependencyRepository.split("/");
+            let packageName, ownerRepo;
+            if (dependencyRepository.includes(":")) {
+                [packageName, ownerRepo] = dependencyRepository.split(":");
+            } else {
+                ownerRepo = dependencyRepository;
+            }
+            const [owner, repo] = ownerRepo.split("/");
+            if (!packageName) {
+                packageName = repo;
+            }
             const dependencyCmakeOptions =
-                dependencyCmakeOptionsLookup[dependencyRepository];
+                dependencyCmakeOptionsLookup[packageName];
 
             if (!owner || !repo)
                 return Promise.reject(
-                    `Unexpected dependency name, must be in 'owner/repo[@branch]' format: ${dependency}`
+                    `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${dependency}`
                 );
 
             const dependencyBranch =
@@ -133,10 +148,11 @@ const main = async () => {
             if (!forceBuild && repo !== "ecbundle") {
                 const isArtifactDownloaded = await downloadArtifact(
                     dependencyRepository,
+                    packageName,
                     dependencyBranch,
                     githubToken,
                     downloadDir,
-                    path.join(installDir, repo),
+                    path.join(installDir, packageName),
                     os,
                     compiler,
                     env,
@@ -154,8 +170,9 @@ const main = async () => {
                 const cacheHit = await restoreCache(
                     dependencyRepository,
                     dependencyBranch,
+                    packageName,
                     githubToken,
-                    path.join(installDir, repo),
+                    path.join(installDir, packageName),
                     os,
                     compiler,
                     cacheSuffix,
@@ -170,6 +187,7 @@ const main = async () => {
             // Download the latest repository state.
             const isRepositoryDownloaded = await downloadRepository(
                 dependencyRepository,
+                packageName,
                 dependencyBranch,
                 githubToken,
                 downloadDir,
@@ -182,8 +200,9 @@ const main = async () => {
             // Build the package locally. We don't run any tests or code coverage in this case.
             const isBuilt = await buildPackage(
                 dependencyRepository,
-                path.join(downloadDir, repo),
-                path.join(installDir, repo),
+                packageName,
+                path.join(downloadDir, packageName),
+                path.join(installDir, packageName),
                 cmake,
                 ecbundle,
                 dependencyCmakeOptions,
@@ -206,9 +225,10 @@ const main = async () => {
                 // Save built package to the cache.
                 await saveCache(
                     dependencyRepository,
+                    packageName,
                     dependencyBranch,
                     githubToken,
-                    path.join(installDir, repo),
+                    path.join(installDir, packageName),
                     os,
                     compiler,
                     cacheSuffix,
@@ -220,9 +240,27 @@ const main = async () => {
         }
 
         if (selfBuild) {
-            const [repository, repositoryBranchSpecific] =
-                repositoryInput.split("@");
-            const [, repo] = repository.split("/");
+            let name, subdir;
+            let repository = repositoryInput;
+            let repositoryBranchSpecific = "";
+            if (repository.includes(":")) {
+                [name, repository] = repository.split(":");
+            }
+
+            [repository, repositoryBranchSpecific] = repository.split("@");
+
+            const [owner, repo] = repository.split("/", 2);
+
+            const numSlashes = repository.match(/\//g)?.length;
+            if (numSlashes && numSlashes > 1) {
+                subdir = repository.replace(`${owner}/${repo}/`, "");
+            } else {
+                subdir = ".";
+            }
+
+            if (!name) {
+                name = repo;
+            }
 
             const sha = repositoryBranchSpecific || shaInput;
 
@@ -235,8 +273,9 @@ const main = async () => {
                 cacheHit = await restoreCache(
                     repository,
                     sha,
+                    name,
                     githubToken,
-                    path.join(installDir, repo),
+                    path.join(installDir, name),
                     os,
                     compiler,
                     cacheSuffix,
@@ -251,8 +290,9 @@ const main = async () => {
                 // Build the currently checked out repository.
                 const isBuilt = await buildPackage(
                     repository,
-                    workspace,
-                    path.join(installDir, repo),
+                    name,
+                    path.join(workspace, subdir),
+                    path.join(installDir, name),
                     cmake,
                     ecbundle,
                     cmakeOptions,
@@ -275,9 +315,10 @@ const main = async () => {
                     // Save built package to the cache.
                     await saveCache(
                         repository,
+                        name,
                         sha,
                         githubToken,
-                        path.join(installDir, repo),
+                        path.join(installDir, name),
                         os,
                         compiler,
                         cacheSuffix,
@@ -290,8 +331,9 @@ const main = async () => {
                     // Upload build artifact.
                     await uploadArtifact(
                         repository,
+                        name,
                         sha,
-                        path.join(installDir, repo),
+                        path.join(installDir, name),
                         env.DEPENDENCIES as DependenciesObject,
                         os,
                         compiler,
@@ -307,7 +349,8 @@ const main = async () => {
                 // Upload coverage artifact.
                 if (selfCoverage && env.COVERAGE_DIR)
                     await uploadArtifact(
-                        `coverage-${repo}`,
+                        `coverage-${name}`,
+                        name,
                         sha,
                         env.COVERAGE_DIR as string,
                         null,

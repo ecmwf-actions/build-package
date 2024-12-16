@@ -210,6 +210,7 @@ describe("main", () => {
         await expect(main()).resolves.toStrictEqual(outputs);
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.repository,
+            "repo",
             inputs.workspace,
             `${inputs.install_dir}/repo`,
             inputs.cmake,
@@ -273,6 +274,7 @@ describe("main", () => {
         await expect(main()).resolves.toStrictEqual(outputs);
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[0],
+            "repo1",
             `${inputs.download_dir}/repo1`,
             `${inputs.install_dir}/repo1`,
             inputs.cmake,
@@ -292,6 +294,7 @@ describe("main", () => {
         );
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[1],
+            "repo2",
             `${inputs.download_dir}/repo2`,
             `${inputs.install_dir}/repo2`,
             inputs.cmake,
@@ -311,6 +314,7 @@ describe("main", () => {
         );
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[2],
+            "repo3",
             `${inputs.download_dir}/repo3`,
             `${inputs.install_dir}/repo3`,
             inputs.cmake,
@@ -478,7 +482,7 @@ describe("main", () => {
         (setupEnv as jest.Mock).mockResolvedValueOnce(env);
 
         await expect(main()).rejects.toBe(
-            `Unexpected CMake option, must be in 'owner/repo: option' format: ${dependencyCmakeOptions[0]}`
+            `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptions[0]}`
         );
 
         (setupEnv as jest.Mock).mockReset();
@@ -524,7 +528,7 @@ describe("main", () => {
         (setupEnv as jest.Mock).mockResolvedValueOnce(env);
 
         await expect(main()).rejects.toBe(
-            `Unexpected dependency name, must be in 'owner/repo[@branch]' format: ${unexpectedDependencyName}`
+            `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${unexpectedDependencyName}`
         );
     });
 
