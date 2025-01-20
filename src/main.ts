@@ -350,7 +350,7 @@ const main = async () => {
                 if (selfCoverage && env.COVERAGE_DIR)
                     await uploadArtifact(
                         `coverage-${name}`,
-                        name,
+                        `coverage-${name}`, // This has to be different from the name of the package, otherwise the artifact will be overwritten.
                         sha,
                         env.COVERAGE_DIR as string,
                         null,
