@@ -5,6 +5,15 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      npm-dep-updates:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      npm-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   # Maintain dependencies for GH workflows
   - package-ecosystem: github-actions
