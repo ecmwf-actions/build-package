@@ -32,7 +32,7 @@ const inputs: ActionInputs = {
     force_build: false,
     cache_suffix: null,
     recreate_cache: false,
-    os: "ubuntu-20.04",
+    os: "ubuntu-22.04",
     compiler: "gnu-10",
     compiler_cc: "gcc-10",
     compiler_cxx: "g++-10",
