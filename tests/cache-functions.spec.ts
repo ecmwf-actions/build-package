@@ -26,8 +26,8 @@ const packageName = "repo";
 const branch = "branch";
 const githubToken = "123";
 const repo = "repo";
-const os = "ubuntu-20.04";
-const compiler = "gnu-10";
+const os = "ubuntu-24.04";
+const compiler = "gnu-12";
 const cacheSuffix = "";
 const installDir = "/path/to/install/repo";
 const sha = "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2";
@@ -37,7 +37,7 @@ const cmakeOptions =
     "-DENABLE_MPI=OFF -DENABLE_TF_LITE=ON -DTENSORFLOWLITE_PATH=$TENSORFLOW_PATH -DTENSORFLOWLITE_ROOT=$TFLITE_PATH -DENABLE_ONNX=ON -DONNX_ROOT=$ONNXRUNTIME_PATH -DENABLE_TENSORRT=OFF";
 
 const env = {
-    CMAKE_VERSION: "3.20.5",
+    CMAKE_VERSION: "3.31.5",
     DEPENDENCIES: {
         repo1: "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
         repo2: "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",

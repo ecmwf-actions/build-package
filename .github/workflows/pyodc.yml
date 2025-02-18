@@ -22,24 +22,24 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          - gnu-10@ubuntu-20.04
-          - clang-12@ubuntu-20.04
+          - gnu-12@ubuntu-24.04
+          - clang-16@ubuntu-24.04
           - gnu-11@ubuntu-22.04
           - clang-14@ubuntu-22.04
           - clang-14@macos-latest
         include:
-          - name: gnu-10@ubuntu-20.04
-            os: ubuntu-20.04
-            compiler: gnu-10
-            compiler_cc: gcc-10
-            compiler_cxx: g++-10
-            compiler_fc: gfortran-10
-          - name: clang-12@ubuntu-20.04
-            os: ubuntu-20.04
-            compiler: clang-12
-            compiler_cc: clang-12
-            compiler_cxx: clang++-12
-            compiler_fc: gfortran-10
+          - name: gnu-12@ubuntu-24.04
+            os: ubuntu-24.04
+            compiler: gnu-12
+            compiler_cc: gcc-12
+            compiler_cxx: g++-12
+            compiler_fc: gfortran-12
+          - name: clang-16@ubuntu-24.04
+            os: ubuntu-24.04
+            compiler: clang-16
+            compiler_cc: clang-16
+            compiler_cxx: clang++-16
+            compiler_fc: gfortran-12
           - name: gnu-11@ubuntu-22.04
             os: ubuntu-22.04
             compiler: gnu-11

@@ -40,10 +40,10 @@ const dependencies = {
 
 // Base environment object, we will take care not to modify it.
 const env = {
-    CC: "gcc-10",
-    CXX: "g++-10",
-    FC: "gfortran-10",
-    CMAKE_VERSION: "3.21.1",
+    CC: "gcc-12",
+    CXX: "g++-12",
+    FC: "gfortran-12",
+    CMAKE_VERSION: "3.31.5",
     DEPENDENCIES: dependencies,
 };
 
@@ -53,8 +53,8 @@ const repo = "repo";
 const packageName = "repo";
 const githubToken = "12345";
 const installDir = "/path/to/install/repo";
-const os = "ubuntu-20.04";
-const compiler = "gnu-10";
+const os = "ubuntu-24.04";
+const compiler = "gnu-12";
 const size = 68168435;
 const sha = "f0b00fd201c7ddf14e1572a10d5fb4577c4bd6a2";
 const cmakeOptions =

@@ -10,11 +10,11 @@ import {
 jest.mock("@actions/core");
 jest.mock("@actions/exec");
 
-const os = "ubuntu-20.04";
-const compilerCc = "gcc-10";
-const compilerCxx = "g++-10";
-const compilerFc = "gfortran-10";
-const cmakeVersion1 = "3.21.1";
+const os = "ubuntu-24.04";
+const compilerCc = "gcc-12";
+const compilerCxx = "g++-12";
+const compilerFc = "gfortran-12";
+const cmakeVersion1 = "3.31.5";
 const cmakeVersion2 = "3.21.5";
 
 const macOs = "macos-10.15";

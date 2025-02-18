@@ -27,9 +27,9 @@ const cmakeOptions = null;
 const ctestOptions = null;
 const test = true;
 const codeCoverage = true;
-const os = "ubuntu-20.04";
+const os = "ubuntu-24.04";
 const macOs = "macos-10.15";
-const compiler = "gnu-10";
+const compiler = "gnu-12";
 const errorObject = new Error("spawn /bin/sh ENOENT");
 const emptyObject = {};
 const parallelismFactor = "2";
@@ -37,10 +37,10 @@ const githubToken = "secrettoken";
 
 // Base environment object, we will take care not to modify it.
 const env: EnvironmentVariables = {
-    CC: "gcc-10",
-    CXX: "g++-10",
-    FC: "gfortran-10",
-    CMAKE_VERSION: "3.21.1",
+    CC: "gcc-12",
+    CXX: "g++-12",
+    FC: "gfortran-12",
+    CMAKE_VERSION: "3.31.5",
 };
 
 describe("buildPackage", () => {
