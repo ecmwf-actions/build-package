@@ -4,14 +4,15 @@ import * as core from "@actions/core";
 import * as artifact from "@actions/artifact";
 import { filesize } from "filesize";
 import tar from "tar";
+import { describe, it, expect, vi } from "vitest";
 
 import uploadArtifact from "../src/upload-artifact";
 import { getCacheKeyHash } from "../src/cache-functions";
 import { EnvironmentVariables } from "../src/types/env-functions";
 
-jest.mock("@actions/core");
-jest.mock("@actions/artifact");
-jest.mock("tar");
+vi.mock("@actions/core");
+vi.mock("@actions/artifact");
+vi.mock("tar");
 
 const getArtifactName = (
     repo: string,
@@ -92,21 +93,21 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
             uploadArtifact: uploadResult,
         }));
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, "writeFileSync");
-        writeFileSync.mockImplementationOnce((path) => {
+        const writeFileSync = vi.spyOn(fs, "writeFileSync");
+        writeFileSync.mockImplementationOnce((path: string) => {
             if (path === dependenciesPath) return true;
         });
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => {
             return true;
         });
@@ -147,7 +148,7 @@ describe("uploadArtifact", () => {
 
         const coverageArtifactName = `coverage-${repo}-${os}-${compiler}`;
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () =>
                 Promise.resolve({
                     artifactName: coverageArtifactName,
@@ -156,12 +157,12 @@ describe("uploadArtifact", () => {
                 }),
         }));
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => {
             return true;
         });
@@ -196,7 +197,7 @@ describe("uploadArtifact", () => {
 
         const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${sha}`;
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () =>
                 Promise.resolve({
                     artifactName: ecbuildArtifactName,
@@ -205,17 +206,17 @@ describe("uploadArtifact", () => {
                 }),
         }));
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, "writeFileSync");
-        writeFileSync.mockImplementationOnce((path) => {
+        const writeFileSync = vi.spyOn(fs, "writeFileSync");
+        writeFileSync.mockImplementationOnce((path: string) => {
             if (path === dependenciesPath) return true;
         });
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => {
             return true;
         });
@@ -254,7 +255,7 @@ describe("uploadArtifact", () => {
                 ...env,
             };
 
-            (tar.c as jest.Mock).mockImplementationOnce(() => {
+            (tar.c as vi.Mock).mockImplementationOnce(() => {
                 throw error;
             });
 
@@ -289,12 +290,12 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementation(() => ({
+        (artifact.create as vi.Mock).mockImplementation(() => ({
             uploadArtifact: uploadResult,
         }));
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size: 0,
         }));
 
@@ -332,21 +333,21 @@ describe("uploadArtifact", () => {
                 ...env,
             };
 
-            (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+            (artifact.create as vi.Mock).mockImplementationOnce(() => ({
                 uploadArtifact: uploadResult,
             }));
 
-            const statSync = jest.spyOn(fs, "statSync");
-            (statSync as jest.Mock).mockImplementationOnce(() => ({
+            const statSync = vi.spyOn(fs, "statSync");
+            (statSync as vi.Mock).mockImplementationOnce(() => ({
                 size,
             }));
 
-            const writeFileSync = jest.spyOn(fs, "writeFileSync");
-            writeFileSync.mockImplementationOnce((path) => {
+            const writeFileSync = vi.spyOn(fs, "writeFileSync");
+            writeFileSync.mockImplementationOnce((path: string) => {
                 if (path === dependenciesPath) throw error;
             });
 
-            const unlinkSync = jest.spyOn(fs, "unlinkSync");
+            const unlinkSync = vi.spyOn(fs, "unlinkSync");
             unlinkSync.mockImplementationOnce(() => {
                 return true;
             });
@@ -368,7 +369,7 @@ describe("uploadArtifact", () => {
 
             expect(isUploaded).toBe(false);
 
-            (artifact.create as jest.Mock).mockReset();
+            (artifact.create as vi.Mock).mockReset();
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
@@ -384,7 +385,7 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () =>
                 Promise.resolve({
                     artifactName,
@@ -393,13 +394,13 @@ describe("uploadArtifact", () => {
                 }),
         }));
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, "writeFileSync");
-        writeFileSync.mockImplementationOnce((path) => {
+        const writeFileSync = vi.spyOn(fs, "writeFileSync");
+        writeFileSync.mockImplementationOnce((path: string) => {
             if (path === dependenciesPath) return true;
         });
 
@@ -431,17 +432,17 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
             uploadArtifact: () => Promise.resolve(),
         }));
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const writeFileSync = jest.spyOn(fs, "writeFileSync");
-        writeFileSync.mockImplementationOnce((path) => {
+        const writeFileSync = vi.spyOn(fs, "writeFileSync");
+        writeFileSync.mockImplementationOnce((path: string) => {
             if (path === dependenciesPath) return true;
         });
 
@@ -479,17 +480,17 @@ describe("uploadArtifact", () => {
                 ...env,
             };
 
-            (artifact.create as jest.Mock).mockImplementationOnce(() => ({
+            (artifact.create as vi.Mock).mockImplementationOnce(() => ({
                 uploadArtifact: () => Promise.reject(error),
             }));
 
-            const statSync = jest.spyOn(fs, "statSync");
-            (statSync as jest.Mock).mockImplementationOnce(() => ({
+            const statSync = vi.spyOn(fs, "statSync");
+            (statSync as vi.Mock).mockImplementationOnce(() => ({
                 size,
             }));
 
-            const writeFileSync = jest.spyOn(fs, "writeFileSync");
-            writeFileSync.mockImplementationOnce((path) => {
+            const writeFileSync = vi.spyOn(fs, "writeFileSync");
+            writeFileSync.mockImplementationOnce((path: string) => {
                 if (path === dependenciesPath) return true;
             });
 

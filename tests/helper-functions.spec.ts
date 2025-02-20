@@ -1,8 +1,9 @@
 import * as core from "@actions/core";
+import { describe, it, expect, vi } from "vitest";
 
 import { isError } from "../src/helper-functions";
 
-jest.mock("@actions/core");
+vi.mock("@actions/core");
 
 describe("isError", () => {
     it("always returns evaluated condition", () => {

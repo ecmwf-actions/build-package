@@ -59,7 +59,6 @@ import main from "./main";
  *   @param {String} coverage_file Absolute path to code coverage file, if collected.
  *   @param {String} package_path Absolute path to generated package.
  */
-// eslint-disable-next-line jest/require-hook
 main()
     .then((outputs: ActionOutputs) => {
         core.startGroup("Set Outputs");

@@ -4,13 +4,14 @@ import path from "path";
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import { mkdirP } from "@actions/io";
+import { describe, it, expect, vi } from "vitest";
 
 import buildPackage from "../src/build-package";
 import { EnvironmentVariables } from "../src/types/env-functions";
 
-jest.mock("@actions/core");
-jest.mock("@actions/exec");
-jest.mock("@actions/io");
+vi.mock("@actions/core");
+vi.mock("@actions/exec");
+vi.mock("@actions/io");
 
 // Test parameters.
 const repository = "owner/repo";
@@ -51,7 +52,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -81,7 +82,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(1);
+        (exec.exec as vi.Mock).mockResolvedValue(1);
 
         const isBuilt = await buildPackage(
             repository,
@@ -111,7 +112,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -145,7 +146,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         let isBuilt = await buildPackage(
             repository,
@@ -171,7 +172,7 @@ describe("buildPackage", () => {
             `==> configureOptions: --prefix=${installDir}`
         );
 
-        (core.info as jest.Mock).mockReset();
+        (core.info as vi.Mock).mockReset();
 
         const testEnv2 = {
             ...env,
@@ -221,7 +222,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         let isBuilt = await buildPackage(
             repository,
@@ -247,7 +248,7 @@ describe("buildPackage", () => {
             `==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},${testCmakeOptions}`
         );
 
-        (core.info as jest.Mock).mockReset();
+        (core.info as vi.Mock).mockReset();
 
         const testEnv2 = {
             ...env,
@@ -294,7 +295,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         let isBuilt = await buildPackage(
             repository,
@@ -319,7 +320,7 @@ describe("buildPackage", () => {
             `==> testOptions: ${testCtestOptions}`
         );
 
-        (core.info as jest.Mock).mockReset();
+        (core.info as vi.Mock).mockReset();
 
         const testEnv2 = {
             ...env,
@@ -356,7 +357,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -402,15 +403,15 @@ describe("buildPackage", () => {
         );
         const cmakeOptionsFileContent = testCmakeOptions.join(" ");
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
-        const existsSync = jest.spyOn(fs, "existsSync");
+        const existsSync = vi.spyOn(fs, "existsSync");
         existsSync.mockImplementation((path) => {
             if (path === cmakeOptionsFile) return true;
             return false;
         });
 
-        const readFileSync = jest.spyOn(fs, "readFileSync");
+        const readFileSync = vi.spyOn(fs, "readFileSync");
         readFileSync.mockImplementation((path) => {
             if (path === cmakeOptionsFile) return cmakeOptionsFileContent;
             return "";
@@ -464,15 +465,15 @@ describe("buildPackage", () => {
         const deprecatedCmakeOptionsFileContent =
             testDeprecatedCmakeOptions.join(" ");
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
-        const existsSync = jest.spyOn(fs, "existsSync");
+        const existsSync = vi.spyOn(fs, "existsSync");
         existsSync.mockImplementation((path) => {
             if (path === deprecatedCmakeOptionsFile) return true;
             return false;
         });
 
-        const readFileSync = jest.spyOn(fs, "readFileSync");
+        const readFileSync = vi.spyOn(fs, "readFileSync");
         readFileSync.mockImplementation((path) => {
             if (path === deprecatedCmakeOptionsFile)
                 return deprecatedCmakeOptionsFileContent;
@@ -553,7 +554,7 @@ describe("buildPackage", () => {
             testEnv1.VAR2,
         ];
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -592,7 +593,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 (command === "sudo" &&
                     args[0] === "apt-get" &&
@@ -638,7 +639,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -674,7 +675,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -707,7 +708,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -729,7 +730,7 @@ describe("buildPackage", () => {
 
         expect(isBuilt).toBe(true);
 
-        (core.info as jest.Mock).mock.calls.forEach((call) => {
+        (core.info as vi.Mock).mock.calls.forEach((call) => {
             const arg = call[0];
             if (!/^==> options\.env:/.test(arg)) return;
 
@@ -757,7 +758,7 @@ describe("buildPackage", () => {
             },
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -838,7 +839,7 @@ describe("buildPackage", () => {
             options
         );
 
-        (core.info as jest.Mock).mock.calls.forEach((call) => {
+        (core.info as vi.Mock).mock.calls.forEach((call) => {
             const arg = call[0];
             if (!/^==> options\.env:/.test(arg)) return;
 
@@ -859,7 +860,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -901,7 +902,7 @@ describe("buildPackage", () => {
             },
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -1001,7 +1002,7 @@ describe("buildPackage", () => {
             },
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -1092,7 +1093,7 @@ describe("buildPackage", () => {
             },
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -1174,7 +1175,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "ecbuild" &&
@@ -1215,7 +1216,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "cmake" &&
@@ -1256,7 +1257,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (command === "env" && args[0] === "ctest") {
                 return Promise.resolve(1);
             }
@@ -1292,7 +1293,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "lcov" &&
@@ -1336,7 +1337,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "lcov" &&
@@ -1382,7 +1383,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "lcov" &&
@@ -1423,7 +1424,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "genhtml" &&
@@ -1465,7 +1466,7 @@ describe("buildPackage", () => {
             ...env,
         };
 
-        (exec.exec as jest.Mock).mockImplementation((command, args) => {
+        (exec.exec as vi.Mock).mockImplementation((command, args) => {
             if (
                 command === "env" &&
                 args[0] === "cmake" &&
@@ -1518,7 +1519,7 @@ describe("buildPackage", () => {
             [`${repo.toUpperCase()}_PATH`]: installDir,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -1565,7 +1566,7 @@ describe("buildPackage", () => {
             COVERAGE_DIR: coverageDir,
         };
 
-        (exec.exec as jest.Mock).mockResolvedValue(0);
+        (exec.exec as vi.Mock).mockResolvedValue(0);
 
         const isBuilt = await buildPackage(
             repository,
@@ -1602,7 +1603,7 @@ describe("buildPackage", () => {
                 ...env,
             };
 
-            (exec.exec as jest.Mock).mockImplementationOnce(() => {
+            (exec.exec as vi.Mock).mockImplementationOnce(() => {
                 throw error;
             });
 

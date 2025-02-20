@@ -3,6 +3,7 @@ import * as core from "@actions/core";
 import { Octokit } from "@octokit/core";
 import crypto from "crypto";
 import fastFolderSize from "fast-folder-size";
+import { describe, it, expect, vi } from "vitest";
 
 import {
     getCacheKey,
@@ -15,11 +16,11 @@ import { EnvironmentVariables } from "../src/types/env-functions";
 import { parseOptions } from "../src/build-package";
 import { CmakeOptionsLookup } from "../src/types/main";
 
-jest.mock("@actions/core");
-jest.mock("@actions/cache");
-jest.mock("@actions/io");
-jest.mock("@octokit/core");
-jest.mock("fast-folder-size");
+vi.mock("@actions/core");
+vi.mock("@actions/cache");
+vi.mock("@actions/io");
+vi.mock("@octokit/core");
+vi.mock("fast-folder-size");
 
 const repository = "owner/repo";
 const packageName = "repo";
@@ -97,7 +98,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(
             (options) => {
                 if (!options.auth)
                     throw Error(
@@ -163,7 +164,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
@@ -237,6 +238,12 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
+            () => ({
+                request: resolveHeadSha,
+            })
+        );
+
         const { cacheKey } = await getCacheKey(
             repository,
             branch,
@@ -281,7 +288,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => {
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => {
             return {
                 request: resolveHeadSha,
             };
@@ -334,7 +341,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
@@ -391,7 +398,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
@@ -436,7 +443,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
@@ -479,7 +486,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
@@ -533,7 +540,7 @@ describe("getCacheKey", () => {
                 .update(cacheKeyStr)
                 .digest("hex");
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
                 () => ({
                     request: () => {
                         throw error;
@@ -592,7 +599,7 @@ describe("getCacheKey", () => {
             .update(cacheKeyStr)
             .digest("hex");
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
@@ -633,6 +640,12 @@ describe("getCacheKey", () => {
             .update(newCacheKeyStr)
             .digest("hex");
 
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
+            () => ({
+                request: resolveHeadSha,
+            })
+        );
+
         const newResult = await getCacheKey(
             repository,
             branch,
@@ -658,16 +671,14 @@ describe("restoreCache", () => {
     it("restores package from cache if found", async () => {
         expect.assertions(4);
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
         );
 
         for (const mockCacheHit of [false, true]) {
-            (cache.restoreCache as jest.Mock).mockResolvedValueOnce(
-                mockCacheHit
-            );
+            (cache.restoreCache as vi.Mock).mockResolvedValueOnce(mockCacheHit);
 
             const cacheHit = await restoreCache(
                 repository,
@@ -699,13 +710,13 @@ describe("restoreCache", () => {
     `("catches unexpected restore cache errors ($error)", async ({ error }) => {
         expect.hasAssertions();
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
         );
 
-        (cache.restoreCache as jest.Mock).mockRejectedValueOnce(error);
+        (cache.restoreCache as vi.Mock).mockRejectedValueOnce(error);
 
         const cacheHit = await restoreCache(
             repository,
@@ -734,16 +745,16 @@ describe("saveCache", () => {
     it("saves package to cache", async () => {
         expect.assertions(4);
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: resolveHeadSha,
         }));
 
-        (fastFolderSize as jest.Mock).mockImplementation((f, cb) => {
+        (fastFolderSize as vi.Mock).mockImplementation((f, cb) => {
             if (f) cb(null, 1024);
         });
 
         for (const mockIsSaved of [false, true]) {
-            (cache.saveCache as jest.Mock).mockResolvedValueOnce(mockIsSaved);
+            (cache.saveCache as vi.Mock).mockResolvedValueOnce(mockIsSaved);
 
             const isSaved = await saveCache(
                 repository,
@@ -771,13 +782,13 @@ describe("saveCache", () => {
     it("does not save empty package to cache", async () => {
         expect.assertions(2);
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
         );
 
-        (fastFolderSize as jest.Mock).mockImplementationOnce((f, cb) => {
+        (fastFolderSize as vi.Mock).mockImplementationOnce((f, cb) => {
             if (f) cb(null, 0);
         });
 
@@ -802,19 +813,19 @@ describe("saveCache", () => {
     it("does not save cache on key collisions", async () => {
         expect.assertions(2);
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
         );
 
-        (fastFolderSize as jest.Mock).mockImplementationOnce((f, cb) => {
+        (fastFolderSize as vi.Mock).mockImplementationOnce((f, cb) => {
             if (f) cb(null, 1024);
         });
 
         const errorMessage = `Unable to reserve cache with key ${cacheKey}, another job may be creating this cache.`;
 
-        (cache.saveCache as jest.Mock).mockRejectedValueOnce(
+        (cache.saveCache as vi.Mock).mockRejectedValueOnce(
             new Error(errorMessage)
         );
 
@@ -845,17 +856,17 @@ describe("saveCache", () => {
     `("catches unexpected save cache errors ($error)", async ({ error }) => {
         expect.hasAssertions();
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
             })
         );
 
-        (fastFolderSize as jest.Mock).mockImplementationOnce((f, cb) => {
+        (fastFolderSize as vi.Mock).mockImplementationOnce((f, cb) => {
             if (f) cb(null, 1024);
         });
 
-        (cache.saveCache as jest.Mock).mockImplementationOnce(() => {
+        (cache.saveCache as vi.Mock).mockImplementationOnce(() => {
             throw error;
         });
 

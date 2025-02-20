@@ -6,9 +6,11 @@ import {
     extendPaths,
     extendDependencies,
 } from "../src/env-functions";
+import { describe, it, expect, vi } from "vitest";
+import type { ExecOptions } from "@actions/exec";
 
-jest.mock("@actions/core");
-jest.mock("@actions/exec");
+vi.mock("@actions/core");
+vi.mock("@actions/exec");
 
 const os = "ubuntu-24.04";
 const compilerCc = "gcc-12";
@@ -39,8 +41,8 @@ describe("setupEnv", () => {
     it("returns compiler and cmake version environment variables", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation(
-            (command, args, options) => {
+        (exec.exec as vi.Mock).mockImplementation(
+            (command: string, args: string[], options: ExecOptions) => {
                 return new Promise((resolve) => {
                     if (args[0] === "cmake") {
                         options.listeners.stdout(
@@ -65,7 +67,7 @@ describe("setupEnv", () => {
     it("works around failed cmake command", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockResolvedValueOnce(1);
+        (exec.exec as vi.Mock).mockResolvedValueOnce(1);
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
 
@@ -85,7 +87,7 @@ describe("setupEnv", () => {
         async ({ error }) => {
             expect.assertions(1);
 
-            jest.spyOn(JSON, "parse").mockImplementationOnce(() => {
+            vi.spyOn(JSON, "parse").mockImplementationOnce(() => {
                 throw error;
             });
 
@@ -102,8 +104,8 @@ describe("setupEnv", () => {
     it("works around empty version key in cmake command", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation(
-            (command, args, options) => {
+        (exec.exec as vi.Mock).mockImplementation(
+            (command: string, args: string[], options: ExecOptions) => {
                 if (args[0] === "cmake") {
                     options.listeners.stdout('{"version":{"string":""}}');
                 }
@@ -124,8 +126,8 @@ describe("setupEnv", () => {
     it("returns OpenSSL environment variables on macOS", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation(
-            (command, args, options) => {
+        (exec.exec as vi.Mock).mockImplementation(
+            (command: string, args: string[], options: ExecOptions) => {
                 switch (args[0]) {
                     case "cmake":
                         options.listeners.stdout(
@@ -164,8 +166,8 @@ describe("setupEnv", () => {
     it("works around failed brew command on macOS", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation(
-            (command, args, options) => {
+        (exec.exec as vi.Mock).mockImplementation(
+            (command: string, args: string[], options: ExecOptions) => {
                 switch (args[0]) {
                     case "cmake":
                         options.listeners.stdout(
@@ -199,8 +201,8 @@ describe("setupEnv", () => {
     it("works around empty output of brew command on macOS", async () => {
         expect.assertions(1);
 
-        (exec.exec as jest.Mock).mockImplementation(
-            (command, args, options) => {
+        (exec.exec as vi.Mock).mockImplementation(
+            (command: string, args: string[], options: ExecOptions) => {
                 switch (args[0]) {
                     case "cmake":
                         options.listeners.stdout(

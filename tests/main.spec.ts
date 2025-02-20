@@ -1,4 +1,5 @@
 import * as core from "@actions/core";
+import { describe, it, expect, vi } from "vitest";
 
 import main from "../src/main";
 
@@ -10,13 +11,13 @@ import downloadRepository from "../src/download-repository";
 import buildPackage from "../src/build-package";
 import { EnvironmentVariables } from "../src/types/env-functions";
 
-jest.mock("@actions/core");
-jest.mock("../src/env-functions");
-jest.mock("../src/cache-functions");
-jest.mock("../src/download-artifact");
-jest.mock("../src/upload-artifact");
-jest.mock("../src/download-repository");
-jest.mock("../src/build-package");
+vi.mock("@actions/core");
+vi.mock("../src/env-functions");
+vi.mock("../src/cache-functions");
+vi.mock("../src/download-artifact");
+vi.mock("../src/upload-artifact");
+vi.mock("../src/download-repository");
+vi.mock("../src/build-package");
 
 const inputs: ActionInputs = {
     workspace: "/path/to/work/repo/repo",
@@ -68,20 +69,20 @@ describe("main", () => {
     it("resolves the promise if dependency artifacts are found", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValue(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValueOnce(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -89,23 +90,23 @@ describe("main", () => {
     it("resolves the promise if dependency build is forced", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => {
+        (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "force_build") return true;
             return inputs[inputName];
         });
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValue(true);
-        (buildPackage as jest.Mock).mockResolvedValue(true);
-        (saveCache as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (saveCache as vi.Mock).mockResolvedValueOnce(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -113,21 +114,22 @@ describe("main", () => {
     it("resolves the promise if cached dependencies are found", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(false);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(false);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -135,23 +137,23 @@ describe("main", () => {
     it("resolves the promise if restoring cache is being skipped", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => {
+        (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "recreate_cache") return true;
             return inputs[inputName];
         });
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (saveCache as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (saveCache as vi.Mock).mockResolvedValueOnce(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -159,23 +161,23 @@ describe("main", () => {
     it("resolves the promise if dependencies are built", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(false);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (saveCache as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(false);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (saveCache as vi.Mock).mockResolvedValueOnce(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -191,21 +193,22 @@ describe("main", () => {
             ...env,
         };
 
-        (core.getInput as jest.Mock).mockImplementation((inputName) => {
+        (core.getInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "cmake_options") return cmakeOptions;
             return inputs[inputName];
         });
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
         expect(buildPackage).toHaveBeenCalledWith(
@@ -250,26 +253,24 @@ describe("main", () => {
             ...env,
         };
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
-            (inputName) => {
-                if (inputName === "dependency_cmake_options")
-                    return dependencyCmakeOptions;
-                return inputs[inputName];
-            }
-        );
+        (core.getMultilineInput as vi.Mock).mockImplementation((inputName) => {
+            if (inputName === "dependency_cmake_options")
+                return dependencyCmakeOptions;
+            return inputs[inputName];
+        });
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValue(false);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValue(false);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
         expect(buildPackage).toHaveBeenCalledWith(
@@ -337,21 +338,22 @@ describe("main", () => {
     it("resolves the promise if build is skipped", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => {
+        (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "self_build") return false;
             return inputs[inputName];
         });
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -372,21 +374,22 @@ describe("main", () => {
 
         delete expectedOutputs.coverage_file;
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation((inputName) => {
+        (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "self_coverage") return false;
             return inputs[inputName];
         });
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(testEnv);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(testEnv);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(expectedOutputs);
     });
@@ -394,23 +397,23 @@ describe("main", () => {
     it("resolves the promise if saving built dependency to cache fails", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(false);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (saveCache as jest.Mock).mockResolvedValueOnce(false);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(true);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(false);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (saveCache as vi.Mock).mockResolvedValueOnce(false);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(true);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -418,20 +421,21 @@ describe("main", () => {
     it("resolves the promise if package artifact upload fails", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockResolvedValueOnce(false);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockResolvedValueOnce(false);
 
         await expect(main()).resolves.toStrictEqual(outputs);
     });
@@ -439,20 +443,21 @@ describe("main", () => {
     it("resolves the promise if code coverage artifact upload fails", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(true);
-        (uploadArtifact as jest.Mock).mockImplementationOnce((repository) => {
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockResolvedValue(true);
+        (uploadArtifact as vi.Mock).mockImplementationOnce((repository) => {
             if (repository === "coverage-repo") return false;
             return true;
         });
@@ -465,43 +470,41 @@ describe("main", () => {
 
         const dependencyCmakeOptions = ['owner/repo1 "-DCMAKE_VAR=1"'];
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
-            (inputName) => {
-                if (inputName === "dependency_cmake_options")
-                    return dependencyCmakeOptions;
-                return inputs[inputName];
-            }
-        );
+        (core.getMultilineInput as vi.Mock).mockImplementation((inputName) => {
+            if (inputName === "dependency_cmake_options")
+                return dependencyCmakeOptions;
+            return inputs[inputName];
+        });
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
 
         await expect(main()).rejects.toBe(
             `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptions[0]}`
         );
 
-        (setupEnv as jest.Mock).mockReset();
+        (setupEnv as vi.Mock).mockReset();
     });
 
     it("rejects the promise if environment setup errors out", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(undefined);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(undefined);
 
         await expect(main()).rejects.toBe("Error setting up build environment");
     });
@@ -511,21 +514,18 @@ describe("main", () => {
 
         const unexpectedDependencyName = "owner-repo@branch";
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
-            (inputName) => {
-                if (inputName === "dependencies")
-                    return [unexpectedDependencyName];
-                return inputs[inputName];
-            }
-        );
+        (core.getMultilineInput as vi.Mock).mockImplementation((inputName) => {
+            if (inputName === "dependencies") return [unexpectedDependencyName];
+            return inputs[inputName];
+        });
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
 
         await expect(main()).rejects.toBe(
             `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${unexpectedDependencyName}`
@@ -535,20 +535,20 @@ describe("main", () => {
     it("rejects the promise if dependency repository download fails", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(false);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValueOnce(false);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(false);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValueOnce(false);
 
         await expect(main()).rejects.toBe("Error downloading repository");
     });
@@ -556,21 +556,21 @@ describe("main", () => {
     it("rejects the promise if dependency is not built", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(false);
-        (restoreCache as jest.Mock).mockResolvedValueOnce(false);
-        (downloadRepository as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockResolvedValueOnce(false);
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(false);
+        (restoreCache as vi.Mock).mockResolvedValueOnce(false);
+        (downloadRepository as vi.Mock).mockResolvedValueOnce(true);
+        (buildPackage as vi.Mock).mockResolvedValueOnce(false);
 
         await expect(main()).rejects.toBe("Error building dependency");
     });
@@ -578,19 +578,20 @@ describe("main", () => {
     it("rejects the promise if package build fails", async () => {
         expect.assertions(1);
 
-        (core.getInput as jest.Mock).mockImplementation(
+        (core.getInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getBooleanInput as jest.Mock).mockImplementation(
+        (core.getBooleanInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
-        (core.getMultilineInput as jest.Mock).mockImplementation(
+        (core.getMultilineInput as vi.Mock).mockImplementation(
             (inputName) => inputs[inputName]
         );
 
-        (setupEnv as jest.Mock).mockResolvedValueOnce(env);
-        (downloadArtifact as jest.Mock).mockResolvedValueOnce(true);
-        (buildPackage as jest.Mock).mockImplementation((repository) => {
+        (setupEnv as vi.Mock).mockResolvedValueOnce(env);
+        (downloadArtifact as vi.Mock).mockResolvedValueOnce(true);
+        (downloadRepository as vi.Mock).mockResolvedValue(true);
+        (buildPackage as vi.Mock).mockImplementation((repository) => {
             if (repository === "owner/repo") return false;
             return true;
         });
@@ -607,17 +608,17 @@ describe("main", () => {
         async ({ error }) => {
             expect.assertions(1);
 
-            (core.getInput as jest.Mock).mockImplementation(
+            (core.getInput as vi.Mock).mockImplementation(
                 (inputName) => inputs[inputName]
             );
-            (core.getBooleanInput as jest.Mock).mockImplementation(
+            (core.getBooleanInput as vi.Mock).mockImplementation(
                 (inputName) => inputs[inputName]
             );
-            (core.getMultilineInput as jest.Mock).mockImplementation(
+            (core.getMultilineInput as vi.Mock).mockImplementation(
                 (inputName) => inputs[inputName]
             );
 
-            (setupEnv as jest.Mock).mockImplementationOnce(() => {
+            (setupEnv as vi.Mock).mockImplementationOnce(() => {
                 throw error;
             });
 

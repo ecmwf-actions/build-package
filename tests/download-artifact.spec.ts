@@ -6,16 +6,17 @@ import { Octokit } from "@octokit/core";
 import AdmZip from "adm-zip";
 import { filesize } from "filesize";
 import tar from "tar";
+import { describe, it, expect, vi } from "vitest";
 
 import downloadArtifact from "../src/download-artifact";
 import { EnvironmentVariables } from "../src/types/env-functions";
 import { getCacheKeyHash } from "../src/cache-functions";
 
-jest.mock("@actions/core");
-jest.mock("@actions/io");
-jest.mock("@octokit/core");
-jest.mock("adm-zip");
-jest.mock("tar");
+vi.mock("@actions/core");
+vi.mock("@actions/io");
+vi.mock("@octokit/core");
+vi.mock("adm-zip");
+vi.mock("tar");
 
 const getArtifactName = (
     repo: string,
@@ -146,7 +147,7 @@ const getEntries = () => [
     },
 ];
 
-const extractAllTo = jest.fn();
+const extractAllTo = vi.fn();
 
 describe("downloadArtifact", () => {
     it("returns true on success", async () => {
@@ -156,8 +157,8 @@ describe("downloadArtifact", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(
-            (options) => {
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(
+            (options: { auth: string }) => {
                 if (!options.auth)
                     throw Error(
                         `Octokit authentication missing, did you pass the auth key?`
@@ -180,20 +181,20 @@ describe("downloadArtifact", () => {
             }
         );
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const existsSync = jest.spyOn(fs, "existsSync");
-        existsSync.mockImplementationOnce((path) => {
+        const existsSync = vi.spyOn(fs, "existsSync");
+        existsSync.mockImplementationOnce((path: string) => {
             if (path === dependenciesPath) return false;
             return true;
         });
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
@@ -268,7 +269,7 @@ describe("downloadArtifact", () => {
         const artifactPath = `${downloadDir}/${artifactName}`;
         const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -281,20 +282,20 @@ describe("downloadArtifact", () => {
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const existsSync = jest.spyOn(fs, "existsSync");
+        const existsSync = vi.spyOn(fs, "existsSync");
         existsSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
             return false;
         });
 
-        const readFileSync = jest.spyOn(fs, "readFileSync");
+        const readFileSync = vi.spyOn(fs, "readFileSync");
         readFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath)
                 return JSON.stringify({
@@ -304,7 +305,7 @@ describe("downloadArtifact", () => {
             return "";
         });
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
@@ -335,7 +336,7 @@ describe("downloadArtifact", () => {
 
         const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`;
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -348,14 +349,14 @@ describe("downloadArtifact", () => {
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
@@ -386,7 +387,7 @@ describe("downloadArtifact", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -433,7 +434,7 @@ describe("downloadArtifact", () => {
                 ...env,
             };
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementation(
                 () => ({
                     request: (route: string) => {
                         switch (route) {
@@ -477,7 +478,7 @@ describe("downloadArtifact", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -523,7 +524,7 @@ describe("downloadArtifact", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -543,14 +544,14 @@ describe("downloadArtifact", () => {
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
@@ -589,7 +590,7 @@ describe("downloadArtifact", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -600,14 +601,14 @@ describe("downloadArtifact", () => {
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
@@ -638,7 +639,7 @@ describe("downloadArtifact", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -685,7 +686,7 @@ describe("downloadArtifact", () => {
                 ...env,
             };
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementation(
                 () => ({
                     request: (route: string) => {
                         switch (route) {
@@ -694,7 +695,6 @@ describe("downloadArtifact", () => {
                                     artifactName
                                 );
                             case "GET /repos/{owner}/{repo}/git/ref/{ref}":
-                                // eslint-disable-next-line jest/no-if
                                 throw error;
                         }
                     },
@@ -738,7 +738,7 @@ describe("downloadArtifact", () => {
                 ...env,
             };
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementation(
                 () => ({
                     request: (route: string) => {
                         switch (route) {
@@ -755,14 +755,14 @@ describe("downloadArtifact", () => {
                 })
             );
 
-            (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+            (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
                 () => ({
                     getEntries,
                     extractAllTo,
                 })
             );
 
-            (tar.x as jest.Mock).mockImplementationOnce(() => {
+            (tar.x as vi.Mock).mockImplementationOnce(() => {
                 throw error;
             });
 
@@ -819,7 +819,7 @@ describe("downloadArtifact", () => {
         const artifactPath = `${downloadDir}/${artifactName}`;
         const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -832,20 +832,20 @@ describe("downloadArtifact", () => {
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const existsSync = jest.spyOn(fs, "existsSync");
+        const existsSync = vi.spyOn(fs, "existsSync");
         existsSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath) return true;
             return false;
         });
 
-        const readFileSync = jest.spyOn(fs, "readFileSync");
+        const readFileSync = vi.spyOn(fs, "readFileSync");
         readFileSync.mockImplementationOnce((path) => {
             if (path === dependenciesPath)
                 return JSON.stringify({
@@ -855,7 +855,7 @@ describe("downloadArtifact", () => {
             return "";
         });
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementation(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
@@ -902,7 +902,7 @@ describe("downloadArtifact", () => {
             },
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/actions/artifacts":
@@ -915,14 +915,14 @@ describe("downloadArtifact", () => {
             },
         }));
 
-        (AdmZip.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
             })
         );
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
         unlinkSync.mockImplementationOnce(() => true);
 
         const isArtifactDownloaded = await downloadArtifact(
