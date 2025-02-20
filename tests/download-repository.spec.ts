@@ -3,16 +3,17 @@ import * as core from "@actions/core";
 import { Octokit } from "@octokit/core";
 import { filesize } from "filesize";
 import tar from "tar";
+import { describe, it, expect, vi } from "vitest";
 
 import downloadFile from "../src/download-file";
 import downloadRepository from "../src/download-repository";
 
-jest.mock("@actions/core");
-jest.mock("@actions/http-client");
-jest.mock("@actions/io");
-jest.mock("@octokit/core");
-jest.mock("tar");
-jest.mock("../src/download-file");
+vi.mock("@actions/core");
+vi.mock("@actions/http-client");
+vi.mock("@actions/io");
+vi.mock("@octokit/core");
+vi.mock("tar");
+vi.mock("../src/download-file");
 
 // Test parameters.
 const repository = "owner/repo";
@@ -62,8 +63,8 @@ describe("downloadRepository", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(
-            (options) => {
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(
+            (options: { auth: string }) => {
                 if (!options.auth)
                     throw Error(
                         `Octokit authentication missing, did you pass the auth key?`
@@ -82,15 +83,15 @@ describe("downloadRepository", () => {
             }
         );
 
-        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
+        (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
-        (unlinkSync as jest.Mock).mockImplementationOnce(() => {
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
+        (unlinkSync as vi.Mock).mockImplementationOnce(() => {
             return true;
         });
 
@@ -126,7 +127,7 @@ describe("downloadRepository", () => {
         const testTag = "1.0.0";
         const testBranch = `refs/tags/${testTag}`;
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/git/ref/{ref}":
@@ -137,15 +138,15 @@ describe("downloadRepository", () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
+        (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
-        (unlinkSync as jest.Mock).mockImplementationOnce(() => {
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
+        (unlinkSync as vi.Mock).mockImplementationOnce(() => {
             return true;
         });
 
@@ -170,7 +171,7 @@ describe("downloadRepository", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+        (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: (route: string) => {
                     switch (route) {
@@ -211,7 +212,7 @@ describe("downloadRepository", () => {
                 ...env,
             };
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementationOnce(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
                 () => ({
                     request: (route: string) => {
                         switch (route) {
@@ -247,7 +248,7 @@ describe("downloadRepository", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/git/ref/{ref}":
@@ -288,7 +289,7 @@ describe("downloadRepository", () => {
                 ...env,
             };
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementation(
                 () => ({
                     request: (route: string) => {
                         switch (route) {
@@ -330,7 +331,7 @@ describe("downloadRepository", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/git/ref/{ref}":
@@ -341,7 +342,7 @@ describe("downloadRepository", () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockImplementationOnce(() => {
+        (downloadFile as vi.Mock).mockImplementationOnce(() => {
             throw error;
         });
 
@@ -369,7 +370,7 @@ describe("downloadRepository", () => {
             ...env,
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/git/ref/{ref}":
@@ -380,10 +381,10 @@ describe("downloadRepository", () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
+        (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size: 0,
         }));
 
@@ -415,7 +416,7 @@ describe("downloadRepository", () => {
                 ...env,
             };
 
-            (Octokit.prototype.constructor as jest.Mock).mockImplementation(
+            (Octokit.prototype.constructor as vi.Mock).mockImplementation(
                 () => ({
                     request: (route: string) => {
                         switch (route) {
@@ -428,14 +429,14 @@ describe("downloadRepository", () => {
                 })
             );
 
-            (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
+            (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
 
-            const statSync = jest.spyOn(fs, "statSync");
-            (statSync as jest.Mock).mockImplementationOnce(() => ({
+            const statSync = vi.spyOn(fs, "statSync");
+            (statSync as vi.Mock).mockImplementationOnce(() => ({
                 size,
             }));
 
-            (tar.x as jest.Mock).mockImplementationOnce(() => {
+            (tar.x as vi.Mock).mockImplementationOnce(() => {
                 throw error;
             });
 
@@ -471,7 +472,7 @@ describe("downloadRepository", () => {
             },
         };
 
-        (Octokit.prototype.constructor as jest.Mock).mockImplementation(() => ({
+        (Octokit.prototype.constructor as vi.Mock).mockImplementation(() => ({
             request: (route: string) => {
                 switch (route) {
                     case "GET /repos/{owner}/{repo}/git/ref/{ref}":
@@ -482,15 +483,15 @@ describe("downloadRepository", () => {
             },
         }));
 
-        (downloadFile as jest.Mock).mockResolvedValueOnce(undefined);
+        (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
 
-        const statSync = jest.spyOn(fs, "statSync");
-        (statSync as jest.Mock).mockImplementationOnce(() => ({
+        const statSync = vi.spyOn(fs, "statSync");
+        (statSync as vi.Mock).mockImplementationOnce(() => ({
             size,
         }));
 
-        const unlinkSync = jest.spyOn(fs, "unlinkSync");
-        (unlinkSync as jest.Mock).mockImplementationOnce(() => {
+        const unlinkSync = vi.spyOn(fs, "unlinkSync");
+        (unlinkSync as vi.Mock).mockImplementationOnce(() => {
             return true;
         });
 
