@@ -89,7 +89,7 @@ const main = async () => {
             !supportedGenerators.includes(cpackGenerator.toUpperCase())
         ) {
             return Promise.reject(
-                `Invalid or unsupported cpack generator: ${cpackGenerator}`
+                `Invalid or unsupported cpack generator: ${cpackGenerator}`,
             );
         }
 
@@ -101,14 +101,14 @@ const main = async () => {
                 dependencyCmakeOptionLine.split(/:\s?(.+)/);
             if (!packageName || !options)
                 return Promise.reject(
-                    `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptionLine}`
+                    `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptionLine}`,
                 );
             if (packageName.includes("/")) {
                 [, packageName] = packageName.split("/");
             }
             dependencyCmakeOptionsLookup[packageName] = options.replace(
                 /^['"]|['"]$/g,
-                ""
+                "",
             );
         }
 
@@ -138,7 +138,7 @@ const main = async () => {
 
             if (!owner || !repo)
                 return Promise.reject(
-                    `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${dependency}`
+                    `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${dependency}`,
                 );
 
             const dependencyBranch =
@@ -158,7 +158,7 @@ const main = async () => {
                     env,
                     dependencyTree,
                     cacheSuffix,
-                    dependencyCmakeOptions
+                    dependencyCmakeOptions,
                 );
 
                 if (isArtifactDownloaded) continue;
@@ -178,7 +178,7 @@ const main = async () => {
                     cacheSuffix,
                     env,
                     dependencyTree,
-                    dependencyCmakeOptions
+                    dependencyCmakeOptions,
                 );
 
                 if (cacheHit) continue;
@@ -191,7 +191,7 @@ const main = async () => {
                 dependencyBranch,
                 githubToken,
                 downloadDir,
-                env
+                env,
             );
 
             if (!isRepositoryDownloaded)
@@ -216,7 +216,7 @@ const main = async () => {
                 githubToken,
                 undefined,
                 undefined,
-                toolchain_file
+                toolchain_file,
             );
 
             if (!isBuilt) return Promise.reject("Error building dependency");
@@ -234,7 +234,7 @@ const main = async () => {
                     cacheSuffix,
                     env,
                     dependencyTree,
-                    dependencyCmakeOptions
+                    dependencyCmakeOptions,
                 );
             }
         }
@@ -282,7 +282,7 @@ const main = async () => {
                     env,
                     dependencyTree,
                     cmakeOptions,
-                    dependencyCmakeOptionsLookup
+                    dependencyCmakeOptionsLookup,
                 );
             }
 
@@ -306,7 +306,7 @@ const main = async () => {
                     githubToken,
                     cpackGenerator,
                     cpackOptions,
-                    toolchain_file
+                    toolchain_file,
                 );
 
                 if (!isBuilt) return Promise.reject("Error building package");
@@ -325,7 +325,7 @@ const main = async () => {
                         env,
                         dependencyTree,
                         cmakeOptions,
-                        dependencyCmakeOptionsLookup
+                        dependencyCmakeOptionsLookup,
                     );
 
                     // Upload build artifact.
@@ -342,7 +342,7 @@ const main = async () => {
                         githubToken,
                         cacheSuffix,
                         cmakeOptions,
-                        dependencyCmakeOptionsLookup
+                        dependencyCmakeOptionsLookup,
                     );
                 }
 
@@ -361,7 +361,7 @@ const main = async () => {
                         githubToken,
                         cacheSuffix,
                         cmakeOptions,
-                        dependencyCmakeOptionsLookup
+                        dependencyCmakeOptionsLookup,
                     );
             }
         }

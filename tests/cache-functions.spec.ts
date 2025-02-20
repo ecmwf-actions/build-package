@@ -79,14 +79,14 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
 
             if (dependencyCmakeOptionsLookup[dependency]) {
                 const dependencyCmakeOptions = [];
                 dependencyCmakeOptions.push(
-                    ...parseOptions(dependencyCmakeOptionsLookup[dependency])
+                    ...parseOptions(dependencyCmakeOptionsLookup[dependency]),
                 );
                 dependencyCmakeOptions.sort();
                 cacheKeyStr += `::${dependency}-options=${dependencyCmakeOptions.join()}`;
@@ -102,13 +102,13 @@ describe("getCacheKey", () => {
             (options) => {
                 if (!options.auth)
                     throw Error(
-                        `Octokit authentication missing, did you pass the auth key?`
+                        `Octokit authentication missing, did you pass the auth key?`,
                     );
 
                 return {
                     request: resolveHeadSha,
                 };
-            }
+            },
         );
 
         for (let i = 0; i < 10; i++) {
@@ -123,11 +123,11 @@ describe("getCacheKey", () => {
                 testEnv,
                 {},
                 cmakeOptions,
-                dependencyCmakeOptionsLookup
+                dependencyCmakeOptionsLookup,
             );
 
             expect(result.cacheKey).toBe(
-                `${os}-${compiler}-${packageName}-${cacheKeySha}`
+                `${os}-${compiler}-${packageName}-${cacheKeySha}`,
             );
             expect(result.headSha).toStrictEqual(sha);
 
@@ -154,7 +154,7 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -167,7 +167,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const result = getCacheKeyHash(
@@ -176,7 +176,7 @@ describe("getCacheKey", () => {
             testEnv,
             {},
             cmakeOptions,
-            sha
+            sha,
         );
 
         expect(result).toStrictEqual(cacheKeySha);
@@ -191,7 +191,7 @@ describe("getCacheKey", () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -211,11 +211,11 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            undefined
+            undefined,
         );
 
         expect(cacheKey).toBe(
-            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`,
         );
     });
 
@@ -228,7 +228,7 @@ describe("getCacheKey", () => {
 
         let cacheKeyStr = `v=${version}${cacheSuffix}::cmake=${testEnv.CMAKE_VERSION}::options=::${repo}=${sha}`;
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -241,7 +241,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const { cacheKey } = await getCacheKey(
@@ -254,11 +254,11 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            ""
+            "",
         );
 
         expect(cacheKey).toBe(
-            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`,
         );
     });
 
@@ -278,7 +278,7 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -304,11 +304,11 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(result.cacheKey).toBe(
-            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`,
         );
     });
 
@@ -331,7 +331,7 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${packageName}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -344,7 +344,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const { cacheKey } = await getCacheKey(
@@ -357,11 +357,11 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(cacheKey).toBe(
-            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`,
         );
         expect(core.info).toHaveBeenCalledWith(`==> Branch: ${testTag}`);
         expect(core.info).toHaveBeenCalledWith(`==> Ref: tags/${testTag}`);
@@ -387,7 +387,7 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             if (dependency === packageName) continue;
             cacheKeyStr += `::${dependency}=${dependencySha}`;
@@ -401,7 +401,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const { cacheKey } = await getCacheKey(
@@ -414,11 +414,11 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(cacheKey).toBe(
-            `${os}-${compiler}-${packageName}-${cacheKeySha}`
+            `${os}-${compiler}-${packageName}-${cacheKeySha}`,
         );
     });
 
@@ -446,7 +446,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const { cacheKey } = await getCacheKey(
@@ -459,7 +459,7 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
@@ -489,7 +489,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const { cacheKey } = await getCacheKey(
@@ -502,7 +502,7 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
@@ -530,7 +530,7 @@ describe("getCacheKey", () => {
             }::options=${buildOptions.join()}::${repo}=undefined`;
 
             for (const [dependency, dependencySha] of Object.entries(
-                testEnv.DEPENDENCIES || {}
+                testEnv.DEPENDENCIES || {},
             ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
                 cacheKeyStr += `::${dependency}=${dependencySha}`;
             }
@@ -545,7 +545,7 @@ describe("getCacheKey", () => {
                     request: () => {
                         throw error;
                     },
-                })
+                }),
             );
 
             const { cacheKey } = await getCacheKey(
@@ -558,19 +558,19 @@ describe("getCacheKey", () => {
                 cacheSuffix,
                 testEnv,
                 {},
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(cacheKey).toBe(`${os}-${compiler}-${repo}-${cacheKeySha}`);
             expect(core.info).toHaveBeenCalledWith(
-                `==> result.headSha: undefined`
+                `==> result.headSha: undefined`,
             );
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error getting repository HEAD for ${repo}: ${error.message}`
+                `Error getting repository HEAD for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("invalidates the cache if suffix is supplied", async () => {
@@ -589,7 +589,7 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             cacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -602,7 +602,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const result = await getCacheKey(
@@ -615,11 +615,11 @@ describe("getCacheKey", () => {
             cacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(result.cacheKey).toBe(
-            `${os}-${compiler}-${repo}-${cacheKeySha}`
+            `${os}-${compiler}-${repo}-${cacheKeySha}`,
         );
         expect(result.headSha).toStrictEqual(sha);
 
@@ -630,7 +630,7 @@ describe("getCacheKey", () => {
         }::options=${buildOptions.join()}::${repo}=${sha}`;
 
         for (const [dependency, dependencySha] of Object.entries(
-            testEnv.DEPENDENCIES || {}
+            testEnv.DEPENDENCIES || {},
         ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
             newCacheKeyStr += `::${dependency}=${dependencySha}`;
         }
@@ -643,7 +643,7 @@ describe("getCacheKey", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         const newResult = await getCacheKey(
@@ -656,11 +656,11 @@ describe("getCacheKey", () => {
             testCacheSuffix,
             testEnv,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(newResult.cacheKey).toBe(
-            `${os}-${compiler}-${repo}-${newCacheKeySha}`
+            `${os}-${compiler}-${repo}-${newCacheKeySha}`,
         );
         expect(newResult.cacheKey).not.toStrictEqual(result.cacheKey);
         expect(newResult.headSha).toStrictEqual(result.headSha);
@@ -674,7 +674,7 @@ describe("restoreCache", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         for (const mockCacheHit of [false, true]) {
@@ -692,13 +692,13 @@ describe("restoreCache", () => {
                 env,
                 {},
                 cmakeOptions,
-                dependencyCmakeOptionsLookup
+                dependencyCmakeOptionsLookup,
             );
 
             expect(cacheHit).toBe(mockCacheHit);
             expect(cache.restoreCache).toHaveBeenCalledWith(
                 [installDir],
-                cacheKey
+                cacheKey,
             );
         }
     });
@@ -713,7 +713,7 @@ describe("restoreCache", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         (cache.restoreCache as vi.Mock).mockRejectedValueOnce(error);
@@ -729,14 +729,14 @@ describe("restoreCache", () => {
             cacheSuffix,
             env,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(cacheHit).toBe(false);
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(
-            `Error restoring cache for ${packageName}: ${error.message}`
+            `Error restoring cache for ${packageName}: ${error.message}`,
         );
     });
 });
@@ -768,13 +768,13 @@ describe("saveCache", () => {
                 env,
                 {},
                 cmakeOptions,
-                dependencyCmakeOptionsLookup
+                dependencyCmakeOptionsLookup,
             );
 
             expect(isSaved).toBe(mockIsSaved);
             expect(cache.saveCache).toHaveBeenCalledWith(
                 [installDir],
-                cacheKey
+                cacheKey,
             );
         }
     });
@@ -785,7 +785,7 @@ describe("saveCache", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         (fastFolderSize as vi.Mock).mockImplementationOnce((f, cb) => {
@@ -803,7 +803,7 @@ describe("saveCache", () => {
             cacheSuffix,
             env,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isSaved).toBe(false);
@@ -816,7 +816,7 @@ describe("saveCache", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         (fastFolderSize as vi.Mock).mockImplementationOnce((f, cb) => {
@@ -826,7 +826,7 @@ describe("saveCache", () => {
         const errorMessage = `Unable to reserve cache with key ${cacheKey}, another job may be creating this cache.`;
 
         (cache.saveCache as vi.Mock).mockRejectedValueOnce(
-            new Error(errorMessage)
+            new Error(errorMessage),
         );
 
         const isSaved = await saveCache(
@@ -840,12 +840,12 @@ describe("saveCache", () => {
             cacheSuffix,
             env,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isSaved).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error saving cache for ${packageName}: ${errorMessage}`
+            `Error saving cache for ${packageName}: ${errorMessage}`,
         );
     });
 
@@ -859,7 +859,7 @@ describe("saveCache", () => {
         (Octokit.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 request: resolveHeadSha,
-            })
+            }),
         );
 
         (fastFolderSize as vi.Mock).mockImplementationOnce((f, cb) => {
@@ -881,14 +881,14 @@ describe("saveCache", () => {
             cacheSuffix,
             env,
             {},
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isSaved).toBe(false);
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(
-            `Error saving cache for ${packageName}: ${error.message}`
+            `Error saving cache for ${packageName}: ${error.message}`,
         );
     });
 });

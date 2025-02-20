@@ -31,10 +31,10 @@ describe("entry", () => {
 
             expect(core.setOutput).toHaveBeenCalledWith(
                 outputName,
-                outputValue
+                outputValue,
             );
             expect(core.info).toHaveBeenCalledWith(
-                `==> ${outputName}: ${outputValue}`
+                `==> ${outputName}: ${outputValue}`,
             );
         });
     });
@@ -57,10 +57,10 @@ describe("entry", () => {
 
             expect(core.setOutput).toHaveBeenCalledWith(
                 outputName,
-                outputValue
+                outputValue,
             );
             expect(core.info).toHaveBeenCalledWith(
-                `==> ${outputName}: ${outputValue}`
+                `==> ${outputName}: ${outputValue}`,
             );
         });
     });
@@ -75,7 +75,7 @@ describe("entry", () => {
         (core.setFailed as vi.Mock).mockImplementation(
             (failureMessage: string) => {
                 expect(failureMessage).toBe(errorMessage);
-            }
+            },
         );
 
         await import("../src/index");

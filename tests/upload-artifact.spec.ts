@@ -21,7 +21,7 @@ const getArtifactName = (
     cacheSuffix: string,
     env: EnvironmentVariables,
     cmakeOptions: string,
-    headSha: string
+    headSha: string,
 ) => {
     const cacheKeySha = getCacheKeyHash(
         repo,
@@ -29,7 +29,7 @@ const getArtifactName = (
         env,
         {},
         cmakeOptions,
-        headSha
+        headSha,
     );
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
 };
@@ -68,7 +68,7 @@ const artifactName = getArtifactName(
     cacheSuffix,
     env,
     cmakeOptions,
-    sha
+    sha,
 );
 const tarName = `${artifactName}.tar`;
 const rootDirectory = path.dirname(installDir);
@@ -124,18 +124,18 @@ describe("uploadArtifact", () => {
             {},
             githubToken,
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Created artifact TAR: ${tarPath} (${filesize(size)})`
+            `==> Created artifact TAR: ${tarPath} (${filesize(size)})`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Created dependencies file: ${dependenciesPath}`
+            `==> Created dependencies file: ${dependenciesPath}`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Uploaded artifact: ${artifactName} (${filesize(size)})`
+            `==> Uploaded artifact: ${artifactName} (${filesize(size)})`,
         );
     });
 
@@ -179,12 +179,12 @@ describe("uploadArtifact", () => {
             {},
             githubToken,
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`
+            `==> Uploaded artifact: ${coverageArtifactName} (${filesize(size)})`,
         );
     });
 
@@ -233,12 +233,12 @@ describe("uploadArtifact", () => {
             {},
             githubToken,
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isUploaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`
+            `==> Uploaded artifact: ${ecbuildArtifactName} (${filesize(size)})`,
         );
     });
 
@@ -271,16 +271,16 @@ describe("uploadArtifact", () => {
                 {},
                 githubToken,
                 cacheSuffix,
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(isUploaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error creating artifact TAR for ${repo}: ${error.message}`
+                `Error creating artifact TAR for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("returns false if determining archive size errors out", async () => {
@@ -311,12 +311,12 @@ describe("uploadArtifact", () => {
             {},
             githubToken,
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error determining size of artifact TAR for ${repo}`
+            `Error determining size of artifact TAR for ${repo}`,
         );
     });
 
@@ -364,7 +364,7 @@ describe("uploadArtifact", () => {
                 {},
                 githubToken,
                 cacheSuffix,
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(isUploaded).toBe(false);
@@ -373,9 +373,9 @@ describe("uploadArtifact", () => {
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error writing dependencies file for ${repo}: ${error.message}`
+                `Error writing dependencies file for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("returns false if artifact item upload has some failures", async () => {
@@ -416,12 +416,12 @@ describe("uploadArtifact", () => {
             {},
             githubToken,
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error uploading artifact for ${repo}: ${artifactName}`
+            `Error uploading artifact for ${repo}: ${artifactName}`,
         );
     });
 
@@ -458,12 +458,12 @@ describe("uploadArtifact", () => {
             {},
             githubToken,
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isUploaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error uploading artifact for ${repo}`
+            `Error uploading artifact for ${repo}`,
         );
     });
 
@@ -506,15 +506,15 @@ describe("uploadArtifact", () => {
                 {},
                 githubToken,
                 cacheSuffix,
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(isUploaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error uploading artifact for ${repo}: ${error.message}`
+                `Error uploading artifact for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 });

@@ -41,7 +41,7 @@ const uploadArtifact = async (
     githubToken: string,
     cacheSuffix: string,
     cmakeOptions: string | undefined,
-    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {},
 ): Promise<boolean> => {
     core.startGroup(`Upload ${packageName} Artifact`);
 
@@ -66,7 +66,7 @@ const uploadArtifact = async (
             env,
             dependencyTree,
             cmakeOptions,
-            dependencyCmakeOptionsLookup
+            dependencyCmakeOptionsLookup,
         );
         artifactName = cacheKey;
     }
@@ -82,13 +82,13 @@ const uploadArtifact = async (
                 file: tarPath,
                 gzip: true,
             },
-            ["."]
+            ["."],
         );
     } catch (error) {
         if (error instanceof Error)
             isError(
                 true,
-                `Error creating artifact TAR for ${packageName}: ${error.message}`
+                `Error creating artifact TAR for ${packageName}: ${error.message}`,
             );
         return false;
     }
@@ -98,7 +98,7 @@ const uploadArtifact = async (
     if (
         isError(
             !stats.size,
-            `Error determining size of artifact TAR for ${packageName}`
+            `Error determining size of artifact TAR for ${packageName}`,
         )
     )
         return false;
@@ -121,7 +121,7 @@ const uploadArtifact = async (
             if (error instanceof Error)
                 isError(
                     true,
-                    `Error writing dependencies file for ${packageName}: ${error.message}`
+                    `Error writing dependencies file for ${packageName}: ${error.message}`,
                 );
             return false;
         }
@@ -143,13 +143,13 @@ const uploadArtifact = async (
             rootDirectory,
             {
                 continueOnError: true,
-            }
+            },
         );
     } catch (error) {
         if (error instanceof Error)
             isError(
                 true,
-                `Error uploading artifact for ${packageName}: ${error.message}`
+                `Error uploading artifact for ${packageName}: ${error.message}`,
             );
         return false;
     }
@@ -162,7 +162,7 @@ const uploadArtifact = async (
             uploadResult &&
                 uploadResult.failedItems &&
                 uploadResult.failedItems.length,
-            `Error uploading artifact for ${packageName}: ${uploadResult.failedItems}`
+            `Error uploading artifact for ${packageName}: ${uploadResult.failedItems}`,
         )
     ) {
         return false;
@@ -170,8 +170,8 @@ const uploadArtifact = async (
 
     core.info(
         `==> Uploaded artifact: ${uploadResult.artifactName} (${filesize(
-            uploadResult.size
-        )})`
+            uploadResult.size,
+        )})`,
     );
 
     fs.unlinkSync(tarPath);

@@ -74,7 +74,7 @@ export const parseOptions = (options: string): string[] => {
  */
 const expandShellVariables = (
     optionsObject: BuildOptions,
-    env: EnvironmentVariables
+    env: EnvironmentVariables,
 ): string[] => {
     const optionsName = Object.keys(optionsObject)[0];
     const options = [...optionsObject[optionsName]];
@@ -88,7 +88,7 @@ const expandShellVariables = (
             const variableName = match[1];
             option = option.replace(
                 new RegExp(`\\$\\{?${variableName}\\}?`),
-                env[variableName] as string
+                env[variableName] as string,
             );
         });
 
@@ -140,7 +140,7 @@ const buildPackage = async (
     token: string,
     cpackGenerator?: string,
     cpackOptions?: string,
-    toolchainFile?: string
+    toolchainFile?: string,
 ): Promise<boolean> => {
     core.startGroup(`Build ${packageName}`);
 
@@ -166,7 +166,7 @@ const buildPackage = async (
                 installDir,
                 path.resolve(sourceDir),
                 cpackGenerator,
-                cpackOptions
+                cpackOptions,
             );
         }
 
@@ -177,7 +177,7 @@ const buildPackage = async (
             configurePath = path.join(
                 path.resolve(sourceDir),
                 "bin",
-                "ecbuild"
+                "ecbuild",
             );
             configureOptions.push(`--prefix=${installDir}`);
         } else {
@@ -199,7 +199,7 @@ const buildPackage = async (
         const deprecatedCmakeOptionsFile = path.join(
             srcDir,
             ".github",
-            ".compiler-flags"
+            ".compiler-flags",
         );
 
         if (fs.existsSync(cmakeOptionsFile)) {
@@ -208,7 +208,7 @@ const buildPackage = async (
                 .toString();
 
             core.info(
-                `==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`
+                `==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`,
             );
 
             configureOptions.push(...parseOptions(cmakeOptionsFileContent));
@@ -218,14 +218,14 @@ const buildPackage = async (
                 .toString();
 
             core.info(
-                `==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`
+                `==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`,
             );
             core.warning(
-                "Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`"
+                "Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`",
             );
 
             configureOptions.push(
-                ...parseOptions(deprecatedCmakeOptionsFileContent)
+                ...parseOptions(deprecatedCmakeOptionsFileContent),
             );
         }
 
@@ -238,7 +238,7 @@ const buildPackage = async (
 
         if (hasCodeCoverage) {
             core.info(
-                "==> Code coverage collection enabled, installing lcov..."
+                "==> Code coverage collection enabled, installing lcov...",
             );
             core.info("==> Checking if lcov is installed...");
             const lcovInstalled =
@@ -273,15 +273,15 @@ const buildPackage = async (
             const instrumentationOptions = "--coverage";
 
             configureOptions.push(
-                `-DCMAKE_C_FLAGS='${instrumentationOptions}'`
+                `-DCMAKE_C_FLAGS='${instrumentationOptions}'`,
             );
             configureOptions.push(
-                `-DCMAKE_CXX_FLAGS='${instrumentationOptions}'`
+                `-DCMAKE_CXX_FLAGS='${instrumentationOptions}'`,
             );
             configureOptions.push(`-DCMAKE_Fortran_FLAGS='--coverage'`);
         } else if (test && codeCoverage) {
             core.info(
-                `Skipping code coverage collection on unsupported platform: ${compiler}@${os}`
+                `Skipping code coverage collection on unsupported platform: ${compiler}@${os}`,
             );
         }
 
@@ -322,7 +322,7 @@ const buildPackage = async (
         //   We must do this manually, because @actions/exec ignores them (`shell: false` option is passed to `spawn`).
         configureOptions = expandShellVariables(
             { configureOptions },
-            options.env
+            options.env,
         );
         testOptions = expandShellVariables({ testOptions }, options.env);
 
@@ -331,7 +331,7 @@ const buildPackage = async (
         let exitCode = await exec.exec(
             "env",
             [configurePath, ...configureOptions, srcDir],
-            options
+            options,
         );
         if (isError(exitCode, "Error configuring package")) return false;
 
@@ -342,7 +342,7 @@ const buildPackage = async (
             exitCode = await exec.exec(
                 "env",
                 ["ctest", ...testOptions],
-                options
+                options,
             );
 
             if (isError(exitCode, "Error testing package")) return false;
@@ -361,7 +361,7 @@ const buildPackage = async (
                         "--output-file",
                         coverageFile,
                     ],
-                    options
+                    options,
                 );
 
                 if (isError(exitCode, "Error collecting code coverage"))
@@ -379,7 +379,7 @@ const buildPackage = async (
                         `${path.dirname(installDir)}/*`,
                         `${buildDir}/*`,
                     ],
-                    options
+                    options,
                 );
 
                 if (isError(exitCode, "Error cleaning up code coverage"))
@@ -388,7 +388,7 @@ const buildPackage = async (
                 exitCode = await exec.exec(
                     "env",
                     ["lcov", "--list", coverageFile],
-                    options
+                    options,
                 );
 
                 if (
@@ -404,13 +404,13 @@ const buildPackage = async (
                         "--output-directory",
                         coverageDir,
                     ],
-                    options
+                    options,
                 );
 
                 if (
                     isError(
                         exitCode,
-                        "Error generating code coverage HTML report"
+                        "Error generating code coverage HTML report",
                     )
                 )
                     return false;
@@ -431,7 +431,7 @@ const buildPackage = async (
                 buildDir,
                 env,
                 cpackGenerator,
-                cpackOptions
+                cpackOptions,
             );
             if (isError(!cpackSuccess, "Error generating package."))
                 return false;
@@ -456,7 +456,7 @@ const ecbundleBuild = async (
     installDir: string,
     sourceDir: string,
     cpackGenerator?: string,
-    cpackOptions?: string
+    cpackOptions?: string,
 ): Promise<boolean> => {
     const options = {
         cwd: sourceDir,
@@ -479,7 +479,7 @@ const ecbundleBuild = async (
             "--shallow",
             `--threads=${parallelismFactor}`,
         ],
-        options
+        options,
     );
     if (isError(exitCode, "Error creating bundle")) return false;
 
@@ -503,7 +503,7 @@ const ecbundleBuild = async (
                 ? [`--cmake="${configureOptions.join(" ")}"`]
                 : []),
         ],
-        options
+        options,
     );
     if (isError(exitCode, "Error building bundle")) return false;
 
@@ -529,7 +529,7 @@ const ecbundleBuild = async (
             path.join(sourceDir, "build"),
             env,
             cpackGenerator,
-            cpackOptions
+            cpackOptions,
         );
         if (isError(!cpackSuccess, "Error generating package.")) return false;
     }
@@ -544,7 +544,7 @@ const cpack = async (
     buildDir: string,
     env: EnvironmentVariables,
     cpackGenerator: string,
-    cpackOptions?: string
+    cpackOptions?: string,
 ) => {
     const cpackOptionsParsed = [];
     if (cpackOptions) {
@@ -555,7 +555,7 @@ const cpack = async (
     const exitCode = await exec.exec(
         "env",
         ["cpack", "-G", cpackGenerator.toUpperCase(), ...cpackOptionsParsed],
-        options
+        options,
     );
     if (isError(exitCode, "Error while generating package")) return false;
 
@@ -567,7 +567,7 @@ const cpack = async (
     const packageFileNames = fs
         .readdirSync(buildDir)
         .filter(
-            (file) => path.extname(file) === `.${cpackGenerator.toLowerCase()}`
+            (file) => path.extname(file) === `.${cpackGenerator.toLowerCase()}`,
         );
 
     if (packageFileNames.length == 1) {

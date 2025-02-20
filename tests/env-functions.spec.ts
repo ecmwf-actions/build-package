@@ -46,12 +46,12 @@ describe("setupEnv", () => {
                 return new Promise((resolve) => {
                     if (args[0] === "cmake") {
                         options.listeners.stdout(
-                            `{"version":{"string":"${cmakeVersion1}"}}`
+                            `{"version":{"string":"${cmakeVersion1}"}}`,
                         );
                     }
                     resolve(0);
                 });
-            }
+            },
         );
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
@@ -98,7 +98,7 @@ describe("setupEnv", () => {
                 CXX: compilerCxx,
                 FC: compilerFc,
             });
-        }
+        },
     );
 
     it("works around empty version key in cmake command", async () => {
@@ -111,7 +111,7 @@ describe("setupEnv", () => {
                 }
 
                 return Promise.resolve(0);
-            }
+            },
         );
 
         const env = await setupEnv(os, compilerCc, compilerCxx, compilerFc);
@@ -131,7 +131,7 @@ describe("setupEnv", () => {
                 switch (args[0]) {
                     case "cmake":
                         options.listeners.stdout(
-                            `{"version":{"string":"${cmakeVersion2}"}}`
+                            `{"version":{"string":"${cmakeVersion2}"}}`,
                         );
                         break;
                     case "brew":
@@ -141,14 +141,14 @@ describe("setupEnv", () => {
                 }
 
                 return Promise.resolve(0);
-            }
+            },
         );
 
         const env = await setupEnv(
             macOs,
             macOsCompilerCc,
             macOsCompilerCxx,
-            compilerFc
+            compilerFc,
         );
 
         const macOsOpenSslPathSanitized = macOsOpenSslPath.replace(/\n$/, "");
@@ -171,7 +171,7 @@ describe("setupEnv", () => {
                 switch (args[0]) {
                     case "cmake":
                         options.listeners.stdout(
-                            `{"version":{"string":"${cmakeVersion2}"}}`
+                            `{"version":{"string":"${cmakeVersion2}"}}`,
                         );
                         break;
                     case "brew":
@@ -180,14 +180,14 @@ describe("setupEnv", () => {
                 }
 
                 return Promise.resolve(0);
-            }
+            },
         );
 
         const env = await setupEnv(
             macOs,
             macOsCompilerCc,
             macOsCompilerCxx,
-            compilerFc
+            compilerFc,
         );
 
         expect(env).toStrictEqual({
@@ -206,7 +206,7 @@ describe("setupEnv", () => {
                 switch (args[0]) {
                     case "cmake":
                         options.listeners.stdout(
-                            `{"version":{"string":"${cmakeVersion2}"}}`
+                            `{"version":{"string":"${cmakeVersion2}"}}`,
                         );
                         break;
                     case "brew":
@@ -216,14 +216,14 @@ describe("setupEnv", () => {
                 }
 
                 return Promise.resolve(0);
-            }
+            },
         );
 
         const env = await setupEnv(
             macOs,
             macOsCompilerCc,
             macOsCompilerCxx,
-            compilerFc
+            compilerFc,
         );
 
         expect(env).toStrictEqual({
@@ -253,7 +253,7 @@ describe("extendPaths", () => {
         });
 
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extended local PATH variable to include ${installDir1}/bin`
+            `==> Extended local PATH variable to include ${installDir1}/bin`,
         );
     });
 
@@ -277,7 +277,7 @@ describe("extendPaths", () => {
         });
 
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extended local PATH variable to include ${installDir2}/bin`
+            `==> Extended local PATH variable to include ${installDir2}/bin`,
         );
     });
 
@@ -302,7 +302,7 @@ describe("extendPaths", () => {
         });
 
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extended local PATH variable to include ${installDir3}/bin`
+            `==> Extended local PATH variable to include ${installDir3}/bin`,
         );
     });
 
@@ -315,7 +315,7 @@ describe("extendPaths", () => {
 
         expect(testEnv).toBeNull();
         expect(core.info).not.toHaveBeenCalledWith(
-            `==> Extended local PATH variable to include ${installDir1}/bin`
+            `==> Extended local PATH variable to include ${installDir1}/bin`,
         );
     });
 });
@@ -339,7 +339,7 @@ describe("extendDependencies", () => {
 
         expect(testEnv).toStrictEqual(expectedEnv);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extended list of dependencies to include ${repository}: ${sha}`
+            `==> Extended list of dependencies to include ${repository}: ${sha}`,
         );
     });
 
@@ -366,7 +366,7 @@ describe("extendDependencies", () => {
 
         expect(testEnv).toStrictEqual(expectedEnv);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extended list of dependencies to include ${repository}: ${sha}`
+            `==> Extended list of dependencies to include ${repository}: ${sha}`,
         );
     });
 
@@ -382,7 +382,7 @@ describe("extendDependencies", () => {
 
         expect(testEnv).toBeNull();
         expect(core.info).not.toHaveBeenCalledWith(
-            `==> Extended list of dependencies to include ${repository}: ${sha}`
+            `==> Extended list of dependencies to include ${repository}: ${sha}`,
         );
     });
 });

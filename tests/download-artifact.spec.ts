@@ -25,7 +25,7 @@ const getArtifactName = (
     cacheSuffix: string,
     env: EnvironmentVariables,
     cmakeOptions: string,
-    headSha: string
+    headSha: string,
 ) => {
     const cacheKeySha = getCacheKeyHash(
         repo,
@@ -33,7 +33,7 @@ const getArtifactName = (
         env,
         {},
         cmakeOptions,
-        headSha
+        headSha,
     );
     return `${os}-${compiler}-${repo}-${cacheKeySha}`;
 };
@@ -67,7 +67,7 @@ const artifactName = getArtifactName(
     cacheSuffix,
     env,
     cmakeOptions,
-    headSha
+    headSha,
 );
 const artifactId = 987654321;
 const artifactSize = 68168435;
@@ -79,7 +79,7 @@ const errorObject = new Error("Oops!");
 const emptyObject = {};
 
 const resolveWorkflowRunArtifacts = (
-    targetArtifactName: string
+    targetArtifactName: string,
 ): Promise<Record<string, unknown>> =>
     Promise.resolve({
         status: 200,
@@ -161,7 +161,7 @@ describe("downloadArtifact", () => {
             (options: { auth: string }) => {
                 if (!options.auth)
                     throw Error(
-                        `Octokit authentication missing, did you pass the auth key?`
+                        `Octokit authentication missing, did you pass the auth key?`,
                     );
 
                 return {
@@ -169,7 +169,7 @@ describe("downloadArtifact", () => {
                         switch (route) {
                             case "GET /repos/{owner}/{repo}/actions/artifacts":
                                 return resolveWorkflowRunArtifacts(
-                                    artifactName
+                                    artifactName,
                                 );
                             case "GET /repos/{owner}/{repo}/git/ref/{ref}":
                                 return resolveHeadSha();
@@ -178,14 +178,14 @@ describe("downloadArtifact", () => {
                         }
                     },
                 };
-            }
+            },
         );
 
         (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const existsSync = vi.spyOn(fs, "existsSync");
@@ -209,7 +209,7 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(true);
@@ -218,17 +218,17 @@ describe("downloadArtifact", () => {
         expect(core.info).toHaveBeenCalledWith("==> Artifacts: 3");
         expect(core.info).toHaveBeenCalledWith(`==> headSha: ${headSha}`);
         expect(core.info).toHaveBeenCalledWith(
-            `==> artifactName: ${artifactName}`
+            `==> artifactName: ${artifactName}`,
         );
         expect(core.info).toHaveBeenCalledWith(`==> artifactId: ${artifactId}`);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Downloaded: ${artifactName}.zip (${filesize(artifactSize)})`
+            `==> Downloaded: ${artifactName}.zip (${filesize(artifactSize)})`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extracted artifact ZIP archive to ${artifactPath}`
+            `==> Extracted artifact ZIP archive to ${artifactPath}`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extracted artifact TAR to ${installDir}`
+            `==> Extracted artifact TAR to ${installDir}`,
         );
         expect(extractAllTo).toHaveBeenCalledWith(artifactPath, true);
         expect(unlinkSync).toHaveBeenCalledWith(tarPath);
@@ -264,7 +264,7 @@ describe("downloadArtifact", () => {
             cacheSuffix,
             testEnv,
             cmakeOptions,
-            headSha
+            headSha,
         );
         const artifactPath = `${downloadDir}/${artifactName}`;
         const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
@@ -286,7 +286,7 @@ describe("downloadArtifact", () => {
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const existsSync = vi.spyOn(fs, "existsSync");
@@ -320,7 +320,7 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(true);
@@ -353,7 +353,7 @@ describe("downloadArtifact", () => {
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const unlinkSync = vi.spyOn(fs, "unlinkSync");
@@ -371,12 +371,12 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> artifactName: ${ecbuildArtifactName}`
+            `==> artifactName: ${ecbuildArtifactName}`,
         );
     });
 
@@ -412,12 +412,12 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Wrong response code while fetching artifacts for ${repo}: ${errorStatusCode}`
+            `Wrong response code while fetching artifacts for ${repo}: ${errorStatusCode}`,
         );
     });
 
@@ -444,7 +444,7 @@ describe("downloadArtifact", () => {
                                 return resolveHeadSha();
                         }
                     },
-                })
+                }),
             );
 
             const isArtifactDownloaded = await downloadArtifact(
@@ -459,16 +459,16 @@ describe("downloadArtifact", () => {
                 testEnv,
                 {},
                 cacheSuffix,
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(isArtifactDownloaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error fetching artifacts for ${repo}: ${error.message}`
+                `Error fetching artifacts for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("returns false if no workflow artifacts are found", async () => {
@@ -506,12 +506,12 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `No workflow artifacts found for ${repo}`
+            `No workflow artifacts found for ${repo}`,
         );
     });
 
@@ -548,7 +548,7 @@ describe("downloadArtifact", () => {
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const unlinkSync = vi.spyOn(fs, "unlinkSync");
@@ -566,7 +566,7 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(false);
@@ -578,8 +578,8 @@ describe("downloadArtifact", () => {
                 cacheSuffix,
                 env,
                 cmakeOptions,
-                newSha
-            )}`
+                newSha,
+            )}`,
         );
     });
 
@@ -605,7 +605,7 @@ describe("downloadArtifact", () => {
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const unlinkSync = vi.spyOn(fs, "unlinkSync");
@@ -623,12 +623,12 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`
+            `No suitable artifact found: ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${headSha}`,
         );
     });
 
@@ -664,12 +664,12 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`
+            `Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`,
         );
     });
 
@@ -692,13 +692,13 @@ describe("downloadArtifact", () => {
                         switch (route) {
                             case "GET /repos/{owner}/{repo}/actions/artifacts":
                                 return resolveWorkflowRunArtifacts(
-                                    artifactName
+                                    artifactName,
                                 );
                             case "GET /repos/{owner}/{repo}/git/ref/{ref}":
                                 throw error;
                         }
                     },
-                })
+                }),
             );
 
             const isArtifactDownloaded = await downloadArtifact(
@@ -713,16 +713,16 @@ describe("downloadArtifact", () => {
                 testEnv,
                 {},
                 cacheSuffix,
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(isArtifactDownloaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error getting repository HEAD for ${repo}: ${error.message}`
+                `Error getting repository HEAD for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it.each`
@@ -744,7 +744,7 @@ describe("downloadArtifact", () => {
                         switch (route) {
                             case "GET /repos/{owner}/{repo}/actions/artifacts":
                                 return resolveWorkflowRunArtifacts(
-                                    artifactName
+                                    artifactName,
                                 );
                             case "GET /repos/{owner}/{repo}/git/ref/{ref}":
                                 return resolveHeadSha();
@@ -752,14 +752,14 @@ describe("downloadArtifact", () => {
                                 return resolveArtifactDownload();
                         }
                     },
-                })
+                }),
             );
 
             (AdmZip.prototype.constructor as vi.Mock).mockImplementationOnce(
                 () => ({
                     getEntries,
                     extractAllTo,
-                })
+                }),
             );
 
             (tar.x as vi.Mock).mockImplementationOnce(() => {
@@ -778,16 +778,16 @@ describe("downloadArtifact", () => {
                 testEnv,
                 {},
                 cacheSuffix,
-                cmakeOptions
+                cmakeOptions,
             );
 
             expect(isArtifactDownloaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error extracting artifact TAR for ${repo}: ${error.message}`
+                `Error extracting artifact TAR for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("returns false if dependencies do not match", async () => {
@@ -814,7 +814,7 @@ describe("downloadArtifact", () => {
             cacheSuffix,
             testEnv,
             cmakeOptions,
-            headSha
+            headSha,
         );
         const artifactPath = `${downloadDir}/${artifactName}`;
         const dependenciesPath = `${artifactPath}/${artifactName}-dependencies.json`;
@@ -836,7 +836,7 @@ describe("downloadArtifact", () => {
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const existsSync = vi.spyOn(fs, "existsSync");
@@ -870,13 +870,13 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(false);
         expect(core.info).toHaveBeenCalledWith(`==> Found ${dependenciesPath}`);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error matching dependency ${dependency2} for ${repo}: ${dependency2NewSha} !== ${dependency2OldSha}`
+            `Error matching dependency ${dependency2} for ${repo}: ${dependency2NewSha} !== ${dependency2OldSha}`,
         );
     });
 
@@ -919,7 +919,7 @@ describe("downloadArtifact", () => {
             () => ({
                 getEntries,
                 extractAllTo,
-            })
+            }),
         );
 
         const unlinkSync = vi.spyOn(fs, "unlinkSync");
@@ -937,7 +937,7 @@ describe("downloadArtifact", () => {
             testEnv,
             {},
             cacheSuffix,
-            cmakeOptions
+            cmakeOptions,
         );
 
         expect(isArtifactDownloaded).toBe(true);

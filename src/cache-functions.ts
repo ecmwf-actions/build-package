@@ -35,7 +35,7 @@ export const getCacheKeyHash = (
     dependencyTree: DependencyTree,
     cmakeOptions: string | undefined,
     sha: string | undefined,
-    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {},
 ): string => {
     const buildOptions = [];
     if (cmakeOptions) {
@@ -50,7 +50,7 @@ export const getCacheKeyHash = (
     const treeDeps = getDependenciesFromTree(packageName, dependencyTree, null);
 
     for (const [dependencyName, dependencySha] of Object.entries(
-        env.DEPENDENCIES || {}
+        env.DEPENDENCIES || {},
     ).sort((a, b) => (a[0] > b[0] ? 1 : -1))) {
         if (
             !treeDeps.includes(dependencyName) &&
@@ -65,7 +65,7 @@ export const getCacheKeyHash = (
         if (dependencyCmakeOptionsLookup[dependencyName]) {
             const dependencyCmakeOptions = [];
             dependencyCmakeOptions.push(
-                ...parseOptions(dependencyCmakeOptionsLookup[dependencyName])
+                ...parseOptions(dependencyCmakeOptionsLookup[dependencyName]),
             );
             dependencyCmakeOptions.sort();
             cacheKeyStr += `::${dependencyName}-options=${dependencyCmakeOptions.join()}`;
@@ -108,7 +108,7 @@ export const getCacheKey = async (
     env: EnvironmentVariables,
     dependencyTree: DependencyTree,
     cmakeOptions: string | undefined,
-    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {},
 ): Promise<CacheObject> => {
     core.startGroup(`Cache Key for ${repository}`);
 
@@ -146,12 +146,12 @@ export const getCacheKey = async (
                     owner,
                     repo,
                     ref,
-                }
+                },
             );
 
             isError(
                 response.status != 200,
-                `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`
+                `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`,
             );
 
             result.headSha = response.data.object.sha;
@@ -159,7 +159,7 @@ export const getCacheKey = async (
             if (error instanceof Error)
                 isError(
                     true,
-                    `Error getting repository HEAD for ${repo}: ${error.message}`
+                    `Error getting repository HEAD for ${repo}: ${error.message}`,
                 );
         }
     }
@@ -173,7 +173,7 @@ export const getCacheKey = async (
         dependencyTree,
         cmakeOptions,
         result.headSha,
-        dependencyCmakeOptionsLookup
+        dependencyCmakeOptionsLookup,
     );
 
     core.info(`==> cacheKeySha: ${cacheKeySha}`);
@@ -215,7 +215,7 @@ export const restoreCache = async (
     env: EnvironmentVariables,
     dependencyTree: DependencyTree,
     cmakeOptions: string | undefined,
-    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {},
 ): Promise<boolean> => {
     const { cacheKey, headSha } = await getCacheKey(
         repository,
@@ -228,7 +228,7 @@ export const restoreCache = async (
         env,
         dependencyTree,
         cmakeOptions,
-        dependencyCmakeOptionsLookup
+        dependencyCmakeOptionsLookup,
     );
 
     core.startGroup(`Restore ${packageName} Cache`);
@@ -241,7 +241,7 @@ export const restoreCache = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error restoring cache for ${packageName}: ${error.message}`
+                `Error restoring cache for ${packageName}: ${error.message}`,
             );
         return false;
     }
@@ -287,7 +287,7 @@ export const saveCache = async (
     env: EnvironmentVariables,
     dependencyTree: DependencyTree,
     cmakeOptions: string | undefined,
-    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {},
 ): Promise<boolean> => {
     const { cacheKey } = await getCacheKey(
         repository,
@@ -300,7 +300,7 @@ export const saveCache = async (
         env,
         dependencyTree,
         cmakeOptions,
-        dependencyCmakeOptionsLookup
+        dependencyCmakeOptionsLookup,
     );
 
     core.startGroup(`Save ${packageName} Cache`);
@@ -312,7 +312,7 @@ export const saveCache = async (
     if (!bytes) {
         isError(
             true,
-            `Empty target dir, skipping saving cache for ${packageName}`
+            `Empty target dir, skipping saving cache for ${packageName}`,
         );
         return false;
     }
@@ -325,7 +325,7 @@ export const saveCache = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error saving cache for ${packageName}: ${error.message}`
+                `Error saving cache for ${packageName}: ${error.message}`,
             );
         return false;
     }

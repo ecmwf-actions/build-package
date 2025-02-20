@@ -26,7 +26,7 @@ export const setupEnv = async (
     os: string,
     compilerCc: string | null,
     compilerCxx: string | null,
-    compilerFc: string
+    compilerFc: string,
 ): Promise<EnvironmentVariables> => {
     core.startGroup("Setup Environment");
 
@@ -52,7 +52,7 @@ export const setupEnv = async (
     let exitCode = await exec.exec(
         "env",
         ["cmake", "-E", "capabilities"],
-        options
+        options,
     );
 
     if (isError(exitCode, "CMake capabilities command failed")) return env;
@@ -66,7 +66,7 @@ export const setupEnv = async (
         if (error instanceof Error)
             isError(
                 true,
-                `CMake capabilities JSON parsing failed: ${error.message}`
+                `CMake capabilities JSON parsing failed: ${error.message}`,
             );
         return env;
     }
@@ -84,7 +84,7 @@ export const setupEnv = async (
         exitCode = await exec.exec(
             "env",
             ["brew", "--prefix", "openssl"],
-            options
+            options,
         );
 
         if (isError(exitCode, "Homebrew command failed")) return env;
@@ -114,7 +114,7 @@ export const setupEnv = async (
 export const extendPaths = async (
     env: EnvironmentVariables | null,
     installDir: string,
-    packageName: string
+    packageName: string,
 ) => {
     if (!env) return;
 
@@ -171,7 +171,7 @@ export const extendPaths = async (
 export const extendDependencies = async (
     env: EnvironmentVariables | null,
     packageName: string,
-    sha: string
+    sha: string,
 ) => {
     if (!env) return;
 
@@ -187,6 +187,6 @@ export const extendDependencies = async (
     }
 
     core.info(
-        `==> Extended list of dependencies to include ${packageName}: ${sha}`
+        `==> Extended list of dependencies to include ${packageName}: ${sha}`,
     );
 };

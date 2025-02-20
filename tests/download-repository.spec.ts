@@ -67,7 +67,7 @@ describe("downloadRepository", () => {
             (options: { auth: string }) => {
                 if (!options.auth)
                     throw Error(
-                        `Octokit authentication missing, did you pass the auth key?`
+                        `Octokit authentication missing, did you pass the auth key?`,
                     );
 
                 return {
@@ -80,7 +80,7 @@ describe("downloadRepository", () => {
                         }
                     },
                 };
-            }
+            },
         );
 
         (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
@@ -101,7 +101,7 @@ describe("downloadRepository", () => {
             branch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(true);
@@ -110,10 +110,10 @@ describe("downloadRepository", () => {
         expect(core.info).toHaveBeenCalledWith(`==> Ref: heads/${branch}`);
         expect(core.info).toHaveBeenCalledWith(`==> URL: ${url}`);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Downloaded: ${tarName} (${filesize(size)})`
+            `==> Downloaded: ${tarName} (${filesize(size)})`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Extracted ${tarName} to ${sourceDir}`
+            `==> Extracted ${tarName} to ${sourceDir}`,
         );
     });
 
@@ -156,7 +156,7 @@ describe("downloadRepository", () => {
             testBranch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(true);
@@ -181,7 +181,7 @@ describe("downloadRepository", () => {
                             });
                     }
                 },
-            })
+            }),
         );
 
         const isRepositoryDownloaded = await downloadRepository(
@@ -190,12 +190,12 @@ describe("downloadRepository", () => {
             branch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`
+            `Wrong response code while fetching repository HEAD for ${repo}: ${errorStatusCode}`,
         );
     });
 
@@ -220,7 +220,7 @@ describe("downloadRepository", () => {
                                 throw error;
                         }
                     },
-                })
+                }),
             );
 
             const isRepositoryDownloaded = await downloadRepository(
@@ -229,16 +229,16 @@ describe("downloadRepository", () => {
                 branch,
                 githubToken,
                 downloadDir,
-                testEnv
+                testEnv,
             );
 
             expect(isRepositoryDownloaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error getting repository HEAD for ${repo}: ${error.message}`
+                `Error getting repository HEAD for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("returns false if request for repository download URL errors out", async () => {
@@ -267,12 +267,12 @@ describe("downloadRepository", () => {
             branch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Wrong response code while fetching repository download URL for ${repo}: ${errorStatusCode}`
+            `Wrong response code while fetching repository download URL for ${repo}: ${errorStatusCode}`,
         );
     });
 
@@ -299,7 +299,7 @@ describe("downloadRepository", () => {
                                 throw error;
                         }
                     },
-                })
+                }),
             );
 
             const isRepositoryDownloaded = await downloadRepository(
@@ -308,16 +308,16 @@ describe("downloadRepository", () => {
                 branch,
                 githubToken,
                 downloadDir,
-                testEnv
+                testEnv,
             );
 
             expect(isRepositoryDownloaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error getting repository download URL for ${repo}: ${error.message}`
+                `Error getting repository download URL for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it.each`
@@ -352,14 +352,14 @@ describe("downloadRepository", () => {
             branch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(false);
 
         if (!(error instanceof Error)) return;
         expect(core.warning).toHaveBeenCalledWith(
-            `Error downloading repository archive for ${repo}: ${error.message}`
+            `Error downloading repository archive for ${repo}: ${error.message}`,
         );
     });
 
@@ -394,12 +394,12 @@ describe("downloadRepository", () => {
             branch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(false);
         expect(core.warning).toHaveBeenCalledWith(
-            `Error determining size of repository archive for ${repo}`
+            `Error determining size of repository archive for ${repo}`,
         );
     });
 
@@ -426,7 +426,7 @@ describe("downloadRepository", () => {
                                 return resolveRepositoryDownloadUrl();
                         }
                     },
-                })
+                }),
             );
 
             (downloadFile as vi.Mock).mockResolvedValueOnce(undefined);
@@ -446,16 +446,16 @@ describe("downloadRepository", () => {
                 branch,
                 githubToken,
                 downloadDir,
-                testEnv
+                testEnv,
             );
 
             expect(isRepositoryDownloaded).toBe(false);
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
-                `Error extracting repository archive for ${repo}: ${error.message}`
+                `Error extracting repository archive for ${repo}: ${error.message}`,
             );
-        }
+        },
     );
 
     it("extends environment object with install paths and dependency", async () => {
@@ -501,7 +501,7 @@ describe("downloadRepository", () => {
             branch,
             githubToken,
             downloadDir,
-            testEnv
+            testEnv,
         );
 
         expect(isRepositoryDownloaded).toBe(true);
