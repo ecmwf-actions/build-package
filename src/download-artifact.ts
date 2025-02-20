@@ -6,7 +6,7 @@ import { mkdirP } from "@actions/io";
 import { Octokit } from "@octokit/core";
 import AdmZip from "adm-zip";
 import { filesize } from "filesize";
-import tar from "tar";
+import * as tar from "tar";
 
 import { extendPaths, extendDependencies } from "./env-functions";
 import { isError } from "./helper-functions";
@@ -45,7 +45,7 @@ const downloadArtifact = async (
     dependencyTree: DependencyTree,
     cacheSuffix: string,
     cmakeOptions: string | undefined,
-    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {}
+    dependencyCmakeOptionsLookup: CmakeOptionsLookup = {},
 ): Promise<boolean> => {
     core.startGroup(`Download ${packageName} Artifact`);
 
@@ -76,13 +76,13 @@ const downloadArtifact = async (
                     owner,
                     repo,
                     ref: `heads/${branch}`,
-                }
+                },
             );
 
             if (
                 isError(
                     response.status != 200,
-                    `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`
+                    `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`,
                 )
             )
                 return false;
@@ -92,7 +92,7 @@ const downloadArtifact = async (
             if (error instanceof Error)
                 isError(
                     true,
-                    `Error getting repository HEAD for ${repo}: ${error.message}`
+                    `Error getting repository HEAD for ${repo}: ${error.message}`,
                 );
             return false;
         }
@@ -117,7 +117,7 @@ const downloadArtifact = async (
             env,
             dependencyTree,
             cmakeOptions,
-            dependencyCmakeOptionsLookup
+            dependencyCmakeOptionsLookup,
         );
         artifactName = cacheKey;
     }
@@ -131,13 +131,13 @@ const downloadArtifact = async (
                 owner,
                 repo,
                 name: artifactName,
-            }
+            },
         );
 
         if (
             isError(
                 response.status != 200,
-                `Wrong response code while fetching artifacts for ${packageName}: ${response.status}`
+                `Wrong response code while fetching artifacts for ${packageName}: ${response.status}`,
             )
         )
             return false;
@@ -147,7 +147,7 @@ const downloadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error fetching artifacts for ${packageName}: ${error.message}`
+                `Error fetching artifacts for ${packageName}: ${error.message}`,
             );
         return false;
     }
@@ -165,7 +165,7 @@ const downloadArtifact = async (
     if (
         isError(
             !artifacts.length,
-            `No suitable artifact found: ${artifactName}`
+            `No suitable artifact found: ${artifactName}`,
         )
     )
         return false;
@@ -185,13 +185,13 @@ const downloadArtifact = async (
                 repo,
                 artifact_id: artifact?.id as number,
                 archive_format: "zip",
-            }
+            },
         );
 
         if (
             isError(
                 response.status === 302 || response.status !== 200,
-                `Wrong response code while downloading workflow run artifact for ${packageName}: ${response.status}`
+                `Wrong response code while downloading workflow run artifact for ${packageName}: ${response.status}`,
             )
         )
             return false;
@@ -201,7 +201,7 @@ const downloadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error downloading workflow run artifact for ${packageName}: ${error.message}`
+                `Error downloading workflow run artifact for ${packageName}: ${error.message}`,
             );
         return false;
     }
@@ -211,7 +211,7 @@ const downloadArtifact = async (
     core.info(`==> Downloaded: ${artifact?.name}.zip (${size})`);
 
     const artifactPath = path.resolve(
-        path.join(downloadDir, artifact?.name as string)
+        path.join(downloadDir, artifact?.name as string),
     );
 
     await mkdirP(artifactPath);
@@ -232,7 +232,7 @@ const downloadArtifact = async (
     const tarPath = path.join(artifactPath, `${artifactName}.tar`);
     const dependenciesPath = path.join(
         artifactPath,
-        `${artifactName}-dependencies.json`
+        `${artifactName}-dependencies.json`,
     );
 
     // Check artifact compatibility by going through its dependencies and verifying against current ones.
@@ -246,7 +246,7 @@ const downloadArtifact = async (
         const dependencies = JSON.parse(dependenciesContent);
 
         for (const [dependency, dependencySha] of Object.entries(
-            dependencies
+            dependencies,
         )) {
             if (
                 env.DEPENDENCIES &&
@@ -261,7 +261,7 @@ const downloadArtifact = async (
                     true,
                     `Error matching dependency ${dependency} for ${packageName}: ${
                         env.DEPENDENCIES[dependency as keyof DependenciesObject]
-                    } !== ${dependencySha}`
+                    } !== ${dependencySha}`,
                 );
 
                 return false;
@@ -282,7 +282,7 @@ const downloadArtifact = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error extracting artifact TAR for ${packageName}: ${error.message}`
+                `Error extracting artifact TAR for ${packageName}: ${error.message}`,
             );
         return false;
     }

@@ -70,13 +70,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -91,14 +91,14 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "force_build") return true;
             return inputs[inputName];
         });
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -115,13 +115,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -138,14 +138,14 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "recreate_cache") return true;
             return inputs[inputName];
         });
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -162,13 +162,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -198,10 +198,10 @@ describe("main", () => {
             return inputs[inputName];
         });
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -229,7 +229,7 @@ describe("main", () => {
             inputs.github_token,
             undefined,
             undefined,
-            undefined
+            undefined,
         );
     });
 
@@ -254,10 +254,10 @@ describe("main", () => {
         };
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "dependency_cmake_options")
@@ -291,7 +291,7 @@ describe("main", () => {
             inputs.github_token,
             undefined,
             undefined,
-            undefined
+            undefined,
         );
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[1],
@@ -311,7 +311,7 @@ describe("main", () => {
             inputs.github_token,
             undefined,
             undefined,
-            undefined
+            undefined,
         );
         expect(buildPackage).toHaveBeenCalledWith(
             inputs.dependencies[2],
@@ -331,7 +331,7 @@ describe("main", () => {
             inputs.github_token,
             undefined,
             undefined,
-            undefined
+            undefined,
         );
     });
 
@@ -339,14 +339,14 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "self_build") return false;
             return inputs[inputName];
         });
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -375,14 +375,14 @@ describe("main", () => {
         delete expectedOutputs.coverage_file;
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "self_coverage") return false;
             return inputs[inputName];
         });
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(testEnv);
@@ -398,13 +398,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -422,13 +422,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -444,13 +444,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -471,10 +471,10 @@ describe("main", () => {
         const dependencyCmakeOptions = ['owner/repo1 "-DCMAKE_VAR=1"'];
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "dependency_cmake_options")
@@ -485,7 +485,7 @@ describe("main", () => {
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
 
         await expect(main()).rejects.toBe(
-            `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptions[0]}`
+            `Unexpected CMake option, must be in 'packageName: option' format: ${dependencyCmakeOptions[0]}`,
         );
 
         (setupEnv as vi.Mock).mockReset();
@@ -495,13 +495,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(undefined);
@@ -515,10 +515,10 @@ describe("main", () => {
         const unexpectedDependencyName = "owner-repo@branch";
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation((inputName) => {
             if (inputName === "dependencies") return [unexpectedDependencyName];
@@ -528,7 +528,7 @@ describe("main", () => {
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
 
         await expect(main()).rejects.toBe(
-            `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${unexpectedDependencyName}`
+            `Unexpected dependency name, must be in '[packageName:]owner/repo[@branch]' format: ${unexpectedDependencyName}`,
         );
     });
 
@@ -536,13 +536,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -557,13 +557,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -579,13 +579,13 @@ describe("main", () => {
         expect.assertions(1);
 
         (core.getInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getBooleanInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
         (core.getMultilineInput as vi.Mock).mockImplementation(
-            (inputName) => inputs[inputName]
+            (inputName) => inputs[inputName],
         );
 
         (setupEnv as vi.Mock).mockResolvedValueOnce(env);
@@ -609,13 +609,13 @@ describe("main", () => {
             expect.assertions(1);
 
             (core.getInput as vi.Mock).mockImplementation(
-                (inputName) => inputs[inputName]
+                (inputName) => inputs[inputName],
             );
             (core.getBooleanInput as vi.Mock).mockImplementation(
-                (inputName) => inputs[inputName]
+                (inputName) => inputs[inputName],
             );
             (core.getMultilineInput as vi.Mock).mockImplementation(
-                (inputName) => inputs[inputName]
+                (inputName) => inputs[inputName],
             );
 
             (setupEnv as vi.Mock).mockImplementationOnce(() => {
@@ -623,6 +623,6 @@ describe("main", () => {
             });
 
             await expect(main()).rejects.toBe(error.message);
-        }
+        },
     );
 });

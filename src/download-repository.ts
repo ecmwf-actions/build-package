@@ -4,7 +4,7 @@ import * as core from "@actions/core";
 import { mkdirP } from "@actions/io";
 import { Octokit } from "@octokit/core";
 import { filesize } from "filesize";
-import tar from "tar";
+import * as tar from "tar";
 
 import downloadFile from "./download-file";
 import { extendDependencies } from "./env-functions";
@@ -29,7 +29,7 @@ const downloadRepository = async (
     branch: string,
     githubToken: string,
     downloadDir: string,
-    env: EnvironmentVariables
+    env: EnvironmentVariables,
 ): Promise<boolean> => {
     core.startGroup(`Download ${packageName} Repository`);
 
@@ -68,13 +68,13 @@ const downloadRepository = async (
                     owner,
                     repo,
                     ref,
-                }
+                },
             );
 
             if (
                 isError(
                     response.status != 200,
-                    `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`
+                    `Wrong response code while fetching repository HEAD for ${repo}: ${response.status}`,
                 )
             )
                 return false;
@@ -84,7 +84,7 @@ const downloadRepository = async (
             if (error instanceof Error)
                 isError(
                     true,
-                    `Error getting repository HEAD for ${repo}: ${error.message}`
+                    `Error getting repository HEAD for ${repo}: ${error.message}`,
                 );
             return false;
         }
@@ -99,13 +99,13 @@ const downloadRepository = async (
                 owner,
                 repo,
                 ref,
-            }
+            },
         );
 
         if (
             isError(
                 response.status === 302 || response.status !== 200,
-                `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`
+                `Wrong response code while fetching repository download URL for ${repo}: ${response.status}`,
             )
         )
             return false;
@@ -115,7 +115,7 @@ const downloadRepository = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error getting repository download URL for ${repo}: ${error.message}`
+                `Error getting repository download URL for ${repo}: ${error.message}`,
             );
         return false;
     }
@@ -130,7 +130,7 @@ const downloadRepository = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error downloading repository archive for ${repo}: ${error.message}`
+                `Error downloading repository archive for ${repo}: ${error.message}`,
             );
         return false;
     }
@@ -140,7 +140,7 @@ const downloadRepository = async (
     if (
         isError(
             !stats.size,
-            `Error determining size of repository archive for ${repo}`
+            `Error determining size of repository archive for ${repo}`,
         )
     )
         return false;
@@ -163,7 +163,7 @@ const downloadRepository = async (
         if (error instanceof Error)
             isError(
                 true,
-                `Error extracting repository archive for ${repo}: ${error.message}`
+                `Error extracting repository archive for ${repo}: ${error.message}`,
             );
         return false;
     }

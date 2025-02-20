@@ -31,7 +31,7 @@ describe("downloadFile", () => {
                             }),
                         },
                     }),
-            })
+            }),
         );
 
         const createWriteStream = vi.spyOn(fs, "createWriteStream");
@@ -42,7 +42,7 @@ describe("downloadFile", () => {
                         close: (cb: () => void) => cb(),
                     } as WriteStream;
                 return new WriteStream();
-            }
+            },
         );
 
         await expect(downloadFile(url, dest)).resolves.toBe(true);
@@ -63,14 +63,14 @@ describe("downloadFile", () => {
                                     return {
                                         on: (
                                             event: string,
-                                            cb: (error: Error) => void
+                                            cb: (error: Error) => void,
                                         ) => cb(new Error(errorMessage)),
                                     };
                                 },
                             }),
                         },
                     }),
-            })
+            }),
         );
 
         const createWriteStream = vi.spyOn(fs, "createWriteStream");
@@ -81,7 +81,7 @@ describe("downloadFile", () => {
                         close: (cb: () => void) => cb(),
                     } as WriteStream;
                 return new WriteStream();
-            }
+            },
         );
 
         await expect(downloadFile(url, dest)).rejects.toBe(errorMessage);
@@ -95,7 +95,7 @@ describe("downloadFile", () => {
         (HttpClient.prototype.constructor as vi.Mock).mockImplementationOnce(
             () => ({
                 get: () => Promise.reject(new Error(errorMessage)),
-            })
+            }),
         );
 
         await expect(downloadFile(url, dest)).rejects.toBe(errorMessage);

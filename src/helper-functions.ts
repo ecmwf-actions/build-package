@@ -11,7 +11,7 @@ import path from "path";
  */
 export const isError = (
     condition: number | boolean,
-    errorMessage: string
+    errorMessage: string,
 ): boolean => {
     if (condition) {
         core.warning(errorMessage);
@@ -33,7 +33,7 @@ export const getProjectVersion = (sourceDir: string): string => {
             if (error instanceof Error)
                 isError(
                     true,
-                    `Error reading ${versionPath}. Using VERSION is the preferred method.`
+                    `Error reading ${versionPath}. Using VERSION is the preferred method.`,
                 );
         }
     }

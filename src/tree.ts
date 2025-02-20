@@ -25,7 +25,7 @@ export const loadTree = (): DependencyTree => {
 export const getDependenciesFromTree = (
     pkg: string,
     tree: DependencyTree,
-    dependencies: string[] | null
+    dependencies: string[] | null,
 ): string[] => {
     if (!dependencies) {
         dependencies = [];

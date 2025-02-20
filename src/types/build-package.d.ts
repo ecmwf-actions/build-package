@@ -13,5 +13,5 @@ export default function buildPackage(
     codeCoverage: boolean,
     os: string,
     compiler: string,
-    env: EnvironmentVariables
+    env: EnvironmentVariables,
 ): boolean;

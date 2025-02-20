@@ -69,7 +69,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -99,7 +99,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -129,13 +129,13 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith("==> configurePath: cmake");
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`
+            `==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`,
         );
     });
 
@@ -163,13 +163,13 @@ describe("buildPackage", () => {
             compiler,
             testEnv1,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith("==> configurePath: ecbuild");
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir}`
+            `==> configureOptions: --prefix=${installDir}`,
         );
 
         (core.info as vi.Mock).mockReset();
@@ -193,15 +193,15 @@ describe("buildPackage", () => {
             compiler,
             testEnv2,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> configurePath: ${sourceDir}/bin/ecbuild`
+            `==> configurePath: ${sourceDir}/bin/ecbuild`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir}`
+            `==> configureOptions: --prefix=${installDir}`,
         );
     });
 
@@ -239,13 +239,13 @@ describe("buildPackage", () => {
             compiler,
             testEnv1,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith("==> configurePath: cmake");
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},${testCmakeOptions}`
+            `==> configureOptions: -DCMAKE_INSTALL_PREFIX=${installDir},${testCmakeOptions}`,
         );
 
         (core.info as vi.Mock).mockReset();
@@ -269,13 +269,13 @@ describe("buildPackage", () => {
             compiler,
             testEnv2,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith("==> configurePath: ecbuild");
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir},${testCmakeOptions}`
+            `==> configureOptions: --prefix=${installDir},${testCmakeOptions}`,
         );
     });
 
@@ -312,12 +312,12 @@ describe("buildPackage", () => {
             compiler,
             testEnv1,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> testOptions: ${testCtestOptions}`
+            `==> testOptions: ${testCtestOptions}`,
         );
 
         (core.info as vi.Mock).mockReset();
@@ -341,12 +341,12 @@ describe("buildPackage", () => {
             compiler,
             testEnv2,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> testOptions: ${testCtestOptions}`
+            `==> testOptions: ${testCtestOptions}`,
         );
     });
 
@@ -374,7 +374,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -399,7 +399,7 @@ describe("buildPackage", () => {
         const cmakeOptionsFile = path.join(
             sourceDir,
             ".github",
-            ".cmake-options"
+            ".cmake-options",
         );
         const cmakeOptionsFileContent = testCmakeOptions.join(" ");
 
@@ -432,15 +432,15 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`
+            `==> Found ${cmakeOptionsFile}: ${cmakeOptionsFileContent}`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir},${testCmakeOptions}`
+            `==> configureOptions: --prefix=${installDir},${testCmakeOptions}`,
         );
     });
 
@@ -460,7 +460,7 @@ describe("buildPackage", () => {
         const deprecatedCmakeOptionsFile = path.join(
             sourceDir,
             ".github",
-            ".compiler-flags"
+            ".compiler-flags",
         );
         const deprecatedCmakeOptionsFileContent =
             testDeprecatedCmakeOptions.join(" ");
@@ -495,18 +495,18 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`
+            `==> Found ${deprecatedCmakeOptionsFile}: ${deprecatedCmakeOptionsFileContent}`,
         );
         expect(core.warning).toHaveBeenCalledWith(
-            "Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`"
+            "Magic file path `.github/.compiler-flags` has been deprecated, please migrate to `.github/.cmake-options`",
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir},${testDeprecatedCmakeOptions}`
+            `==> configureOptions: --prefix=${installDir},${testDeprecatedCmakeOptions}`,
         );
     });
 
@@ -571,18 +571,18 @@ describe("buildPackage", () => {
             compiler,
             testEnv1,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir},${testCmakeOptions}`
+            `==> configureOptions: --prefix=${installDir},${testCmakeOptions}`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Expanded shell variables in configureOptions: --prefix=${installDir},${expandedTestCmakeOptions}`
+            `==> Expanded shell variables in configureOptions: --prefix=${installDir},${expandedTestCmakeOptions}`,
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> Expanded shell variables in testOptions: ${expandedTestCtestOptions}`
+            `==> Expanded shell variables in testOptions: ${expandedTestCtestOptions}`,
         );
     });
 
@@ -626,7 +626,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -656,15 +656,15 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            "==> Code coverage collection enabled, installing lcov..."
+            "==> Code coverage collection enabled, installing lcov...",
         );
         expect(core.info).toHaveBeenCalledWith(
-            `==> configureOptions: --prefix=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`
+            `==> configureOptions: --prefix=${installDir},-DCMAKE_C_FLAGS='--coverage',-DCMAKE_CXX_FLAGS='--coverage',-DCMAKE_Fortran_FLAGS='--coverage'`,
         );
     });
 
@@ -692,12 +692,12 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(core.info).toHaveBeenCalledWith(
-            `Skipping code coverage collection on unsupported platform: ${compiler}@${macOs}`
+            `Skipping code coverage collection on unsupported platform: ${compiler}@${macOs}`,
         );
     });
 
@@ -725,7 +725,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -775,7 +775,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -789,12 +789,12 @@ describe("buildPackage", () => {
                 "-DCMAKE_Fortran_FLAGS='--coverage'",
                 sourceDir,
             ],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--build", "."],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith("env", ["ctest"], options);
         expect(exec.exec).toHaveBeenCalledWith(
@@ -807,7 +807,7 @@ describe("buildPackage", () => {
                 "--output-file",
                 coverageFile,
             ],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
@@ -821,22 +821,22 @@ describe("buildPackage", () => {
                 `${path.dirname(installDir)}/*`,
                 `${buildDir}/*`,
             ],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["lcov", "--list", coverageFile],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["genhtml", coverageFile, "--output-directory", coverageDir],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--install", "."],
-            options
+            options,
         );
 
         (core.info as vi.Mock).mock.calls.forEach((call) => {
@@ -877,7 +877,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -919,7 +919,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -933,12 +933,12 @@ describe("buildPackage", () => {
                 "-DCMAKE_Fortran_FLAGS='--coverage'",
                 sourceDir,
             ],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--build", "."],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith("env", ["ctest"], options);
         expect(exec.exec).toHaveBeenCalledWith(
@@ -951,7 +951,7 @@ describe("buildPackage", () => {
                 "--output-file",
                 coverageFile,
             ],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
@@ -965,22 +965,22 @@ describe("buildPackage", () => {
                 `${path.dirname(installDir)}/*`,
                 `${buildDir}/*`,
             ],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["lcov", "--list", coverageFile],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["genhtml", coverageFile, "--output-directory", coverageDir],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--install", "."],
-            options
+            options,
         );
     });
 
@@ -1019,19 +1019,19 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["ecbuild", `--prefix=${installDir}`, sourceDir],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--build", "."],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith("env", ["ctest"], options);
         expect(exec.exec).not.toHaveBeenCalledWith(
@@ -1044,7 +1044,7 @@ describe("buildPackage", () => {
                 "--output-file",
                 coverageFile,
             ],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith(
             "env",
@@ -1058,22 +1058,22 @@ describe("buildPackage", () => {
                 `${path.dirname(installDir)}/*`,
                 `${buildDir}/*`,
             ],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith(
             "env",
             ["lcov", "--list", coverageFile],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith(
             "env",
             ["genhtml", coverageFile, "--output-directory", coverageDir],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--install", "."],
-            options
+            options,
         );
     });
 
@@ -1110,19 +1110,19 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["ecbuild", `--prefix=${installDir}`, sourceDir],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--build", "."],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith("env", ["ctest"], options);
         expect(exec.exec).not.toHaveBeenCalledWith(
@@ -1135,7 +1135,7 @@ describe("buildPackage", () => {
                 "--output-file",
                 coverageFile,
             ],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith(
             "env",
@@ -1149,22 +1149,22 @@ describe("buildPackage", () => {
                 `${path.dirname(installDir)}/*`,
                 `${buildDir}/*`,
             ],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith(
             "env",
             ["lcov", "--list", coverageFile],
-            options
+            options,
         );
         expect(exec.exec).not.toHaveBeenCalledWith(
             "env",
             ["genhtml", coverageFile, "--output-directory", coverageDir],
-            options
+            options,
         );
         expect(exec.exec).toHaveBeenCalledWith(
             "env",
             ["cmake", "--install", "."],
-            options
+            options,
         );
     });
 
@@ -1203,7 +1203,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1244,7 +1244,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1280,7 +1280,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1324,7 +1324,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1370,7 +1370,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1411,7 +1411,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1453,7 +1453,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1494,7 +1494,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(false);
@@ -1536,7 +1536,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -1583,7 +1583,7 @@ describe("buildPackage", () => {
             compiler,
             testEnv,
             parallelismFactor,
-            githubToken
+            githubToken,
         );
 
         expect(isBuilt).toBe(true);
@@ -1622,10 +1622,10 @@ describe("buildPackage", () => {
                 compiler,
                 testEnv,
                 parallelismFactor,
-                githubToken
+                githubToken,
             );
 
             expect(isBuilt).toBe(false);
-        }
+        },
     );
 });
