@@ -338,10 +338,6 @@ const buildPackage = async (
         exitCode = await exec.exec("env", ["cmake", "--build", "."], options);
         if (isError(exitCode, "Error building package")) return false;
 
-        exitCode = await exec.exec("env", ["cmake", "--install", "."], options);
-        if (isError(exitCode, "Error installing package")) return false;
-        await extendPaths(env, installDir, packageName);
-
         if (test) {
             exitCode = await exec.exec(
                 "env",
@@ -423,6 +419,10 @@ const buildPackage = async (
                 env.COVERAGE_DIR = coverageDir;
             }
         }
+
+        exitCode = await exec.exec("env", ["cmake", "--install", "."], options);
+        if (isError(exitCode, "Error installing package")) return false;
+        await extendPaths(env, installDir, packageName);
 
         if (cpackGenerator) {
             const cpackSuccess = await cpack(
