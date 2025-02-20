@@ -24,6 +24,7 @@ jobs:
     with:
       codecov_upload: true
       notify_teams: true
+      node_version: 20
     secrets:
       incoming_webhook: ${{ secrets.MS_TEAMS_INCOMING_WEBHOOK }}
 
