@@ -2,7 +2,7 @@ import fs from "fs";
 import * as core from "@actions/core";
 import { Octokit } from "@octokit/core";
 import { filesize } from "filesize";
-import tar from "tar";
+import * as tar from "tar";
 import { describe, it, expect, vi } from "vitest";
 
 import downloadFile from "../src/download-file";

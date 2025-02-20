@@ -3,7 +3,7 @@ import path from "path";
 import * as core from "@actions/core";
 import * as artifact from "@actions/artifact";
 import { filesize } from "filesize";
-import tar from "tar";
+import * as tar from "tar";
 import { describe, it, expect, vi } from "vitest";
 
 import uploadArtifact from "../src/upload-artifact";
@@ -11,7 +11,11 @@ import { getCacheKeyHash } from "../src/cache-functions";
 import { EnvironmentVariables } from "../src/types/env-functions";
 
 vi.mock("@actions/core");
-vi.mock("@actions/artifact");
+vi.mock("@actions/artifact", () => ({
+    DefaultArtifactClient: vi.fn().mockImplementation(() => ({
+        uploadArtifact: vi.fn(),
+    })),
+}));
 vi.mock("tar");
 
 const getArtifactName = (
@@ -80,9 +84,7 @@ const emptyObject = {};
 
 const uploadResult = () =>
     Promise.resolve({
-        artifactName,
         size,
-        failedItems: [],
     });
 
 describe("uploadArtifact", () => {
@@ -93,7 +95,7 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
+        (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(() => ({
             uploadArtifact: uploadResult,
         }));
 
@@ -146,14 +148,21 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        const coverageArtifactName = `coverage-${repo}-${os}-${compiler}`;
+        const cacheKeySha = getCacheKeyHash(
+            `coverage-${repo}`,
+            cacheSuffix,
+            env,
+            {},
+            cmakeOptions,
+            sha,
+        );
 
-        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
+        const coverageArtifactName = `${os}-${compiler}-coverage-${repo}-${cacheKeySha}`;
+
+        (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(() => ({
             uploadArtifact: () =>
                 Promise.resolve({
-                    artifactName: coverageArtifactName,
                     size,
-                    failedItems: [],
                 }),
         }));
 
@@ -169,7 +178,7 @@ describe("uploadArtifact", () => {
 
         const isUploaded = await uploadArtifact(
             `coverage-${packageName}`,
-            packageName,
+            `coverage-${packageName}`,
             sha,
             installDir,
             null,
@@ -197,12 +206,10 @@ describe("uploadArtifact", () => {
 
         const ecbuildArtifactName = `ecbuild-${os}-cmake-${testEnv.CMAKE_VERSION}-${sha}`;
 
-        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
+        (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(() => ({
             uploadArtifact: () =>
                 Promise.resolve({
-                    artifactName: ecbuildArtifactName,
                     size,
-                    failedItems: [],
                 }),
         }));
 
@@ -290,7 +297,7 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as vi.Mock).mockImplementation(() => ({
+        (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(() => ({
             uploadArtifact: uploadResult,
         }));
 
@@ -333,9 +340,11 @@ describe("uploadArtifact", () => {
                 ...env,
             };
 
-            (artifact.create as vi.Mock).mockImplementationOnce(() => ({
-                uploadArtifact: uploadResult,
-            }));
+            (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(
+                () => ({
+                    uploadArtifact: uploadResult,
+                }),
+            );
 
             const statSync = vi.spyOn(fs, "statSync");
             (statSync as vi.Mock).mockImplementationOnce(() => ({
@@ -369,7 +378,7 @@ describe("uploadArtifact", () => {
 
             expect(isUploaded).toBe(false);
 
-            (artifact.create as vi.Mock).mockReset();
+            (artifact.DefaultArtifactClient as vi.Mock).mockReset();
 
             if (!(error instanceof Error)) return;
             expect(core.warning).toHaveBeenCalledWith(
@@ -378,53 +387,6 @@ describe("uploadArtifact", () => {
         },
     );
 
-    it("returns false if artifact item upload has some failures", async () => {
-        expect.assertions(2);
-
-        const testEnv = {
-            ...env,
-        };
-
-        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
-            uploadArtifact: () =>
-                Promise.resolve({
-                    artifactName,
-                    size,
-                    failedItems: [artifactName],
-                }),
-        }));
-
-        const statSync = vi.spyOn(fs, "statSync");
-        (statSync as vi.Mock).mockImplementationOnce(() => ({
-            size,
-        }));
-
-        const writeFileSync = vi.spyOn(fs, "writeFileSync");
-        writeFileSync.mockImplementationOnce((path: string) => {
-            if (path === dependenciesPath) return true;
-        });
-
-        const isUploaded = await uploadArtifact(
-            repository,
-            packageName,
-            sha,
-            installDir,
-            dependencies,
-            os,
-            compiler,
-            testEnv,
-            {},
-            githubToken,
-            cacheSuffix,
-            cmakeOptions,
-        );
-
-        expect(isUploaded).toBe(false);
-        expect(core.warning).toHaveBeenCalledWith(
-            `Error uploading artifact for ${repo}: ${artifactName}`,
-        );
-    });
-
     it("returns false if artifact item upload returns empty result", async () => {
         expect.assertions(2);
 
@@ -432,7 +394,7 @@ describe("uploadArtifact", () => {
             ...env,
         };
 
-        (artifact.create as vi.Mock).mockImplementationOnce(() => ({
+        (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(() => ({
             uploadArtifact: () => Promise.resolve(),
         }));
 
@@ -480,9 +442,11 @@ describe("uploadArtifact", () => {
                 ...env,
             };
 
-            (artifact.create as vi.Mock).mockImplementationOnce(() => ({
-                uploadArtifact: () => Promise.reject(error),
-            }));
+            (artifact.DefaultArtifactClient as vi.Mock).mockImplementation(
+                () => ({
+                    uploadArtifact: () => Promise.reject(error),
+                }),
+            );
 
             const statSync = vi.spyOn(fs, "statSync");
             (statSync as vi.Mock).mockImplementationOnce(() => ({

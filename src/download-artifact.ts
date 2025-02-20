@@ -6,7 +6,7 @@ import { mkdirP } from "@actions/io";
 import { Octokit } from "@octokit/core";
 import AdmZip from "adm-zip";
 import { filesize } from "filesize";
-import tar from "tar";
+import * as tar from "tar";
 
 import { extendPaths, extendDependencies } from "./env-functions";
 import { isError } from "./helper-functions";

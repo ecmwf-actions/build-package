@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import * as core from "@actions/core";
 import * as artifact from "@actions/artifact";
-import tar from "tar";
+import * as tar from "tar";
 import { filesize } from "filesize";
 
 import { isError } from "./helper-functions";
@@ -131,7 +131,7 @@ const uploadArtifact = async (
         uploadPaths.push(dependenciesPath);
     }
 
-    const artifactClient = artifact.create();
+    const artifactClient = new artifact.DefaultArtifactClient();
 
     let uploadResult;
 
@@ -141,9 +141,6 @@ const uploadArtifact = async (
             artifactName,
             uploadPaths,
             rootDirectory,
-            {
-                continueOnError: true,
-            },
         );
     } catch (error) {
         if (error instanceof Error)
@@ -157,20 +154,9 @@ const uploadArtifact = async (
     if (isError(!uploadResult, `Error uploading artifact for ${packageName}`))
         return false;
 
-    if (
-        isError(
-            uploadResult &&
-                uploadResult.failedItems &&
-                uploadResult.failedItems.length,
-            `Error uploading artifact for ${packageName}: ${uploadResult.failedItems}`,
-        )
-    ) {
-        return false;
-    }
-
     core.info(
-        `==> Uploaded artifact: ${uploadResult.artifactName} (${filesize(
-            uploadResult.size,
+        `==> Uploaded artifact: ${artifactName} (${filesize(
+            uploadResult?.size || 0,
         )})`,
     );
 
