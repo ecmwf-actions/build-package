@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This repository was moved to https://github.com/ecmwf/build-package. Do not update!
+
 # build-package
 
 [![Changelog](https://img.shields.io/github/package-json/v/ecmwf-actions/build-package)](CHANGELOG.md)
